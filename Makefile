@@ -3,16 +3,26 @@ SUBMAKE := $(MAKE) --no-print-directory
 
 ifeq ($(OS),Windows_NT)
 SHELL := cmd.exe
-FLUTTER := flutter.bat
-DART := dart.bat
+FVM_FLUTTER_SDK := $(wildcard $(CURDIR)\.fvm\flutter_sdk)
+LOCAL_FLUTTER := $(if $(FVM_FLUTTER_SDK),$(FVM_FLUTTER_SDK)\bin\flutter.bat,flutter.bat)
+LOCAL_DART := $(if $(FVM_FLUTTER_SDK),$(FVM_FLUTTER_SDK)\bin\dart.bat,dart.bat)
+FLUTTER := $(LOCAL_FLUTTER)
+DART := $(LOCAL_DART)
+FLUTTER_BIN_DIR := $(if $(FVM_FLUTTER_SDK),$(FVM_FLUTTER_SDK)\bin,)
 BLANK_LINE := @echo.
 GRADLEW := gradlew.bat
+PATH_SEP := ;
 else
 SHELL := /bin/bash
-FLUTTER := flutter
-DART := dart
+FVM_FLUTTER_SDK := $(wildcard $(CURDIR)/.fvm/flutter_sdk)
+LOCAL_FLUTTER := $(if $(FVM_FLUTTER_SDK),$(FVM_FLUTTER_SDK)/bin/flutter,flutter)
+LOCAL_DART := $(if $(FVM_FLUTTER_SDK),$(FVM_FLUTTER_SDK)/bin/dart,dart)
+FLUTTER := $(LOCAL_FLUTTER)
+DART := $(LOCAL_DART)
+FLUTTER_BIN_DIR := $(if $(FVM_FLUTTER_SDK),$(FVM_FLUTTER_SDK)/bin,)
 BLANK_LINE := @echo
 GRADLEW := ./gradlew
+PATH_SEP := :
 endif
 
 PROJECT_NAME := native_natural_sort
@@ -20,12 +30,14 @@ EXAMPLE_DIR := example
 
 ANDROID_DIR := $(EXAMPLE_DIR)/android
 ANDROID_TEST_TASK := :$(PROJECT_NAME):testDebugUnitTest
-ANDROID_INTEGRATION_TASK := :$(PROJECT_NAME):connectedAndroidTest
 
 # Test mode flags
 #   make test          → human-readable (default)
 #   make test CI=1     → CI-friendly (GitHub reporter / plain console)
 CI ?= 0
+
+# Device ID for integration tests (optional, e.g. DEVICE=macos).
+DEVICE ?=
 
 ifeq ($(CI),1)
 FLUTTER_TFLAGS = --reporter=github
@@ -38,7 +50,7 @@ NATIVE_TFLAGS =
 endif
 
 .PHONY: help format fix analyze test \
-        test-android test-ios test-macos test-windows test-linux \
+        test-integration test-all \
         gen aio
 
 # Internal targets
@@ -56,12 +68,9 @@ help:
 	@echo "                  (make test CI=1 for CI-friendly output)"
 	@echo "  aio             gen → format → fix → analyze → gen → test"
 	$(BLANK_LINE)
-	@echo "Platform-specific tests (require SDK / device):"
-	@echo "  test-android    Kotlin + Android integration tests"
-	@echo "  test-ios        iOS XCTest via example app"
-	@echo "  test-macos      macOS XCTest via example app"
-	@echo "  test-windows    C++ Google Test (build example first)"
-	@echo "  test-linux      C++ Google Test (build example first)"
+	@echo "Integration tests (require device, pass DEVICE=<id> to select):"
+	@echo "  test-integration  Flutter integration tests"
+	@echo "  test-all          Unit tests + integration tests"
 
 format:
 	@$(DART) format lib test
@@ -87,7 +96,7 @@ _test-dart:
 
 _test-kotlin:
 	@echo "=== Kotlin unit tests (JVM, no device) ==="
-	@cd $(ANDROID_DIR) && $(GRADLEW) $(ANDROID_TEST_TASK) $(KOTLIN_TFLAGS)
+	@cd $(ANDROID_DIR) && PATH="$(FLUTTER_BIN_DIR)$(PATH_SEP)$$PATH" $(GRADLEW) $(ANDROID_TEST_TASK) $(KOTLIN_TFLAGS)
 
 _test-native:
 ifeq ($(OS),Windows_NT)
@@ -114,28 +123,15 @@ test:
 	@$(BLANK_LINE)
 	@$(SUBMAKE) _test-native
 
-# Kotlin unit tests + Android integration tests + Flutter integration tests.
-test-android:
-	@$(SUBMAKE) _test-kotlin
+test-integration:
+ifeq ($(CI),1)
+ifeq ($(DEVICE),)
+	@echo "ERROR: CI mode requires DEVICE="
+	@exit 1
+endif
+endif
+	@cd $(EXAMPLE_DIR) && $(FLUTTER) test integration_test $(if $(DEVICE),-d $(DEVICE),)
+
+test-all: test
 	@$(BLANK_LINE)
-	@echo "=== Android integration tests ==="
-	@cd $(ANDROID_DIR) && $(GRADLEW) $(ANDROID_INTEGRATION_TASK) --console=plain
-	@$(BLANK_LINE)
-	@echo "=== Flutter integration tests (Android) ==="
-	@cd $(EXAMPLE_DIR) && $(FLUTTER) test integration_test -d android
-
-# iOS XCTest via the example app (requires Xcode + simulator).
-test-ios:
-	@cd $(EXAMPLE_DIR) && $(FLUTTER) test integration_test -d ios
-
-# macOS XCTest via the example app.
-test-macos:
-	@cd $(EXAMPLE_DIR) && $(FLUTTER) test integration_test -d macos
-
-# Windows C++ Google Test (standalone).
-test-windows:
-	@$(SUBMAKE) _test-native
-
-# Linux C++ Google Test (standalone).
-test-linux:
-	@$(SUBMAKE) _test-native
+	@$(SUBMAKE) test-integration DEVICE=$(DEVICE)

@@ -82,5 +82,56 @@ TEST(CollationPlugin, SortStringsWithNumbers) {
   EXPECT_EQ(std::get<std::string>(list[2]), "10");
 }
 
+TEST(CollationPlugin, SortSingleItem) {
+  CollationPlugin plugin;
+  auto request = MakeRequest({
+      MakeItem("only", "value"),
+  });
+
+  auto result = plugin.SortStrings(request);
+  ASSERT_FALSE(result.has_error());
+
+  const auto& list = result.value();
+  ASSERT_EQ(list.size(), 1);
+  EXPECT_EQ(std::get<std::string>(list[0]), "only");
+}
+
+TEST(CollationPlugin, SortWithLocale) {
+  CollationPlugin plugin;
+  auto request = MakeRequest(
+      {
+          MakeItem("a", "apple"),
+          MakeItem("b", "banana"),
+      },
+      "en-US");
+
+  auto result = plugin.SortStrings(request);
+  ASSERT_FALSE(result.has_error());
+
+  const auto& list = result.value();
+  ASSERT_EQ(list.size(), 2);
+  EXPECT_EQ(std::get<std::string>(list[0]), "a");
+  EXPECT_EQ(std::get<std::string>(list[1]), "b");
+}
+
+TEST(CollationPlugin, SortDuplicateValuesBrokenById) {
+  CollationPlugin plugin;
+  auto request = MakeRequest({
+      MakeItem("id2", "same"),
+      MakeItem("id1", "same"),
+      MakeItem("id3", "same"),
+  });
+
+  auto result = plugin.SortStrings(request);
+  ASSERT_FALSE(result.has_error());
+
+  const auto& list = result.value();
+  ASSERT_EQ(list.size(), 3);
+  // Ties broken by id: 'id1' < 'id2' < 'id3'
+  EXPECT_EQ(std::get<std::string>(list[0]), "id1");
+  EXPECT_EQ(std::get<std::string>(list[1]), "id2");
+  EXPECT_EQ(std::get<std::string>(list[2]), "id3");
+}
+
 }  // namespace test
 }  // namespace native_natural_sort

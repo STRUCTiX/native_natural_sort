@@ -9,6 +9,20 @@ void main() {
       rules = IcuCollationLinuxRules();
     });
 
+    test('recommendedVersion is 72', () {
+      expect(IcuCollationLinuxRules.recommendedVersion, 72);
+    });
+
+    test('multiarchTriplet is a non-empty string', () {
+      expect(rules.multiarchTriplet, isNotEmpty);
+    });
+
+    test('searchDirs includes standard multiarch paths', () {
+      final dirs = rules.searchDirs;
+      expect(dirs.any((d) => d.contains(rules.multiarchTriplet)), isTrue);
+      expect(dirs.contains('/app/lib'), isTrue);
+    });
+
     group('extractVersionMajor', () {
       test('extracts major version from soname path', () {
         expect(rules.extractVersionMajor('/usr/lib/libicui18n.so.72'), 72);
@@ -53,6 +67,24 @@ void main() {
           'libicui18n.so',
           'libicui18n.so.72',
           'libicui18n.so.75',
+        ]);
+      });
+
+      test('single discovered version is appended after recommended', () {
+        final result = rules.candidates(['libicui18n.so.70']);
+        expect(result, [
+          'libicui18n.so',
+          'libicui18n.so.72',
+          'libicui18n.so.70',
+        ]);
+      });
+
+      test('duplicate of recommended version is not deduped', () {
+        final result = rules.candidates(['libicui18n.so.72']);
+        expect(result, [
+          'libicui18n.so',
+          'libicui18n.so.72',
+          'libicui18n.so.72',
         ]);
       });
     });

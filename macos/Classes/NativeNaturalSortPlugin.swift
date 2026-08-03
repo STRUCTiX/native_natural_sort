@@ -1,19 +1,18 @@
 import Cocoa
 import FlutterMacOS
 
+/// Native natural sort plugin for macOS.
+///
+/// Uses [localizedStandardCompare] for locale-aware string collation
+/// via the Pigeon-generated CollationHostApi interface.
 public class NativeNaturalSortPlugin: NSObject, FlutterPlugin {
   public static func register(with registrar: FlutterPluginRegistrar) {
-    let channel = FlutterMethodChannel(name: "native_natural_sort", binaryMessenger: registrar.messenger)
-    let instance = NativeNaturalSortPlugin()
-    registrar.addMethodCallDelegate(instance, channel: channel)
+    CollationHostApiSetup.setUp(
+      binaryMessenger: registrar.messenger(),
+      api: CollationPlugin())
   }
 
   public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
-    switch call.method {
-    case "getPlatformVersion":
-      result("macOS " + ProcessInfo.processInfo.operatingSystemVersionString)
-    default:
-      result(FlutterMethodNotImplemented)
-    }
+    result(FlutterMethodNotImplemented)
   }
 }

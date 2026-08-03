@@ -3,10 +3,10 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
-  native_natural_sort
 )
 
 list(APPEND FLUTTER_FFI_PLUGIN_LIST
+  native_natural_sort
 )
 
 set(PLUGIN_BUNDLED_LIBRARIES)

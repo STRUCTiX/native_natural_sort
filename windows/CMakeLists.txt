@@ -20,6 +20,10 @@ set(PLUGIN_NAME "native_natural_sort_plugin")
 list(APPEND PLUGIN_SOURCES
   "native_natural_sort_plugin.cpp"
   "native_natural_sort_plugin.h"
+  "collation_api.g.cpp"
+  "collation_api.g.h"
+  "collation_plugin.cpp"
+  "collation_plugin.h"
 )
 
 # Define the plugin library target. Its name must not be changed (see comment

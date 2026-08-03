@@ -3,28 +3,24 @@
 #include <gtest/gtest.h>
 
 #include "include/native_natural_sort/native_natural_sort_plugin.h"
-#include "native_natural_sort_plugin_private.h"
 
-// This demonstrates a simple unit test of the C portion of this plugin's
-// implementation.
-//
-// Once you have built the plugin's example app, you can run these tests
-// from the command line. For instance, for a plugin called my_plugin
-// built for x64 debug, run:
-// $ build/linux/x64/debug/plugins/my_plugin/my_plugin_test
+// Linux uses Dart FFI (collation_ffi_linux.dart) for collation — the native
+// plugin class is minimal. These tests verify the plugin can be instantiated
+// and registered without errors.
 
 namespace native_natural_sort {
 namespace test {
 
-TEST(NativeNaturalSortPlugin, GetPlatformVersion) {
-  g_autoptr(FlMethodResponse) response = get_platform_version();
-  ASSERT_NE(response, nullptr);
-  ASSERT_TRUE(FL_IS_METHOD_SUCCESS_RESPONSE(response));
-  FlValue* result = fl_method_success_response_get_result(
-      FL_METHOD_SUCCESS_RESPONSE(response));
-  ASSERT_EQ(fl_value_get_type(result), FL_VALUE_TYPE_STRING);
-  // The full string varies, so just validate that it has the right format.
-  EXPECT_THAT(fl_value_get_string(result), testing::StartsWith("Linux "));
+TEST(NativeNaturalSortPlugin, GetType) {
+  GType type = native_natural_sort_plugin_get_type();
+  ASSERT_NE(type, G_TYPE_INVALID);
+  ASSERT_NE(type, G_TYPE_NONE);
+}
+
+TEST(NativeNaturalSortPlugin, Instantiate) {
+  g_autoptr(GObject) plugin = G_OBJECT(
+      g_object_new(native_natural_sort_plugin_get_type(), nullptr));
+  ASSERT_NE(plugin, nullptr);
 }
 
 }  // namespace test

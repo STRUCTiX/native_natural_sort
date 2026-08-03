@@ -1,42 +1,85 @@
-#include <flutter/method_call.h>
-#include <flutter/method_result_functions.h>
-#include <flutter/standard_method_codec.h>
+#include <flutter/encodable_value.h>
 #include <gtest/gtest.h>
 #include <windows.h>
 
-#include <memory>
 #include <string>
 #include <variant>
 
-#include "native_natural_sort_plugin.h"
+#include "collation_api.g.h"
+#include "collation_plugin.h"
 
 namespace native_natural_sort {
 namespace test {
 
 namespace {
 
-using flutter::EncodableMap;
+using flutter::EncodableList;
 using flutter::EncodableValue;
-using flutter::MethodCall;
-using flutter::MethodResultFunctions;
+using flutter::CustomEncodableValue;
+
+CollationItem MakeItem(const std::string& id, const std::string& value) {
+  return CollationItem(id, value);
+}
+
+CollationRequest MakeRequest(
+    const std::vector<CollationItem>& items,
+    std::optional<std::string> locale = std::nullopt) {
+  ::flutter::EncodableList encodable_items;
+  for (const auto& item : items) {
+    encodable_items.push_back(
+        ::flutter::EncodableValue(
+            ::flutter::CustomEncodableValue(item)));
+  }
+  return CollationRequest(encodable_items, locale);
+}
 
 }  // namespace
 
-TEST(NativeNaturalSortPlugin, GetPlatformVersion) {
-  NativeNaturalSortPlugin plugin;
-  // Save the reply value from the success callback.
-  std::string result_string;
-  plugin.HandleMethodCall(
-      MethodCall("getPlatformVersion", std::make_unique<EncodableValue>()),
-      std::make_unique<MethodResultFunctions<>>(
-          [&result_string](const EncodableValue* result) {
-            result_string = std::get<std::string>(*result);
-          },
-          nullptr, nullptr));
+TEST(CollationPlugin, SortStringsAscending) {
+  CollationPlugin plugin;
+  auto request = MakeRequest({
+      MakeItem("id2", "banana"),
+      MakeItem("id1", "apple"),
+      MakeItem("id3", "cherry"),
+  });
 
-  // Since the exact string varies by host, just ensure that it's a string
-  // with the expected format.
-  EXPECT_TRUE(result_string.rfind("Windows ", 0) == 0);
+  auto result = plugin.SortStrings(request);
+  ASSERT_FALSE(result.has_error());
+
+  const auto& list = result.value();
+  ASSERT_EQ(list.size(), 3);
+  // English collation: 'apple' < 'banana' < 'cherry'
+  EXPECT_EQ(std::get<std::string>(list[0]), "id1");
+  EXPECT_EQ(std::get<std::string>(list[1]), "id2");
+  EXPECT_EQ(std::get<std::string>(list[2]), "id3");
+}
+
+TEST(CollationPlugin, SortStringsEmptyList) {
+  CollationPlugin plugin;
+  auto request = MakeRequest({});
+
+  auto result = plugin.SortStrings(request);
+  ASSERT_FALSE(result.has_error());
+  EXPECT_TRUE(result.value().empty());
+}
+
+TEST(CollationPlugin, SortStringsWithNumbers) {
+  CollationPlugin plugin;
+  auto request = MakeRequest({
+      MakeItem("10", "item10"),
+      MakeItem("2", "item2"),
+      MakeItem("1", "item1"),
+  });
+
+  auto result = plugin.SortStrings(request);
+  ASSERT_FALSE(result.has_error());
+
+  const auto& list = result.value();
+  ASSERT_EQ(list.size(), 3);
+  // With SORT_DIGITSASNUMBERS: 'item1' < 'item2' < 'item10'
+  EXPECT_EQ(std::get<std::string>(list[0]), "1");
+  EXPECT_EQ(std::get<std::string>(list[1]), "2");
+  EXPECT_EQ(std::get<std::string>(list[2]), "10");
 }
 
 }  // namespace test

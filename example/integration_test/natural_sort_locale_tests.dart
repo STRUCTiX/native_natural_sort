@@ -1,24 +1,21 @@
-import 'dart:ui' show Locale;
+part of 'natural_sort_test.dart';
 
-import 'package:flutter_test/flutter_test.dart';
-import 'package:integration_test/integration_test.dart';
-import 'package:native_natural_sort/native_natural_sort.dart';
-
-void main() {
-  IntegrationTestWidgetsFlutterBinding.ensureInitialized();
-
+void registerLocaleTests() {
   late NativeSort sort;
 
   setUp(() async {
+    NativeSort.reset();
     sort = NativeSort();
   });
 
   testWidgets('sorts with explicit locale', (tester) async {
-    await sort.init(const SortOptions(
-      android: SortOptionsAndroid(locale: Locale('en')),
-      linux: SortOptionsLinux(locale: Locale('en')),
-      windows: SortOptionsWindows(locale: Locale('en')),
-    ));
+    await sort.init(
+      const SortOptions(
+        android: SortOptionsAndroid(locale: Locale('en')),
+        linux: SortOptionsLinux(locale: Locale('en')),
+        windows: SortOptionsWindows(locale: Locale('en')),
+      ),
+    );
 
     final result = await sort.sort([
       const SortItem(id: 'a', value: 'apple'),
@@ -30,22 +27,21 @@ void main() {
 
   testWidgets('sorts with locale override at call time', (tester) async {
     await sort.init(const SortOptions());
-    final result = await sort.sort(
-      [
-        const SortItem(id: 'a', value: 'apple'),
-        const SortItem(id: 'b', value: 'banana'),
-      ],
-      locale: const Locale('en'),
-    );
+    final result = await sort.sort([
+      const SortItem(id: 'a', value: 'apple'),
+      const SortItem(id: 'b', value: 'banana'),
+    ], locale: const Locale('en'));
     expect(result.map((i) => i.id), ['a', 'b']);
   });
 
   testWidgets('sorts Chinese characters in zh locale order', (tester) async {
-    await sort.init(const SortOptions(
-      android: SortOptionsAndroid(locale: Locale('zh')),
-      linux: SortOptionsLinux(locale: Locale('zh')),
-      windows: SortOptionsWindows(locale: Locale('zh')),
-    ));
+    await sort.init(
+      const SortOptions(
+        android: SortOptionsAndroid(locale: Locale('zh')),
+        linux: SortOptionsLinux(locale: Locale('zh')),
+        windows: SortOptionsWindows(locale: Locale('zh')),
+      ),
+    );
 
     final result = await sort.sort([
       const SortItem(id: '1', value: '张三'),

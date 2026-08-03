@@ -20,7 +20,10 @@ import 'sort.dart';
 
 class MacOSDelegate extends PlatformDelegate {
   late final MacOSSort _sort;
+  Locale? _defaultLocale;
   SortDirection _defaultDirection = SortDirection.ascending;
+  bool? _defaultCaseSensitive;
+  bool? _defaultDiacriticInsensitive;
 
   MacOSDelegate();
 
@@ -28,7 +31,10 @@ class MacOSDelegate extends PlatformDelegate {
   Future<void> init(SortOptions options) async {
     final macOS = options.macOS;
     _sort = macOS?.sort ?? MacOSSort();
+    _defaultLocale = macOS?.locale;
     _defaultDirection = macOS?.direction ?? SortDirection.ascending;
+    _defaultCaseSensitive = macOS?.caseSensitive;
+    _defaultDiacriticInsensitive = macOS?.diacriticInsensitive;
   }
 
   @override
@@ -42,7 +48,10 @@ class MacOSDelegate extends PlatformDelegate {
         .toList();
     final result = await _sort.sort(
       platformItems,
+      locale: locale ?? _defaultLocale,
       direction: direction ?? _defaultDirection,
+      caseSensitive: _defaultCaseSensitive,
+      diacriticInsensitive: _defaultDiacriticInsensitive,
     );
     return result.map((i) => SortItem(id: i.id, value: i.value)).toList();
   }

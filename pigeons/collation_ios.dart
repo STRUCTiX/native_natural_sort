@@ -34,12 +34,35 @@ class CollationIOSItem {
 
 /// Request to sort [items] by the collation order of their [value]s.
 ///
-/// iOS uses `localizedStandardCompare` with the system locale —
+/// iOS uses `compare(_:options:range:locale:)` —
 /// [CollationIOSItem.id]s are returned in collation order.
+///
+/// [locale] selects the Foundation locale identifier (e.g. "en_US").
+/// When `null`, the system locale is used.
+///
+/// [direction] sets sort direction: 0 = ascending (default),
+/// 1 = descending.
+///
+/// [caseSensitive] controls whether case differences affect sort
+/// order.  `null` (default) uses case-insensitive comparison.
+///
+/// [diacriticInsensitive] controls whether diacritics are ignored.
+/// `null` (default) treats diacritics as distinct; `true` treats
+/// "é" as "e".
 class CollationIOSRequest {
-  CollationIOSRequest({required this.items});
+  CollationIOSRequest({
+    required this.items,
+    this.locale,
+    this.direction,
+    this.caseSensitive,
+    this.diacriticInsensitive,
+  });
 
   List<CollationIOSItem> items;
+  String? locale;
+  int? direction;
+  bool? caseSensitive;
+  bool? diacriticInsensitive;
 }
 
 /// Platform-native string collation.

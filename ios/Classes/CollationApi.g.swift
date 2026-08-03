@@ -230,41 +230,74 @@ struct CollationIOSItem: Hashable, CustomStringConvertible {
 
 /// Request to sort [items] by the collation order of their [value]s.
 ///
-/// iOS uses `localizedStandardCompare` with the system locale —
+/// iOS uses `compare(_:options:range:locale:)` —
 /// [CollationIOSItem.id]s are returned in collation order.
+///
+/// [locale] selects the Foundation locale identifier (e.g. "en_US").
+/// When `null`, the system locale is used.
+///
+/// [direction] sets sort direction: 0 = ascending (default),
+/// 1 = descending.
+///
+/// [caseSensitive] controls whether case differences affect sort
+/// order.  `null` (default) uses case-insensitive comparison.
+///
+/// [diacriticInsensitive] controls whether diacritics are ignored.
+/// `null` (default) treats diacritics as distinct; `true` treats
+/// "é" as "e".
 ///
 /// Generated class from Pigeon that represents data sent in messages.
 struct CollationIOSRequest: Hashable, CustomStringConvertible {
   var items: [CollationIOSItem]
+  var locale: String? = nil
+  var direction: Int64? = nil
+  var caseSensitive: Bool? = nil
+  var diacriticInsensitive: Bool? = nil
 
 
   // swift-format-ignore: AlwaysUseLowerCamelCase
   static func fromList(_ pigeonVar_list: [Any?]) -> CollationIOSRequest? {
     let items = pigeonVar_list[0] as! [CollationIOSItem]
+    let locale: String? = nilOrValue(pigeonVar_list[1])
+    let direction: Int64? = nilOrValue(pigeonVar_list[2])
+    let caseSensitive: Bool? = nilOrValue(pigeonVar_list[3])
+    let diacriticInsensitive: Bool? = nilOrValue(pigeonVar_list[4])
 
     return CollationIOSRequest(
-      items: items
+      items: items,
+      locale: locale,
+      direction: direction,
+      caseSensitive: caseSensitive,
+      diacriticInsensitive: diacriticInsensitive
     )
   }
   func toList() -> [Any?] {
     return [
-      items
+      items,
+      locale,
+      direction,
+      caseSensitive,
+      diacriticInsensitive,
     ]
   }
   static func == (lhs: CollationIOSRequest, rhs: CollationIOSRequest) -> Bool {
     if Swift.type(of: lhs) != Swift.type(of: rhs) {
       return false
     }
-    return CollationApiPigeonInternal.deepEquals(lhs.items, rhs.items)
+    return CollationApiPigeonInternal.deepEquals(lhs.items, rhs.items) && CollationApiPigeonInternal.deepEquals(lhs.locale, rhs.locale) && CollationApiPigeonInternal.deepEquals(lhs.direction, rhs.direction) && CollationApiPigeonInternal.deepEquals(lhs.caseSensitive, rhs.caseSensitive) && CollationApiPigeonInternal.deepEquals(lhs.diacriticInsensitive, rhs.diacriticInsensitive)
   }
 
   func hash(into hasher: inout Hasher) {
     hasher.combine("CollationIOSRequest")
     CollationApiPigeonInternal.deepHash(value: items, hasher: &hasher)
+    CollationApiPigeonInternal.deepHash(value: locale, hasher: &hasher)
+    CollationApiPigeonInternal.deepHash(value: direction, hasher: &hasher)
+    CollationApiPigeonInternal.deepHash(value: caseSensitive, hasher: &hasher)
+    CollationApiPigeonInternal.deepHash(value: diacriticInsensitive, hasher: &hasher)
   }
 
   public var description: String {
-    return "CollationIOSRequest(items: \(String(describing: items)))"
+    return "CollationIOSRequest(items: \(String(describing: items)), locale: \(String(describing: locale)), direction: \(String(describing: direction)), caseSensitive: \(String(describing: caseSensitive)), diacriticInsensitive: \(String(describing: diacriticInsensitive)))"
   }
 }
 

@@ -60,19 +60,121 @@ void main() {
       ], direction: SortDirection.descending);
       expect(mockSort.lastDirection, SortDirection.descending);
     });
+
+    test(
+      'init stores caseSensitive and diacriticInsensitive from options',
+      () async {
+        final mockSort = _MockMacOSSort();
+        final delegate = MacOSDelegate();
+        await delegate.init(
+          SortOptions(
+            macOS: SortOptionsMacOS(
+              sort: mockSort,
+              caseSensitive: true,
+              diacriticInsensitive: true,
+            ),
+          ),
+        );
+
+        await delegate.sort([const SortItem(id: 'a', value: 'x')]);
+        expect(mockSort.lastCaseSensitive, true);
+        expect(mockSort.lastDiacriticInsensitive, true);
+      },
+    );
+
+    test(
+      'init defaults caseSensitive and diacriticInsensitive to null',
+      () async {
+        final mockSort = _MockMacOSSort();
+        final delegate = MacOSDelegate();
+        await delegate.init(
+          SortOptions(macOS: SortOptionsMacOS(sort: mockSort)),
+        );
+
+        await delegate.sort([const SortItem(id: 'a', value: 'x')]);
+        expect(mockSort.lastCaseSensitive, isNull);
+        expect(mockSort.lastDiacriticInsensitive, isNull);
+      },
+    );
+
+    test(
+      'sort passes caseSensitive and diacriticInsensitive through',
+      () async {
+        final mockSort = _MockMacOSSort();
+        final delegate = MacOSDelegate();
+        await delegate.init(
+          SortOptions(
+            macOS: SortOptionsMacOS(
+              sort: mockSort,
+              caseSensitive: false,
+              diacriticInsensitive: false,
+            ),
+          ),
+        );
+
+        await delegate.sort([const SortItem(id: 'a', value: 'x')]);
+        expect(mockSort.lastCaseSensitive, false);
+        expect(mockSort.lastDiacriticInsensitive, false);
+      },
+    );
+
+    test('init stores locale from options', () async {
+      final mockSort = _MockMacOSSort();
+      final delegate = MacOSDelegate();
+      await delegate.init(
+        SortOptions(
+          macOS: SortOptionsMacOS(sort: mockSort, locale: const Locale('zh')),
+        ),
+      );
+
+      await delegate.sort([const SortItem(id: 'a', value: 'x')]);
+      expect(mockSort.lastLocale, const Locale('zh'));
+    });
+
+    test('init defaults locale to null', () async {
+      final mockSort = _MockMacOSSort();
+      final delegate = MacOSDelegate();
+      await delegate.init(SortOptions(macOS: SortOptionsMacOS(sort: mockSort)));
+
+      await delegate.sort([const SortItem(id: 'a', value: 'x')]);
+      expect(mockSort.lastLocale, isNull);
+    });
+
+    test('sort overrides locale from call argument', () async {
+      final mockSort = _MockMacOSSort();
+      final delegate = MacOSDelegate();
+      await delegate.init(
+        SortOptions(
+          macOS: SortOptionsMacOS(sort: mockSort, locale: const Locale('en')),
+        ),
+      );
+
+      await delegate.sort([
+        const SortItem(id: 'a', value: 'x'),
+      ], locale: const Locale('fr'));
+      expect(mockSort.lastLocale, const Locale('fr'));
+    });
   });
 }
 
 class _MockMacOSSort implements MacOSSort {
+  Locale? lastLocale;
   SortDirection? lastDirection;
+  bool? lastCaseSensitive;
+  bool? lastDiacriticInsensitive;
 
   @override
   Future<List<CollationMacOSItem>> sort(
     List<CollationMacOSItem> items, {
     Locale? locale,
     SortDirection? direction,
+    bool? caseSensitive,
+    bool? diacriticInsensitive,
   }) async {
+    lastLocale = locale;
     lastDirection = direction;
+    lastCaseSensitive = caseSensitive;
+    lastDiacriticInsensitive = diacriticInsensitive;
     return items;
   }
 }

@@ -8,7 +8,7 @@ import FlutterMacOS
 public class NativeNaturalSortPlugin: NSObject, FlutterPlugin {
   public static func register(with registrar: FlutterPluginRegistrar) {
     CollationMacOSHostApiSetup.setUp(
-      binaryMessenger: registrar.messenger(),
+      binaryMessenger: registrar.messenger,
       api: CollationPlugin())
   }
 

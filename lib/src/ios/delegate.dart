@@ -20,7 +20,10 @@ import 'sort.dart';
 
 class IOSDelegate extends PlatformDelegate {
   late final IOSSort _sort;
+  Locale? _defaultLocale;
   SortDirection _defaultDirection = SortDirection.ascending;
+  bool? _defaultCaseSensitive;
+  bool? _defaultDiacriticInsensitive;
 
   IOSDelegate();
 
@@ -28,7 +31,10 @@ class IOSDelegate extends PlatformDelegate {
   Future<void> init(SortOptions options) async {
     final ios = options.ios;
     _sort = ios?.sort ?? IOSSort();
+    _defaultLocale = ios?.locale;
     _defaultDirection = ios?.direction ?? SortDirection.ascending;
+    _defaultCaseSensitive = ios?.caseSensitive;
+    _defaultDiacriticInsensitive = ios?.diacriticInsensitive;
   }
 
   @override
@@ -42,7 +48,10 @@ class IOSDelegate extends PlatformDelegate {
         .toList();
     final result = await _sort.sort(
       platformItems,
+      locale: locale ?? _defaultLocale,
       direction: direction ?? _defaultDirection,
+      caseSensitive: _defaultCaseSensitive,
+      diacriticInsensitive: _defaultDiacriticInsensitive,
     );
     return result.map((i) => SortItem(id: i.id, value: i.value)).toList();
   }

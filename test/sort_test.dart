@@ -62,8 +62,16 @@ void main() {
     test('per-platform options are preserved', () {
       const options = SortOptions(
         android: SortOptionsAndroid(locale: Locale('zh')),
-        ios: SortOptionsIOS(direction: SortDirection.descending),
-        macOS: SortOptionsMacOS(direction: SortDirection.descending),
+        ios: SortOptionsIOS(
+          locale: Locale('ja'),
+          direction: SortDirection.descending,
+          caseSensitive: true,
+        ),
+        macOS: SortOptionsMacOS(
+          locale: Locale('ko'),
+          direction: SortDirection.descending,
+          diacriticInsensitive: true,
+        ),
         linux: SortOptionsLinux(locale: Locale('de')),
         windows: SortOptionsWindows(
           locale: Locale('en'),
@@ -71,8 +79,12 @@ void main() {
         ),
       );
       expect(options.android?.locale, const Locale('zh'));
+      expect(options.ios?.locale, const Locale('ja'));
       expect(options.ios?.direction, SortDirection.descending);
+      expect(options.ios?.caseSensitive, true);
+      expect(options.macOS?.locale, const Locale('ko'));
       expect(options.macOS?.direction, SortDirection.descending);
+      expect(options.macOS?.diacriticInsensitive, true);
       expect(options.linux?.locale, const Locale('de'));
       expect(options.windows?.locale, const Locale('en'));
       expect(options.windows?.backend, WindowsCollationBackend.ffi);
@@ -95,6 +107,62 @@ void main() {
       expect(options.decomposition, isNull);
       expect(options.numeric, isNull);
     });
+
+    test('SortOptionsIOS stores caseSensitive and diacriticInsensitive', () {
+      const options = SortOptionsIOS(
+        caseSensitive: true,
+        diacriticInsensitive: true,
+      );
+      expect(options.caseSensitive, true);
+      expect(options.diacriticInsensitive, true);
+    });
+
+    test('SortOptionsIOS stores locale', () {
+      const options = SortOptionsIOS(locale: Locale('fr'));
+      expect(options.locale, const Locale('fr'));
+    });
+
+    test('SortOptionsIOS locale defaults to null', () {
+      const options = SortOptionsIOS();
+      expect(options.locale, isNull);
+    });
+
+    test(
+      'SortOptionsIOS caseSensitive/diacriticInsensitive default to null',
+      () {
+        const options = SortOptionsIOS();
+        expect(options.caseSensitive, isNull);
+        expect(options.diacriticInsensitive, isNull);
+      },
+    );
+
+    test('SortOptionsMacOS stores caseSensitive and diacriticInsensitive', () {
+      const options = SortOptionsMacOS(
+        caseSensitive: true,
+        diacriticInsensitive: true,
+      );
+      expect(options.caseSensitive, true);
+      expect(options.diacriticInsensitive, true);
+    });
+
+    test('SortOptionsMacOS stores locale', () {
+      const options = SortOptionsMacOS(locale: Locale('fr'));
+      expect(options.locale, const Locale('fr'));
+    });
+
+    test('SortOptionsMacOS locale defaults to null', () {
+      const options = SortOptionsMacOS();
+      expect(options.locale, isNull);
+    });
+
+    test(
+      'SortOptionsMacOS caseSensitive/diacriticInsensitive default to null',
+      () {
+        const options = SortOptionsMacOS();
+        expect(options.caseSensitive, isNull);
+        expect(options.diacriticInsensitive, isNull);
+      },
+    );
   });
 
   group('CollatorStrength', () {
@@ -107,11 +175,11 @@ void main() {
       ]);
     });
 
-    test('index matches transport encoding', () {
-      expect(CollatorStrength.primary.index, 0);
-      expect(CollatorStrength.secondary.index, 1);
-      expect(CollatorStrength.tertiary.index, 2);
-      expect(CollatorStrength.identical.index, 3);
+    test('value matches transport encoding', () {
+      expect(CollatorStrength.primary.value, 0);
+      expect(CollatorStrength.secondary.value, 1);
+      expect(CollatorStrength.tertiary.value, 2);
+      expect(CollatorStrength.identical.value, 3);
     });
   });
 
@@ -124,10 +192,10 @@ void main() {
       ]);
     });
 
-    test('index matches transport encoding', () {
-      expect(CollatorDecomposition.none.index, 0);
-      expect(CollatorDecomposition.canonical.index, 1);
-      expect(CollatorDecomposition.full.index, 2);
+    test('value matches transport encoding', () {
+      expect(CollatorDecomposition.none.value, 0);
+      expect(CollatorDecomposition.canonical.value, 1);
+      expect(CollatorDecomposition.full.value, 2);
     });
   });
 

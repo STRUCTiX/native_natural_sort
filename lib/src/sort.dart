@@ -32,10 +32,13 @@ import 'windows/sort.dart' show SortOptionsWindows;
 /// Sort direction for collation ordering.
 enum SortDirection {
   /// Ascending order (default).
-  ascending,
+  ascending(0),
 
   /// Descending order.
-  descending,
+  descending(1);
+
+  final int value;
+  const SortDirection(this.value);
 }
 
 /// An id/value pair for collation sorting.
@@ -119,6 +122,12 @@ class NativeSort {
   /// Inject a mock for testing (replaces the singleton).
   @visibleForTesting
   static set instance(NativeSort? value) => _testInstance = value;
+
+  /// Reset the singleton to a fresh, uninitialized instance for testing.
+  @visibleForTesting
+  static void reset() {
+    _testInstance = NativeSort._();
+  }
 
   final PlatformDelegate _delegate;
   Completer<void>? _initCompleter;

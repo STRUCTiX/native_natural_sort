@@ -147,15 +147,48 @@ class CollationIOSItem {
 
 /// Request to sort [items] by the collation order of their [value]s.
 ///
-/// iOS uses `localizedStandardCompare` with the system locale —
+/// iOS uses `compare(_:options:range:locale:)` —
 /// [CollationIOSItem.id]s are returned in collation order.
+///
+/// [locale] selects the Foundation locale identifier (e.g. "en_US").
+/// When `null`, the system locale is used.
+///
+/// [direction] sets sort direction: 0 = ascending (default),
+/// 1 = descending.
+///
+/// [caseSensitive] controls whether case differences affect sort
+/// order.  `null` (default) uses case-insensitive comparison.
+///
+/// [diacriticInsensitive] controls whether diacritics are ignored.
+/// `null` (default) treats diacritics as distinct; `true` treats
+/// "é" as "e".
 class CollationIOSRequest {
-  CollationIOSRequest({required this.items});
+  CollationIOSRequest({
+    required this.items,
+    this.locale,
+    this.direction,
+    this.caseSensitive,
+    this.diacriticInsensitive,
+  });
 
   List<CollationIOSItem> items;
 
+  String? locale;
+
+  int? direction;
+
+  bool? caseSensitive;
+
+  bool? diacriticInsensitive;
+
   List<Object?> _toList() {
-    return <Object?>[items];
+    return <Object?>[
+      items,
+      locale,
+      direction,
+      caseSensitive,
+      diacriticInsensitive,
+    ];
   }
 
   Object encode() {
@@ -166,6 +199,10 @@ class CollationIOSRequest {
     result as List<Object?>;
     return CollationIOSRequest(
       items: (result[0]! as List<Object?>).cast<CollationIOSItem>(),
+      locale: result[1] as String?,
+      direction: result[2] as int?,
+      caseSensitive: result[3] as bool?,
+      diacriticInsensitive: result[4] as bool?,
     );
   }
 
@@ -178,7 +215,11 @@ class CollationIOSRequest {
     if (identical(this, other)) {
       return true;
     }
-    return _deepEquals(items, other.items);
+    return _deepEquals(items, other.items) &&
+        _deepEquals(locale, other.locale) &&
+        _deepEquals(direction, other.direction) &&
+        _deepEquals(caseSensitive, other.caseSensitive) &&
+        _deepEquals(diacriticInsensitive, other.diacriticInsensitive);
   }
 
   @override
@@ -187,7 +228,7 @@ class CollationIOSRequest {
 
   @override
   String toString() {
-    return 'CollationIOSRequest(items: $items)';
+    return 'CollationIOSRequest(items: $items, locale: $locale, direction: $direction, caseSensitive: $caseSensitive, diacriticInsensitive: $diacriticInsensitive)';
   }
 }
 

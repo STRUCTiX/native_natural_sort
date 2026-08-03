@@ -26,6 +26,8 @@ abstract interface class IOSSort {
     List<CollationIOSItem> items, {
     Locale? locale,
     SortDirection? direction,
+    bool? caseSensitive,
+    bool? diacriticInsensitive,
   });
 
   factory IOSSort() = _IOSSortImpl;
@@ -33,17 +35,34 @@ abstract interface class IOSSort {
 
 /// Per-platform options for iOS.
 ///
-/// iOS uses `localizedStandardCompare` with the system locale —
-/// no configurable options are currently exposed.
+/// iOS uses `compare(_:options:range:locale:)` with configurable options.
+/// Defaults match `localizedStandardCompare`.
 abstract interface class SortOptionsIOS {
   /// Injectable sort implementation; `null` uses the default.
   IOSSort? get sort;
 
+  /// Locale for collation (e.g. `Locale('en_US')`).
+  /// `null` uses the system locale.
+  Locale? get locale;
+
   /// Sort direction (defaults to [SortDirection.ascending]).
   SortDirection get direction;
 
-  const factory SortOptionsIOS({IOSSort? sort, SortDirection direction}) =
-      _SortOptionsIOSImpl;
+  /// Whether case differences affect sort order.
+  /// `null` (default) uses case-insensitive comparison.
+  bool? get caseSensitive;
+
+  /// Whether diacritics are ignored.
+  /// `null` (default) treats diacritics as distinct.
+  bool? get diacriticInsensitive;
+
+  const factory SortOptionsIOS({
+    IOSSort? sort,
+    Locale? locale,
+    SortDirection direction,
+    bool? caseSensitive,
+    bool? diacriticInsensitive,
+  }) = _SortOptionsIOSImpl;
 }
 
 class _IOSSortImpl implements IOSSort {
@@ -56,8 +75,16 @@ class _IOSSortImpl implements IOSSort {
     List<CollationIOSItem> items, {
     Locale? locale,
     SortDirection? direction,
+    bool? caseSensitive,
+    bool? diacriticInsensitive,
   }) async {
-    final request = CollationIOSRequest(items: items);
+    final request = CollationIOSRequest(
+      items: items,
+      locale: locale?.toLanguageTag(),
+      direction: direction?.value,
+      caseSensitive: caseSensitive,
+      diacriticInsensitive: diacriticInsensitive,
+    );
     return _host.sort(request);
   }
 }
@@ -66,9 +93,18 @@ class _SortOptionsIOSImpl implements SortOptionsIOS {
   @override
   final IOSSort? sort;
   @override
+  final Locale? locale;
+  @override
   final SortDirection direction;
+  @override
+  final bool? caseSensitive;
+  @override
+  final bool? diacriticInsensitive;
   const _SortOptionsIOSImpl({
     this.sort,
+    this.locale,
     this.direction = SortDirection.ascending,
+    this.caseSensitive,
+    this.diacriticInsensitive,
   });
 }

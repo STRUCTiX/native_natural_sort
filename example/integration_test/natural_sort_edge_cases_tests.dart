@@ -1,13 +1,10 @@
-import 'package:flutter_test/flutter_test.dart';
-import 'package:integration_test/integration_test.dart';
-import 'package:native_natural_sort/native_natural_sort.dart';
+part of 'natural_sort_test.dart';
 
-void main() {
-  IntegrationTestWidgetsFlutterBinding.ensureInitialized();
-
+void registerEdgeCaseTests() {
   late NativeSort sort;
 
   setUp(() async {
+    NativeSort.reset();
     sort = NativeSort();
     await sort.init(const SortOptions());
   });
@@ -31,7 +28,9 @@ void main() {
     expect(result.length, 3);
   });
 
-  testWidgets('sorts strings with leading and trailing whitespace', (tester) async {
+  testWidgets('sorts strings with leading and trailing whitespace', (
+    tester,
+  ) async {
     final result = await sort.sort([
       const SortItem(id: 'a', value: '  apple'),
       const SortItem(id: 'b', value: 'apple  '),

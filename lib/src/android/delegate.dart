@@ -22,6 +22,9 @@ class AndroidDelegate extends PlatformDelegate {
   late final AndroidSort _sort;
   Locale? _defaultLocale;
   SortDirection _defaultDirection = SortDirection.ascending;
+  CollatorStrength? _defaultStrength;
+  CollatorDecomposition? _defaultDecomposition;
+  bool? _defaultNumeric;
 
   AndroidDelegate();
 
@@ -31,6 +34,9 @@ class AndroidDelegate extends PlatformDelegate {
     _sort = android?.sort ?? AndroidSort();
     _defaultLocale = android?.locale;
     _defaultDirection = android?.direction ?? SortDirection.ascending;
+    _defaultStrength = android?.strength;
+    _defaultDecomposition = android?.decomposition;
+    _defaultNumeric = android?.numeric;
   }
 
   @override
@@ -38,6 +44,35 @@ class AndroidDelegate extends PlatformDelegate {
     List<SortItem> items, {
     SortDirection? direction,
     Locale? locale,
+  }) async => _doSort(items, direction: direction, locale: locale);
+
+  /// Sorts [items] with full Android-specific collator overrides.
+  ///
+  /// Each named parameter, when non-null, overrides the default set
+  /// via [SortOptionsAndroid] during [init].
+  Future<List<SortItem>> sortWithOptions(
+    List<SortItem> items, {
+    SortDirection? direction,
+    Locale? locale,
+    CollatorStrength? strength,
+    CollatorDecomposition? decomposition,
+    bool? numeric,
+  }) async => _doSort(
+    items,
+    direction: direction,
+    locale: locale,
+    strength: strength,
+    decomposition: decomposition,
+    numeric: numeric,
+  );
+
+  Future<List<SortItem>> _doSort(
+    List<SortItem> items, {
+    SortDirection? direction,
+    Locale? locale,
+    CollatorStrength? strength,
+    CollatorDecomposition? decomposition,
+    bool? numeric,
   }) async {
     final platformItems = items
         .map((i) => CollationAndroidItem(id: i.id, value: i.value))
@@ -46,6 +81,9 @@ class AndroidDelegate extends PlatformDelegate {
       platformItems,
       locale: locale ?? _defaultLocale,
       direction: direction ?? _defaultDirection,
+      strength: strength ?? _defaultStrength,
+      decomposition: decomposition ?? _defaultDecomposition,
+      numeric: numeric ?? _defaultNumeric,
     );
     return result.map((i) => SortItem(id: i.id, value: i.value)).toList();
   }

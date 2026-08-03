@@ -77,12 +77,89 @@ void main() {
       expect(mockSort.lastLocale, const Locale('fr'));
       expect(mockSort.lastDirection, SortDirection.descending);
     });
+
+    test('init stores collator fields from options', () async {
+      final mockSort = _MockAndroidSort();
+      final delegate = AndroidDelegate();
+      await delegate.init(
+        SortOptions(
+          android: SortOptionsAndroid(
+            sort: mockSort,
+            strength: CollatorStrength.primary,
+            decomposition: CollatorDecomposition.none,
+            numeric: false,
+          ),
+        ),
+      );
+
+      await delegate.sort([const SortItem(id: 'a', value: 'x')]);
+      expect(mockSort.lastStrength, CollatorStrength.primary);
+      expect(mockSort.lastDecomposition, CollatorDecomposition.none);
+      expect(mockSort.lastNumeric, false);
+    });
+
+    test('sort passes direction to AndroidSort', () async {
+      final mockSort = _MockAndroidSort();
+      final delegate = AndroidDelegate();
+      await delegate.init(
+        SortOptions(android: SortOptionsAndroid(sort: mockSort)),
+      );
+
+      await delegate.sort([
+        const SortItem(id: 'a', value: 'x'),
+      ], direction: SortDirection.descending);
+      expect(mockSort.lastDirection, SortDirection.descending);
+    });
+
+    test('sortWithOptions overrides collator fields per-call', () async {
+      final mockSort = _MockAndroidSort();
+      final delegate = AndroidDelegate();
+      await delegate.init(
+        SortOptions(
+          android: SortOptionsAndroid(
+            sort: mockSort,
+            strength: CollatorStrength.tertiary,
+            numeric: true,
+          ),
+        ),
+      );
+
+      await delegate.sortWithOptions(
+        [const SortItem(id: 'a', value: 'x')],
+        strength: CollatorStrength.primary,
+        numeric: false,
+      );
+      expect(mockSort.lastStrength, CollatorStrength.primary);
+      expect(mockSort.lastNumeric, false);
+    });
+
+    test('sortWithOptions falls back to defaults when param is null', () async {
+      final mockSort = _MockAndroidSort();
+      final delegate = AndroidDelegate();
+      await delegate.init(
+        SortOptions(
+          android: SortOptionsAndroid(
+            sort: mockSort,
+            decomposition: CollatorDecomposition.none,
+          ),
+        ),
+      );
+
+      await delegate.sortWithOptions([
+        const SortItem(id: 'a', value: 'x'),
+      ], direction: SortDirection.descending);
+      expect(mockSort.lastDecomposition, CollatorDecomposition.none);
+      expect(mockSort.lastDirection, SortDirection.descending);
+    });
   });
 }
 
 class _MockAndroidSort implements AndroidSort {
   Locale? lastLocale;
   SortDirection? lastDirection;
+  CollatorStrength? lastStrength;
+  CollatorDecomposition? lastDecomposition;
+  bool? lastNumeric;
   List<String> lastRequestedIds = [];
 
   @override
@@ -90,9 +167,15 @@ class _MockAndroidSort implements AndroidSort {
     List<CollationAndroidItem> items, {
     Locale? locale,
     SortDirection? direction,
+    CollatorStrength? strength,
+    CollatorDecomposition? decomposition,
+    bool? numeric,
   }) async {
     lastLocale = locale;
     lastDirection = direction;
+    lastStrength = strength;
+    lastDecomposition = decomposition;
+    lastNumeric = numeric;
     lastRequestedIds = items.map((i) => i.id).toList();
     return items;
   }

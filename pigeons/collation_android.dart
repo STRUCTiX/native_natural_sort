@@ -40,13 +40,34 @@ class CollationAndroidItem {
 /// Request to sort [items] by the collation order of their [value]s.
 ///
 /// [locale] selects the ICU collation locale.  When omitted, the
-/// platform uses its system-default collator.  Returns the
-/// [CollationAndroidItem.id]s in collation order.
+/// platform uses its system-default collator.
+///
+/// [direction] sets sort direction: 0 = ascending (default),
+/// 1 = descending.
+///
+/// [strength] sets ICU collation strength: 0 = primary,
+/// 1 = secondary, 2 = tertiary (default), 3 = identical.
+///
+/// [decomposition] sets Unicode normalisation mode: 0 = none,
+/// 1 = canonical (default), 2 = full.
+///
+/// [numeric] enables natural numeric ordering (default true).
 class CollationAndroidRequest {
-  CollationAndroidRequest({required this.items, this.locale});
+  CollationAndroidRequest({
+    required this.items,
+    this.locale,
+    this.direction,
+    this.strength,
+    this.decomposition,
+    this.numeric,
+  });
 
   List<CollationAndroidItem> items;
   String? locale;
+  int? direction;
+  int? strength;
+  int? decomposition;
+  bool? numeric;
 }
 
 /// Platform-native string collation.

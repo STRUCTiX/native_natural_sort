@@ -1,5 +1,6 @@
 import 'dart:ui' show Locale;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:native_natural_sort/native_natural_sort.dart';
 
@@ -75,6 +76,58 @@ void main() {
       expect(options.linux?.locale, const Locale('de'));
       expect(options.windows?.locale, const Locale('en'));
       expect(options.windows?.backend, WindowsCollationBackend.ffi);
+    });
+
+    test('SortOptionsAndroid stores collator fields', () {
+      const options = SortOptionsAndroid(
+        strength: CollatorStrength.primary,
+        decomposition: CollatorDecomposition.none,
+        numeric: false,
+      );
+      expect(options.strength, CollatorStrength.primary);
+      expect(options.decomposition, CollatorDecomposition.none);
+      expect(options.numeric, false);
+    });
+
+    test('SortOptionsAndroid collator fields default to null', () {
+      const options = SortOptionsAndroid();
+      expect(options.strength, isNull);
+      expect(options.decomposition, isNull);
+      expect(options.numeric, isNull);
+    });
+  });
+
+  group('CollatorStrength', () {
+    test('has four levels in order', () {
+      expect(CollatorStrength.values, [
+        CollatorStrength.primary,
+        CollatorStrength.secondary,
+        CollatorStrength.tertiary,
+        CollatorStrength.identical,
+      ]);
+    });
+
+    test('index matches transport encoding', () {
+      expect(CollatorStrength.primary.index, 0);
+      expect(CollatorStrength.secondary.index, 1);
+      expect(CollatorStrength.tertiary.index, 2);
+      expect(CollatorStrength.identical.index, 3);
+    });
+  });
+
+  group('CollatorDecomposition', () {
+    test('has three modes in order', () {
+      expect(CollatorDecomposition.values, [
+        CollatorDecomposition.none,
+        CollatorDecomposition.canonical,
+        CollatorDecomposition.full,
+      ]);
+    });
+
+    test('index matches transport encoding', () {
+      expect(CollatorDecomposition.none.index, 0);
+      expect(CollatorDecomposition.canonical.index, 1);
+      expect(CollatorDecomposition.full.index, 2);
     });
   });
 
@@ -190,6 +243,38 @@ void main() {
 
       NativeSort.instance = null;
     });
+
+    test('resolveAs returns PlatformDelegate', () {
+      NativeSort.instance = null;
+      final sort = NativeSort();
+      final delegate = sort.resolveAs<PlatformDelegate>();
+      expect(delegate, isA<PlatformDelegate>());
+    });
+
+    test('resolveAs returns platform-specific delegate type', () {
+      NativeSort.instance = null;
+      final sort = NativeSort();
+      final delegate = sort.resolveAs<PlatformDelegate>();
+      // The delegate must be one of the known platform delegates.
+      expect(
+        delegate,
+        anyOf(
+          isA<AndroidDelegate>(),
+          isA<IOSDelegate>(),
+          isA<MacOSDelegate>(),
+          isA<LinuxDelegate>(),
+          isA<WindowsDelegate>(),
+        ),
+      );
+    });
+
+    test('android extension resolves on Android platform', () {
+      NativeSort.instance = null;
+      final sort = NativeSort();
+      if (defaultTargetPlatform == TargetPlatform.android) {
+        expect(sort.android, isA<AndroidDelegate>());
+      }
+    });
   });
 }
 
@@ -207,6 +292,9 @@ class _MockSort implements NativeSort {
     SortDirection? direction,
     Locale? locale,
   }) async => _result;
+
+  @override
+  T resolveAs<T extends PlatformDelegate>() => this as T;
 }
 
 /// Mirrors [NativeSort._] init/sort contract: idempotent init,
@@ -261,4 +349,7 @@ class _ContractMock implements NativeSort {
     if (!_initialized) throw StateError('Call init() first');
     return Future.value(_result);
   }
+
+  @override
+  T resolveAs<T extends PlatformDelegate>() => this as T;
 }

@@ -13,6 +13,7 @@
 // limitations under the License.
 
 export 'src/android/delegate.dart';
+export 'src/android/extensions.dart';
 export 'src/android/sort.dart';
 export 'src/collation_ffi.dart';
 export 'src/delegate.dart';

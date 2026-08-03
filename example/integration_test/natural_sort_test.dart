@@ -40,7 +40,39 @@ void main() {
       ], direction: SortDirection.descending);
       expect(result.map((i) => i.id), ['c', 'b', 'a']);
     },
-    skip: true, // Pigeon API does not pass SortDirection to native code yet
+  );
+
+  testWidgets(
+    'sorts case-insensitively with primary strength',
+    (tester) async {
+      final androidSort = sort.resolveAs<AndroidDelegate>();
+      final result = await androidSort.sortWithOptions(
+        [
+          const SortItem(id: 'B', value: 'Banana'),
+          const SortItem(id: 'a', value: 'apple'),
+          const SortItem(id: 'C', value: 'cherry'),
+        ],
+        strength: CollatorStrength.primary,
+      );
+      expect(result.map((i) => i.id), ['a', 'B', 'C']);
+    },
+  );
+
+  testWidgets(
+    'sorts lexicographically with numeric disabled',
+    (tester) async {
+      final androidSort = sort.resolveAs<AndroidDelegate>();
+      final result = await androidSort.sortWithOptions(
+        [
+          const SortItem(id: '10', value: 'item10'),
+          const SortItem(id: '2', value: 'item2'),
+          const SortItem(id: '1', value: 'item1'),
+        ],
+        numeric: false,
+      );
+      // Lexicographic: item1 < item10 < item2
+      expect(result.map((i) => i.id), ['1', '10', '2']);
+    },
   );
 
   testWidgets('empty list returns empty', (tester) async {

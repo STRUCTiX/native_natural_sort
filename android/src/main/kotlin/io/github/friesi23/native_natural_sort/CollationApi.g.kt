@@ -243,27 +243,49 @@ data class CollationAndroidItem (
  * Request to sort [items] by the collation order of their [value]s.
  *
  * [locale] selects the ICU collation locale.  When omitted, the
- * platform uses its system-default collator.  Returns the
- * [CollationAndroidItem.id]s in collation order.
+ * platform uses its system-default collator.
+ *
+ * [direction] sets sort direction: 0 = ascending (default),
+ * 1 = descending.
+ *
+ * [strength] sets ICU collation strength: 0 = primary,
+ * 1 = secondary, 2 = tertiary (default), 3 = identical.
+ *
+ * [decomposition] sets Unicode normalisation mode: 0 = none,
+ * 1 = canonical (default), 2 = full.
+ *
+ * [numeric] enables natural numeric ordering (default true).
  *
  * Generated class from Pigeon that represents data sent in messages.
  */
 data class CollationAndroidRequest (
   val items: List<CollationAndroidItem>,
-  val locale: String? = null
+  val locale: String? = null,
+  val direction: Long? = null,
+  val strength: Long? = null,
+  val decomposition: Long? = null,
+  val numeric: Boolean? = null
 )
  {
   companion object {
     fun fromList(pigeonVar_list: List<Any?>): CollationAndroidRequest {
       val items = pigeonVar_list[0] as List<CollationAndroidItem>
       val locale = pigeonVar_list[1] as String?
-      return CollationAndroidRequest(items, locale)
+      val direction = pigeonVar_list[2] as Long?
+      val strength = pigeonVar_list[3] as Long?
+      val decomposition = pigeonVar_list[4] as Long?
+      val numeric = pigeonVar_list[5] as Boolean?
+      return CollationAndroidRequest(items, locale, direction, strength, decomposition, numeric)
     }
   }
   fun toList(): List<Any?> {
     return listOf(
       items,
       locale,
+      direction,
+      strength,
+      decomposition,
+      numeric,
     )
   }
   override fun equals(other: Any?): Boolean {
@@ -274,17 +296,21 @@ data class CollationAndroidRequest (
       return true
     }
     val other = other as CollationAndroidRequest
-    return CollationApiPigeonUtils.deepEquals(this.items, other.items) && CollationApiPigeonUtils.deepEquals(this.locale, other.locale)
+    return CollationApiPigeonUtils.deepEquals(this.items, other.items) && CollationApiPigeonUtils.deepEquals(this.locale, other.locale) && CollationApiPigeonUtils.deepEquals(this.direction, other.direction) && CollationApiPigeonUtils.deepEquals(this.strength, other.strength) && CollationApiPigeonUtils.deepEquals(this.decomposition, other.decomposition) && CollationApiPigeonUtils.deepEquals(this.numeric, other.numeric)
   }
 
   override fun hashCode(): Int {
     var result = javaClass.hashCode()
     result = 31 * result + CollationApiPigeonUtils.deepHash(this.items)
     result = 31 * result + CollationApiPigeonUtils.deepHash(this.locale)
+    result = 31 * result + CollationApiPigeonUtils.deepHash(this.direction)
+    result = 31 * result + CollationApiPigeonUtils.deepHash(this.strength)
+    result = 31 * result + CollationApiPigeonUtils.deepHash(this.decomposition)
+    result = 31 * result + CollationApiPigeonUtils.deepHash(this.numeric)
     return result
   }
   override fun toString(): String {
-    return "CollationAndroidRequest(items=$items, locale=$locale)"
+    return "CollationAndroidRequest(items=$items, locale=$locale, direction=$direction, strength=$strength, decomposition=$decomposition, numeric=$numeric)"
   }
 }
 private open class CollationApiPigeonCodec : StandardMessageCodec() {

@@ -178,4 +178,15 @@ class NativeSort {
     if (!_isInitialized) throw StateError('Call init() first');
     return _delegate.sort(items, direction: direction, locale: locale);
   }
+
+  /// Casts the platform delegate to [T].
+  ///
+  /// The caller is responsible for ensuring the platform matches [T];
+  /// a failed cast throws a [TypeError].
+  ///
+  /// ```dart
+  /// final android = sort.resolveAs<AndroidDelegate>();
+  /// await android.sortWithOptions(items, numeric: false);
+  /// ```
+  T resolveAs<T extends PlatformDelegate>() => _delegate as T;
 }

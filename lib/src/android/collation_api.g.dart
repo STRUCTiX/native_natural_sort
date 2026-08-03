@@ -148,17 +148,49 @@ class CollationAndroidItem {
 /// Request to sort [items] by the collation order of their [value]s.
 ///
 /// [locale] selects the ICU collation locale.  When omitted, the
-/// platform uses its system-default collator.  Returns the
-/// [CollationAndroidItem.id]s in collation order.
+/// platform uses its system-default collator.
+///
+/// [direction] sets sort direction: 0 = ascending (default),
+/// 1 = descending.
+///
+/// [strength] sets ICU collation strength: 0 = primary,
+/// 1 = secondary, 2 = tertiary (default), 3 = identical.
+///
+/// [decomposition] sets Unicode normalisation mode: 0 = none,
+/// 1 = canonical (default), 2 = full.
+///
+/// [numeric] enables natural numeric ordering (default true).
 class CollationAndroidRequest {
-  CollationAndroidRequest({required this.items, this.locale});
+  CollationAndroidRequest({
+    required this.items,
+    this.locale,
+    this.direction,
+    this.strength,
+    this.decomposition,
+    this.numeric,
+  });
 
   List<CollationAndroidItem> items;
 
   String? locale;
 
+  int? direction;
+
+  int? strength;
+
+  int? decomposition;
+
+  bool? numeric;
+
   List<Object?> _toList() {
-    return <Object?>[items, locale];
+    return <Object?>[
+      items,
+      locale,
+      direction,
+      strength,
+      decomposition,
+      numeric,
+    ];
   }
 
   Object encode() {
@@ -170,6 +202,10 @@ class CollationAndroidRequest {
     return CollationAndroidRequest(
       items: (result[0]! as List<Object?>).cast<CollationAndroidItem>(),
       locale: result[1] as String?,
+      direction: result[2] as int?,
+      strength: result[3] as int?,
+      decomposition: result[4] as int?,
+      numeric: result[5] as bool?,
     );
   }
 
@@ -182,7 +218,12 @@ class CollationAndroidRequest {
     if (identical(this, other)) {
       return true;
     }
-    return _deepEquals(items, other.items) && _deepEquals(locale, other.locale);
+    return _deepEquals(items, other.items) &&
+        _deepEquals(locale, other.locale) &&
+        _deepEquals(direction, other.direction) &&
+        _deepEquals(strength, other.strength) &&
+        _deepEquals(decomposition, other.decomposition) &&
+        _deepEquals(numeric, other.numeric);
   }
 
   @override
@@ -191,7 +232,7 @@ class CollationAndroidRequest {
 
   @override
   String toString() {
-    return 'CollationAndroidRequest(items: $items, locale: $locale)';
+    return 'CollationAndroidRequest(items: $items, locale: $locale, direction: $direction, strength: $strength, decomposition: $decomposition, numeric: $numeric)';
   }
 }
 

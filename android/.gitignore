@@ -7,3 +7,12 @@
 /build
 /captures
 .cxx
+
+/**/gradle-wrapper.jar
+/**/gradle-wrapper.properties
+/.gradle
+/captures/
+/gradlew
+/gradlew.bat
+/local.properties
+/**/GeneratedPluginRegistrant.java

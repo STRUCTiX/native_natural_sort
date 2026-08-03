@@ -12,81 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import 'src/collation_api.g.dart';
-import 'src/collation_ffi.dart';
-import 'src/collation_ffi_linux.dart';
-import 'src/collation_ffi_windows.dart';
-
-// Re-export Pigeon-generated types so callers only need this import.
-export 'src/collation_api.g.dart' show CollationItem, CollationRequest;
-
-// Re-export the shared pure-Dart collation engine for direct use.
-export 'src/collation_ffi.dart' show IcuCollation;
-
-/// Dart-side API that delegates string collation to the platform's
-/// native Collation API via Pigeon-generated MethodChannel.
-///
-/// Prefer [CollationApi.instance] for production use; construct
-/// directly via `CollationApi(api: ...)` when you need to inject a
-/// custom [CollationHostApi] (e.g. in tests).
-///
-/// Errors (MissingPluginException, PlatformException, etc.) are
-/// propagated to the caller, which should handle graceful fallback.
-class CollationApi {
-  static final instance = CollationApi._();
-
-  final CollationHostApi _api;
-
-  CollationApi._({CollationHostApi? api}) : _api = api ?? CollationHostApi();
-
-  /// Sorts [request.items] by the collation order of their values and
-  /// returns the ids in that order.
-  Future<List<String>> sortStrings(CollationRequest request) =>
-      _api.sortStrings(request);
-}
-
-/// Linux synchronous collation sort via ICU FFI (numeric-aware).
-///
-/// Assumes the engine was resolved at startup.
-List<T> collationSortFfiLinux<T>({
-  required List<T> items,
-  required String Function(T) idOf,
-  required String Function(T) valueOf,
-  bool descending = false,
-  String? locale,
-}) {
-  final c = IcuCollation(IcuCollationLinux().engine(locale));
-  try {
-    return c.sort(
-      items: items,
-      idOf: idOf,
-      valueOf: valueOf,
-      descending: descending,
-    );
-  } finally {
-    c.dispose();
-  }
-}
-
-/// Windows synchronous collation sort via system ICU FFI (numeric-aware).
-///
-/// Assumes the engine was resolved at startup.
-List<T> collationSortFfiWindows<T>({
-  required List<T> items,
-  required String Function(T) idOf,
-  required String Function(T) valueOf,
-  bool descending = false,
-  String? locale,
-}) {
-  final c = IcuCollation(IcuCollationWindows().engine(locale));
-  try {
-    return c.sort(
-      items: items,
-      idOf: idOf,
-      valueOf: valueOf,
-      descending: descending,
-    );
-  } finally {
-    c.dispose();
-  }
-}
+export 'src/android/delegate.dart';
+export 'src/android/sort.dart';
+export 'src/collation_ffi.dart';
+export 'src/delegate.dart';
+export 'src/ios/delegate.dart';
+export 'src/ios/sort.dart';
+export 'src/linux/collation_ffi.dart';
+export 'src/linux/delegate.dart';
+export 'src/linux/sort.dart';
+export 'src/macos/delegate.dart';
+export 'src/macos/sort.dart';
+export 'src/sort.dart';
+export 'src/windows/collation_ffi.dart';
+export 'src/windows/delegate.dart';
+export 'src/windows/sort.dart';

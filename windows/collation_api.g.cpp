@@ -319,33 +319,33 @@ std::string PigeonInternalToString(const ::flutter::EncodableValue& v) {
 }
 
 }  // namespace
-// CollationItem
+// CollationWindowsItem
 
-CollationItem::CollationItem(
+CollationWindowsItem::CollationWindowsItem(
   const std::string& id,
   const std::string& value)
  : id_(id),
     value_(value) {}
 
-const std::string& CollationItem::id() const {
+const std::string& CollationWindowsItem::id() const {
   return id_;
 }
 
-void CollationItem::set_id(std::string_view value_arg) {
+void CollationWindowsItem::set_id(std::string_view value_arg) {
   id_ = value_arg;
 }
 
 
-const std::string& CollationItem::value() const {
+const std::string& CollationWindowsItem::value() const {
   return value_;
 }
 
-void CollationItem::set_value(std::string_view value_arg) {
+void CollationWindowsItem::set_value(std::string_view value_arg) {
   value_ = value_arg;
 }
 
 
-EncodableList CollationItem::ToEncodableList() const {
+EncodableList CollationWindowsItem::ToEncodableList() const {
   EncodableList list;
   list.reserve(2);
   list.push_back(EncodableValue(id_));
@@ -353,22 +353,22 @@ EncodableList CollationItem::ToEncodableList() const {
   return list;
 }
 
-CollationItem CollationItem::FromEncodableList(const EncodableList& list) {
-  CollationItem decoded(
+CollationWindowsItem CollationWindowsItem::FromEncodableList(const EncodableList& list) {
+  CollationWindowsItem decoded(
     std::get<std::string>(list[0]),
     std::get<std::string>(list[1]));
   return decoded;
 }
 
-bool CollationItem::operator==(const CollationItem& other) const {
+bool CollationWindowsItem::operator==(const CollationWindowsItem& other) const {
   return PigeonInternalDeepEquals(id_, other.id_) && PigeonInternalDeepEquals(value_, other.value_);
 }
 
-bool CollationItem::operator!=(const CollationItem& other) const {
+bool CollationWindowsItem::operator!=(const CollationWindowsItem& other) const {
   return !(*this == other);
 }
 
-size_t CollationItem::Hash() const {
+size_t CollationWindowsItem::Hash() const {
   size_t result = 1;
   result = result * 31 + PigeonInternalDeepHash(id_);
   result = result * 31 + PigeonInternalDeepHash(value_);
@@ -377,8 +377,8 @@ size_t CollationItem::Hash() const {
 
 std::ostream& operator<<(
   std::ostream& os,
-  const CollationItem& obj) {
-  os << "CollationItem(";
+  const CollationWindowsItem& obj) {
+  os << "CollationWindowsItem(";
   os << "id: ";
   os << PigeonInternalToString(obj.id_);
   os << ", value: ";
@@ -387,44 +387,44 @@ std::ostream& operator<<(
   return os;
 }
 
-size_t PigeonInternalDeepHash(const CollationItem& v) {
+size_t PigeonInternalDeepHash(const CollationWindowsItem& v) {
   return v.Hash();
 }
 
-// CollationRequest
+// CollationWindowsRequest
 
-CollationRequest::CollationRequest(const EncodableList& items)
+CollationWindowsRequest::CollationWindowsRequest(const EncodableList& items)
  : items_(items) {}
 
-CollationRequest::CollationRequest(
+CollationWindowsRequest::CollationWindowsRequest(
   const EncodableList& items,
   const std::string* locale)
  : items_(items),
     locale_(locale ? std::optional<std::string>(*locale) : std::nullopt) {}
 
-const EncodableList& CollationRequest::items() const {
+const EncodableList& CollationWindowsRequest::items() const {
   return items_;
 }
 
-void CollationRequest::set_items(const EncodableList& value_arg) {
+void CollationWindowsRequest::set_items(const EncodableList& value_arg) {
   items_ = value_arg;
 }
 
 
-const std::string* CollationRequest::locale() const {
+const std::string* CollationWindowsRequest::locale() const {
   return locale_ ? &(*locale_) : nullptr;
 }
 
-void CollationRequest::set_locale(const std::string_view* value_arg) {
+void CollationWindowsRequest::set_locale(const std::string_view* value_arg) {
   locale_ = value_arg ? std::optional<std::string>(*value_arg) : std::nullopt;
 }
 
-void CollationRequest::set_locale(std::string_view value_arg) {
+void CollationWindowsRequest::set_locale(std::string_view value_arg) {
   locale_ = value_arg;
 }
 
 
-EncodableList CollationRequest::ToEncodableList() const {
+EncodableList CollationWindowsRequest::ToEncodableList() const {
   EncodableList list;
   list.reserve(2);
   list.push_back(EncodableValue(items_));
@@ -432,8 +432,8 @@ EncodableList CollationRequest::ToEncodableList() const {
   return list;
 }
 
-CollationRequest CollationRequest::FromEncodableList(const EncodableList& list) {
-  CollationRequest decoded(
+CollationWindowsRequest CollationWindowsRequest::FromEncodableList(const EncodableList& list) {
+  CollationWindowsRequest decoded(
     std::get<EncodableList>(list[0]));
   auto& encodable_locale = list[1];
   if (!encodable_locale.IsNull()) {
@@ -442,15 +442,15 @@ CollationRequest CollationRequest::FromEncodableList(const EncodableList& list) 
   return decoded;
 }
 
-bool CollationRequest::operator==(const CollationRequest& other) const {
+bool CollationWindowsRequest::operator==(const CollationWindowsRequest& other) const {
   return PigeonInternalDeepEquals(items_, other.items_) && PigeonInternalDeepEquals(locale_, other.locale_);
 }
 
-bool CollationRequest::operator!=(const CollationRequest& other) const {
+bool CollationWindowsRequest::operator!=(const CollationWindowsRequest& other) const {
   return !(*this == other);
 }
 
-size_t CollationRequest::Hash() const {
+size_t CollationWindowsRequest::Hash() const {
   size_t result = 1;
   result = result * 31 + PigeonInternalDeepHash(items_);
   result = result * 31 + PigeonInternalDeepHash(locale_);
@@ -459,8 +459,8 @@ size_t CollationRequest::Hash() const {
 
 std::ostream& operator<<(
   std::ostream& os,
-  const CollationRequest& obj) {
-  os << "CollationRequest(";
+  const CollationWindowsRequest& obj) {
+  os << "CollationWindowsRequest(";
   os << "items: ";
   os << PigeonInternalToString(obj.items_);
   os << ", locale: ";
@@ -474,7 +474,7 @@ std::ostream& operator<<(
   return os;
 }
 
-size_t PigeonInternalDeepHash(const CollationRequest& v) {
+size_t PigeonInternalDeepHash(const CollationWindowsRequest& v) {
   return v.Hash();
 }
 
@@ -486,10 +486,10 @@ EncodableValue PigeonInternalCodecSerializer::ReadValueOfType(
   ::flutter::ByteStreamReader* stream) const {
   switch (type) {
     case 129: {
-        return CustomEncodableValue(CollationItem::FromEncodableList(std::get<EncodableList>(ReadValue(stream))));
+        return CustomEncodableValue(CollationWindowsItem::FromEncodableList(std::get<EncodableList>(ReadValue(stream))));
       }
     case 130: {
-        return CustomEncodableValue(CollationRequest::FromEncodableList(std::get<EncodableList>(ReadValue(stream))));
+        return CustomEncodableValue(CollationWindowsRequest::FromEncodableList(std::get<EncodableList>(ReadValue(stream))));
       }
     default:
       return ::flutter::StandardCodecSerializer::ReadValueOfType(type, stream);
@@ -500,39 +500,39 @@ void PigeonInternalCodecSerializer::WriteValue(
   const EncodableValue& value,
   ::flutter::ByteStreamWriter* stream) const {
   if (const CustomEncodableValue* custom_value = std::get_if<CustomEncodableValue>(&value)) {
-    if (custom_value->type() == typeid(CollationItem)) {
+    if (custom_value->type() == typeid(CollationWindowsItem)) {
       stream->WriteByte(129);
-      WriteValue(EncodableValue(std::any_cast<CollationItem>(*custom_value).ToEncodableList()), stream);
+      WriteValue(EncodableValue(std::any_cast<CollationWindowsItem>(*custom_value).ToEncodableList()), stream);
       return;
     }
-    if (custom_value->type() == typeid(CollationRequest)) {
+    if (custom_value->type() == typeid(CollationWindowsRequest)) {
       stream->WriteByte(130);
-      WriteValue(EncodableValue(std::any_cast<CollationRequest>(*custom_value).ToEncodableList()), stream);
+      WriteValue(EncodableValue(std::any_cast<CollationWindowsRequest>(*custom_value).ToEncodableList()), stream);
       return;
     }
   }
   ::flutter::StandardCodecSerializer::WriteValue(value, stream);
 }
 
-/// The codec used by CollationHostApi.
-const ::flutter::StandardMessageCodec& CollationHostApi::GetCodec() {
+/// The codec used by CollationWindowsHostApi.
+const ::flutter::StandardMessageCodec& CollationWindowsHostApi::GetCodec() {
   return ::flutter::StandardMessageCodec::GetInstance(&PigeonInternalCodecSerializer::GetInstance());
 }
 
-// Sets up an instance of `CollationHostApi` to handle messages through the `binary_messenger`.
-void CollationHostApi::SetUp(
+// Sets up an instance of `CollationWindowsHostApi` to handle messages through the `binary_messenger`.
+void CollationWindowsHostApi::SetUp(
   ::flutter::BinaryMessenger* binary_messenger,
-  CollationHostApi* api) {
-  CollationHostApi::SetUp(binary_messenger, api, "");
+  CollationWindowsHostApi* api) {
+  CollationWindowsHostApi::SetUp(binary_messenger, api, "");
 }
 
-void CollationHostApi::SetUp(
+void CollationWindowsHostApi::SetUp(
   ::flutter::BinaryMessenger* binary_messenger,
-  CollationHostApi* api,
+  CollationWindowsHostApi* api,
   const std::string& message_channel_suffix) {
   const std::string prepended_suffix = message_channel_suffix.length() > 0 ? std::string(".") + message_channel_suffix : "";
   {
-    BasicMessageChannel<> channel(binary_messenger, "dev.flutter.pigeon.native_natural_sort.CollationHostApi.sortStrings" + prepended_suffix, &GetCodec());
+    BasicMessageChannel<> channel(binary_messenger, "dev.flutter.pigeon.native_natural_sort.CollationWindowsHostApi.sort" + prepended_suffix, &GetCodec());
     if (api != nullptr) {
       channel.SetMessageHandler([api](const EncodableValue& message, const ::flutter::MessageReply<EncodableValue>& reply) {
         try {
@@ -542,8 +542,8 @@ void CollationHostApi::SetUp(
             reply(WrapError("request_arg unexpectedly null."));
             return;
           }
-          const auto& request_arg = std::any_cast<const CollationRequest&>(std::get<CustomEncodableValue>(encodable_request_arg));
-          ErrorOr<EncodableList> output = api->SortStrings(request_arg);
+          const auto& request_arg = std::any_cast<const CollationWindowsRequest&>(std::get<CustomEncodableValue>(encodable_request_arg));
+          ErrorOr<EncodableList> output = api->Sort(request_arg);
           if (output.has_error()) {
             reply(WrapError(output.error()));
             return;
@@ -561,7 +561,7 @@ void CollationHostApi::SetUp(
   }
 }
 
-EncodableValue CollationHostApi::WrapError(std::string_view error_message) {
+EncodableValue CollationWindowsHostApi::WrapError(std::string_view error_message) {
   return EncodableValue(EncodableList{
     EncodableValue(std::string(error_message)),
     EncodableValue("Error"),
@@ -569,7 +569,7 @@ EncodableValue CollationHostApi::WrapError(std::string_view error_message) {
   });
 }
 
-EncodableValue CollationHostApi::WrapError(const FlutterError& error) {
+EncodableValue CollationWindowsHostApi::WrapError(const FlutterError& error) {
   return EncodableValue(EncodableList{
     EncodableValue(error.code()),
     EncodableValue(error.message()),

@@ -11,7 +11,7 @@ void NativeNaturalSortPlugin::RegisterWithRegistrar(
     flutter::PluginRegistrarWindows *registrar) {
   auto plugin = std::make_unique<NativeNaturalSortPlugin>();
 
-  CollationHostApi::SetUp(registrar->messenger(), plugin->collation_plugin_.get());
+  CollationWindowsHostApi::SetUp(registrar->messenger(), plugin->collation_plugin_.get());
 
   registrar->AddPlugin(std::move(plugin));
 }

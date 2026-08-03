@@ -14,39 +14,21 @@
 
 import 'dart:ffi';
 
-import 'package:flutter/foundation.dart';
+import '../collation_ffi.dart';
 
-import 'collation_ffi.dart';
-
-/// Windows ICU collation resolver (singleton).
-///
-/// Resolves the OS-bundled ICU DLL eagerly at app startup ([init]); sort
-/// callers branch on [isAvailable] rather than catching load exceptions.
-/// Windows exports unversioned symbols — no version probing needed.  Use
-/// [engine] to build a locale-specific collator.
-class IcuCollationWindows {
-  static IcuCollationWindows? _instance;
-
-  factory IcuCollationWindows() => _instance ??= IcuCollationWindows._();
-
-  IcuCollationWindows._();
-
+class WindowsCollationLoader implements CollationLibraryLoader {
   /// Windows system ICU candidates, most recent first.
   static const _dllCandidates = ['icu.dll', 'icuin.dll'];
 
   DynamicLibrary? _lib;
   bool _available = false;
 
-  /// Whether a native collation engine was resolved successfully.
-  /// Safe to call on any platform — returns `false` when [init] was
-  /// never called or failed, without creating the singleton.
-  static bool get available => _instance?._available ?? false;
+  WindowsCollationLoader();
 
-  /// Whether the OS-bundled ICU DLL was resolved successfully.
+  @override
   bool get isAvailable => _available;
 
-  /// Resolves the OS-bundled ICU DLL once at app startup; failure is
-  /// logged and leaves [isAvailable] `false` for conditional fallback.
+  @override
   Future<void> init() async {
     if (_available) return;
     for (final candidate in _dllCandidates) {
@@ -63,9 +45,15 @@ class IcuCollationWindows {
     // Windows system ICU unavailable — natural sort falls back to platform.
   }
 
-  /// Builds a collator engine for [localeName] from the resolved library.
+  @override
   IcuCollationEngine engine(String? localeName) =>
-      _IcuCollationWindowsEngine(_requireLib(), '', localeName);
+      WindowsCollationEngine(_requireLib(), '', localeName);
+
+  @override
+  void dispose() {
+    _lib = null;
+    _available = false;
+  }
 
   /// Verifies the unversioned ICU entry symbols are exported by [lib].
   bool _hasSymbols(DynamicLibrary lib) {
@@ -83,22 +71,13 @@ class IcuCollationWindows {
     final lib = _lib;
     if (lib == null) {
       throw StateError(
-        'IcuCollationWindows not resolved; call IcuCollationWindows().init() '
-        'first',
+        'WindowsCollationLoader not resolved; call init() first',
       );
     }
     return lib;
   }
-
-  /// Resets the resolved state (tests only).
-  @visibleForTesting
-  void resetForTest() {
-    _lib = null;
-    _available = false;
-  }
 }
 
-/// Windows ICU collator backed by the resolved [IcuCollationWindows] library.
-final class _IcuCollationWindowsEngine extends IcuCollationBase {
-  _IcuCollationWindowsEngine(super.lib, super.suffix, super.localeName);
+final class WindowsCollationEngine extends CollationEngineBase {
+  WindowsCollationEngine(super.lib, super.suffix, super.localeName);
 }

@@ -8,8 +8,8 @@
 
 namespace native_natural_sort {
 
-/// Windows implementation of CollationHostApi using CompareStringEx.
-class CollationPlugin : public CollationHostApi {
+/// Windows implementation of CollationWindowsHostApi using CompareStringEx.
+class CollationPlugin : public CollationWindowsHostApi {
  public:
   CollationPlugin() = default;
 
@@ -18,8 +18,8 @@ class CollationPlugin : public CollationHostApi {
   /// Uses the locale from the request when provided, otherwise falls
   /// back to the user's default locale. Numeric values within strings
   /// are sorted naturally (SORT_DIGITSASNUMBERS).
-  ErrorOr<::flutter::EncodableList> SortStrings(
-      const CollationRequest& request) override;
+  ErrorOr<::flutter::EncodableList> Sort(
+      const CollationWindowsRequest& request) override;
 
  private:
   /// Converts a UTF-8 string to a wide string (UTF-16).
@@ -27,7 +27,7 @@ class CollationPlugin : public CollationHostApi {
 
   /// Extracts (id, value) pairs from the request items.
   static std::vector<std::pair<std::string, std::string>> ExtractItems(
-      const CollationRequest& request);
+      const CollationWindowsRequest& request);
 };
 
 }  // namespace native_natural_sort

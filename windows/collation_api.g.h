@@ -49,7 +49,7 @@ template<class T> class ErrorOr {
   const FlutterError& error() const { return std::get<FlutterError>(v_); };
 
  private:
-  friend class CollationHostApi;
+  friend class CollationWindowsHostApi;
   ErrorOr() = default;
   T TakeValue() && { return std::get<T>(std::move(v_)); }
 
@@ -61,10 +61,10 @@ template<class T> class ErrorOr {
 // An id/value pair for collation sorting.
 //
 // Generated class from Pigeon that represents data sent in messages.
-class CollationItem {
+class CollationWindowsItem {
  public:
   // Constructs an object setting all fields.
-  explicit CollationItem(
+  explicit CollationWindowsItem(
     const std::string& id,
     const std::string& value);
 
@@ -76,16 +76,16 @@ class CollationItem {
   const std::string& value() const;
   void set_value(std::string_view value_arg);
 
-  bool operator==(const CollationItem& other) const;
-  bool operator!=(const CollationItem& other) const;
+  bool operator==(const CollationWindowsItem& other) const;
+  bool operator!=(const CollationWindowsItem& other) const;
   /// Returns a hash code value for the object. This method is supported for the benefit of hash tables.
   size_t Hash() const;
   /// Stream output operator for formatted string representation.
-  friend std::ostream& operator<<(std::ostream& os, const CollationItem& obj);
+  friend std::ostream& operator<<(std::ostream& os, const CollationWindowsItem& obj);
  private:
-  static CollationItem FromEncodableList(const ::flutter::EncodableList& list);
+  static CollationWindowsItem FromEncodableList(const ::flutter::EncodableList& list);
   ::flutter::EncodableList ToEncodableList() const;
-  friend class CollationHostApi;
+  friend class CollationWindowsHostApi;
   friend class PigeonInternalCodecSerializer;
   std::string id_;
   std::string value_;
@@ -94,21 +94,18 @@ class CollationItem {
 
 // Request to sort [items] by the collation order of their [value]s.
 //
-// [locale] selects the ICU collation locale (Android) or is currently
-// unused (iOS/macOS use the system locale via
-// `localizedStandardCompare`).
-//
-// When [locale] is omitted, the platform uses its system-default
-// collator. Returns the [CollationItem.id]s in collation order.
+// [locale] selects the ICU collation locale.  When omitted, the
+// platform uses its system-default collator.  Returns the
+// [CollationWindowsItem.id]s in collation order.
 //
 // Generated class from Pigeon that represents data sent in messages.
-class CollationRequest {
+class CollationWindowsRequest {
  public:
   // Constructs an object setting all non-nullable fields.
-  explicit CollationRequest(const ::flutter::EncodableList& items);
+  explicit CollationWindowsRequest(const ::flutter::EncodableList& items);
 
   // Constructs an object setting all fields.
-  explicit CollationRequest(
+  explicit CollationWindowsRequest(
     const ::flutter::EncodableList& items,
     const std::string* locale);
 
@@ -119,16 +116,16 @@ class CollationRequest {
   void set_locale(const std::string_view* value_arg);
   void set_locale(std::string_view value_arg);
 
-  bool operator==(const CollationRequest& other) const;
-  bool operator!=(const CollationRequest& other) const;
+  bool operator==(const CollationWindowsRequest& other) const;
+  bool operator!=(const CollationWindowsRequest& other) const;
   /// Returns a hash code value for the object. This method is supported for the benefit of hash tables.
   size_t Hash() const;
   /// Stream output operator for formatted string representation.
-  friend std::ostream& operator<<(std::ostream& os, const CollationRequest& obj);
+  friend std::ostream& operator<<(std::ostream& os, const CollationWindowsRequest& obj);
  private:
-  static CollationRequest FromEncodableList(const ::flutter::EncodableList& list);
+  static CollationWindowsRequest FromEncodableList(const ::flutter::EncodableList& list);
   ::flutter::EncodableList ToEncodableList() const;
-  friend class CollationHostApi;
+  friend class CollationWindowsHostApi;
   friend class PigeonInternalCodecSerializer;
   ::flutter::EncodableList items_;
   std::optional<std::string> locale_;
@@ -155,29 +152,29 @@ class PigeonInternalCodecSerializer : public ::flutter::StandardCodecSerializer 
 // Platform-native string collation.
 //
 // Generated interface from Pigeon that represents a handler of messages from Flutter.
-class CollationHostApi {
+class CollationWindowsHostApi {
  public:
-  CollationHostApi(const CollationHostApi&) = delete;
-  CollationHostApi& operator=(const CollationHostApi&) = delete;
-  virtual ~CollationHostApi() {}
+  CollationWindowsHostApi(const CollationWindowsHostApi&) = delete;
+  CollationWindowsHostApi& operator=(const CollationWindowsHostApi&) = delete;
+  virtual ~CollationWindowsHostApi() {}
   // Returns [request.items]' ids reordered so that their corresponding
   // values are in collation order.
-  virtual ErrorOr<::flutter::EncodableList> SortStrings(const CollationRequest& request) = 0;
+  virtual ErrorOr<::flutter::EncodableList> Sort(const CollationWindowsRequest& request) = 0;
 
-  // The codec used by CollationHostApi.
+  // The codec used by CollationWindowsHostApi.
   static const ::flutter::StandardMessageCodec& GetCodec();
-  // Sets up an instance of `CollationHostApi` to handle messages through the `binary_messenger`.
+  // Sets up an instance of `CollationWindowsHostApi` to handle messages through the `binary_messenger`.
   static void SetUp(
     ::flutter::BinaryMessenger* binary_messenger,
-    CollationHostApi* api);
+    CollationWindowsHostApi* api);
   static void SetUp(
     ::flutter::BinaryMessenger* binary_messenger,
-    CollationHostApi* api,
+    CollationWindowsHostApi* api,
     const std::string& message_channel_suffix);
   static ::flutter::EncodableValue WrapError(std::string_view error_message);
   static ::flutter::EncodableValue WrapError(const FlutterError& error);
  protected:
-  CollationHostApi() = default;
+  CollationWindowsHostApi() = default;
 };
 }  // namespace native_natural_sort
 #endif  // PIGEON_COLLATION_API_G_H_

@@ -22,9 +22,27 @@ ANDROID_DIR := $(EXAMPLE_DIR)/android
 ANDROID_TEST_TASK := :$(PROJECT_NAME):testDebugUnitTest
 ANDROID_INTEGRATION_TASK := :$(PROJECT_NAME):connectedAndroidTest
 
+# Test mode flags
+#   make test          → human-readable (default)
+#   make test CI=1     → CI-friendly (GitHub reporter / plain console)
+CI ?= 0
+
+ifeq ($(CI),1)
+FLUTTER_TFLAGS = --reporter=github
+KOTLIN_TFLAGS = --console=plain
+NATIVE_TFLAGS = $(if $(filter Windows_NT,$(OS)),--gtest_color=no,)
+else
+FLUTTER_TFLAGS =
+KOTLIN_TFLAGS =
+NATIVE_TFLAGS =
+endif
+
 .PHONY: help format fix analyze test \
         test-android test-ios test-macos test-windows test-linux \
-        gen
+        gen aio
+
+# Internal targets
+.PHONY: _test-dart _test-kotlin _test-native
 
 help:
 	@echo "native_natural_sort — automation entrypoints"
@@ -34,7 +52,9 @@ help:
 	@echo "  fix             Apply Dart fixes then format"
 	@echo "  analyze         Run Dart static analysis"
 	@echo "  gen             Regenerate Pigeon platform-channel code"
-	@echo "  test            Dart tests + Kotlin unit tests (no device needed)"
+	@echo "  test            Dart + Kotlin + native unit tests"
+	@echo "                  (make test CI=1 for CI-friendly output)"
+	@echo "  aio             gen → format → fix → analyze → gen → test"
 	$(BLANK_LINE)
 	@echo "Platform-specific tests (require SDK / device):"
 	@echo "  test-android    Kotlin + Android integration tests"
@@ -54,21 +74,49 @@ analyze:
 	@$(DART) analyze lib test
 
 gen:
-	@$(DART) run pigeon --input pigeons/collation.dart
+	@$(DART) run pigeon --input pigeons/collation_android.dart
+	@$(DART) run pigeon --input pigeons/collation_ios.dart
+	@$(DART) run pigeon --input pigeons/collation_macos.dart
+	@$(DART) run pigeon --input pigeons/collation_windows.dart
 
-# Default test suite: Dart + Kotlin unit tests (runs on any dev machine
-# with the Android SDK installed; no Android device/emulator needed).
-test:
+aio: gen format fix analyze gen test
+
+_test-dart:
 	@echo "=== Dart tests ==="
-	@$(FLUTTER) test
-	@$(BLANK_LINE)
+	@$(FLUTTER) test $(FLUTTER_TFLAGS)
+
+_test-kotlin:
 	@echo "=== Kotlin unit tests (JVM, no device) ==="
-	@cd $(ANDROID_DIR) && $(GRADLEW) $(ANDROID_TEST_TASK) --console=plain
+	@cd $(ANDROID_DIR) && $(GRADLEW) $(ANDROID_TEST_TASK) $(KOTLIN_TFLAGS)
+
+_test-native:
+ifeq ($(OS),Windows_NT)
+	@echo "=== Windows C++ tests ==="
+	@cd $(EXAMPLE_DIR) && $(FLUTTER) build windows --debug
+	@cd $(EXAMPLE_DIR)/build/windows/x64/debug/plugins/$(PROJECT_NAME) \
+		&& $(PROJECT_NAME)_test.exe $(NATIVE_TFLAGS)
+else
+	@UNAME_S=$$(uname -s); \
+	if [ "$$UNAME_S" = "Linux" ]; then \
+		echo "=== Linux C++ tests ==="; \
+		cd $(EXAMPLE_DIR) && $(FLUTTER) build linux --debug && \
+		cd build/linux/x64/debug/plugins/$(PROJECT_NAME) \
+			&& ctest --output-on-failure $(NATIVE_TFLAGS); \
+	else \
+		echo "=== no platform-native tests for $$UNAME_S, skipping ==="; \
+	fi
+endif
+
+test:
+	@$(SUBMAKE) _test-dart
+	@$(BLANK_LINE)
+	@$(SUBMAKE) _test-kotlin
+	@$(BLANK_LINE)
+	@$(SUBMAKE) _test-native
 
 # Kotlin unit tests + Android integration tests + Flutter integration tests.
 test-android:
-	@echo "=== Kotlin unit tests ==="
-	@cd $(ANDROID_DIR) && $(GRADLEW) $(ANDROID_TEST_TASK) --console=plain
+	@$(SUBMAKE) _test-kotlin
 	@$(BLANK_LINE)
 	@echo "=== Android integration tests ==="
 	@cd $(ANDROID_DIR) && $(GRADLEW) $(ANDROID_INTEGRATION_TASK) --console=plain
@@ -84,17 +132,10 @@ test-ios:
 test-macos:
 	@cd $(EXAMPLE_DIR) && $(FLUTTER) test integration_test -d macos
 
-# Windows C++ Google Test — build the example first so CMake configures
-# the test target, then run the test binary directly.
+# Windows C++ Google Test (standalone).
 test-windows:
-	@echo "=== Windows C++ tests ==="
-	@cd $(EXAMPLE_DIR) && $(FLUTTER) build windows --debug
-	@cd $(EXAMPLE_DIR)/build/windows/x64/debug/plugins/$(PROJECT_NAME) \
-		&& $(PROJECT_NAME)_test.exe
+	@$(SUBMAKE) _test-native
 
-# Linux C++ Google Test — build the example first, then run ctest.
+# Linux C++ Google Test (standalone).
 test-linux:
-	@echo "=== Linux C++ tests ==="
-	@cd $(EXAMPLE_DIR) && $(FLUTTER) build linux --debug
-	@cd $(EXAMPLE_DIR)/build/linux/x64/debug/plugins/$(PROJECT_NAME) \
-		&& ctest --output-on-failure
+	@$(SUBMAKE) _test-native

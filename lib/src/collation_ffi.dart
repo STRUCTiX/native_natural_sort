@@ -24,13 +24,32 @@ typedef CollationCompareFn = int Function(String a, String b);
 
 /// Contract for platform-native ICU collation engines.
 ///
-/// Implemented by [IcuCollationBase] subclasses ([IcuCollationLinux] on
-/// Linux, [IcuCollationWindows] on Windows) and consumed by [IcuCollation].
+/// Implemented by [CollationEngineBase] subclasses and consumed by
+/// [IcuCollation].
 abstract interface class IcuCollationEngine {
   /// Compares [a] and [b] by collation order.
   int compare(String a, String b);
 
   /// Releases native resources.  No-op for test doubles.
+  void dispose();
+}
+
+/// Contract for resolving a platform-native ICU library and producing
+/// collation engines.
+///
+/// Implemented by `LinuxCollationLoader` (Linux) and
+/// `WindowsCollationLoader` (Windows).
+abstract interface class CollationLibraryLoader {
+  /// Whether the native ICU library was resolved successfully.
+  bool get isAvailable;
+
+  /// Resolves the native ICU library (async, cache-aware).
+  Future<void> init();
+
+  /// Builds a collator engine for [localeName] from the resolved library.
+  IcuCollationEngine engine(String? localeName);
+
+  /// Releases native resources.
   void dispose();
 }
 
@@ -45,8 +64,8 @@ abstract interface class IcuCollationEngine {
 /// UCOL_NUMERIC_COLLATION attribute afterwards has no effect — and sort
 /// keys cannot represent numeric order ("2"/"10" collapse to equal keys),
 /// hence direct [ucol_strcoll] comparison.
-class IcuCollationBase implements IcuCollationEngine {
-  IcuCollationBase(DynamicLibrary lib, String suffix, String? localeName) {
+abstract class CollationEngineBase implements IcuCollationEngine {
+  CollationEngineBase(DynamicLibrary lib, String suffix, String? localeName) {
     _ucolOpen = lib
         .lookupFunction<
           Pointer<Void> Function(Pointer<Uint8>, Pointer<Int32>),

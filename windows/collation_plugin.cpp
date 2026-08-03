@@ -35,12 +35,12 @@ std::wstring CollationPlugin::ToWide(const std::string &utf8) {
 }
 
 std::vector<std::pair<std::string, std::string>>
-CollationPlugin::ExtractItems(const CollationRequest &request) {
+CollationPlugin::ExtractItems(const CollationWindowsRequest &request) {
   std::vector<std::pair<std::string, std::string>> items;
   const auto &raw = request.items();
   items.reserve(raw.size());
   for (const auto &encodable : raw) {
-    const auto &item = std::any_cast<const CollationItem &>(
+    const auto &item = std::any_cast<const CollationWindowsItem &>(
         std::get<::flutter::CustomEncodableValue>(encodable));
     items.emplace_back(item.id(), item.value());
   }
@@ -48,9 +48,10 @@ CollationPlugin::ExtractItems(const CollationRequest &request) {
 }
 
 ErrorOr<::flutter::EncodableList>
-CollationPlugin::SortStrings(const CollationRequest &request) {
+CollationPlugin::Sort(const CollationWindowsRequest &request) {
   struct SortEntry {
     std::string id;
+    std::string value;
     std::wstring wide_value;
   };
 
@@ -59,19 +60,16 @@ CollationPlugin::SortStrings(const CollationRequest &request) {
   entries.reserve(raw.size());
   for (auto &item : raw) {
     entries.push_back(
-        {std::move(item.first), ToWide(item.second)});
+        {std::move(item.first), item.second, ToWide(item.second)});
   }
 
   // Resolve locale: use requested locale when available, otherwise
-  // fall back to the user's default locale.
+  // fall back to the user's default locale.  Locale is already
+  // normalized to BCP-47 by the Dart layer.
   const auto *locale_str = request.locale();
   std::wstring locale_name;
   if (locale_str && !locale_str->empty()) {
-    // Dart localeName uses underscores (zh_Hans_CN); BCP-47 / Windows
-    // expects hyphens (zh-Hans-CN).  Normalize to BCP-47 here.
-    std::string bcp47 = *locale_str;
-    std::replace(bcp47.begin(), bcp47.end(), '_', '-');
-    locale_name = ToWide(bcp47);
+    locale_name = ToWide(*locale_str);
   }
   const wchar_t *effective_locale =
       locale_name.empty() ? LOCALE_NAME_USER_DEFAULT : locale_name.c_str();
@@ -92,7 +90,8 @@ CollationPlugin::SortStrings(const CollationRequest &request) {
   ::flutter::EncodableList result;
   result.reserve(entries.size());
   for (const auto &e : entries) {
-    result.push_back(::flutter::EncodableValue(e.id));
+    result.push_back(::flutter::CustomEncodableValue(
+        CollationWindowsItem(e.id, e.value)));
   }
   return result;
 }

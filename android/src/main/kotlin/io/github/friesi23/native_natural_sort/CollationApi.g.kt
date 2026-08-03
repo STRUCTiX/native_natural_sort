@@ -197,7 +197,7 @@ class CollationFlutterError (
  *
  * Generated class from Pigeon that represents data sent in messages.
  */
-data class CollationItem (
+data class CollationAndroidItem (
   /** Opaque identifier returned in the sorted result. */
   val id: String,
   /** String whose collation order determines the sort position. */
@@ -205,10 +205,10 @@ data class CollationItem (
 )
  {
   companion object {
-    fun fromList(pigeonVar_list: List<Any?>): CollationItem {
+    fun fromList(pigeonVar_list: List<Any?>): CollationAndroidItem {
       val id = pigeonVar_list[0] as String
       val value = pigeonVar_list[1] as String
-      return CollationItem(id, value)
+      return CollationAndroidItem(id, value)
     }
   }
   fun toList(): List<Any?> {
@@ -224,7 +224,7 @@ data class CollationItem (
     if (this === other) {
       return true
     }
-    val other = other as CollationItem
+    val other = other as CollationAndroidItem
     return CollationApiPigeonUtils.deepEquals(this.id, other.id) && CollationApiPigeonUtils.deepEquals(this.value, other.value)
   }
 
@@ -235,32 +235,29 @@ data class CollationItem (
     return result
   }
   override fun toString(): String {
-    return "CollationItem(id=$id, value=$value)"
+    return "CollationAndroidItem(id=$id, value=$value)"
   }
 }
 
 /**
  * Request to sort [items] by the collation order of their [value]s.
  *
- * [locale] selects the ICU collation locale (Android) or is currently
- * unused (iOS/macOS use the system locale via
- * `localizedStandardCompare`).
- *
- * When [locale] is omitted, the platform uses its system-default
- * collator. Returns the [CollationItem.id]s in collation order.
+ * [locale] selects the ICU collation locale.  When omitted, the
+ * platform uses its system-default collator.  Returns the
+ * [CollationAndroidItem.id]s in collation order.
  *
  * Generated class from Pigeon that represents data sent in messages.
  */
-data class CollationRequest (
-  val items: List<CollationItem>,
+data class CollationAndroidRequest (
+  val items: List<CollationAndroidItem>,
   val locale: String? = null
 )
  {
   companion object {
-    fun fromList(pigeonVar_list: List<Any?>): CollationRequest {
-      val items = pigeonVar_list[0] as List<CollationItem>
+    fun fromList(pigeonVar_list: List<Any?>): CollationAndroidRequest {
+      val items = pigeonVar_list[0] as List<CollationAndroidItem>
       val locale = pigeonVar_list[1] as String?
-      return CollationRequest(items, locale)
+      return CollationAndroidRequest(items, locale)
     }
   }
   fun toList(): List<Any?> {
@@ -276,7 +273,7 @@ data class CollationRequest (
     if (this === other) {
       return true
     }
-    val other = other as CollationRequest
+    val other = other as CollationAndroidRequest
     return CollationApiPigeonUtils.deepEquals(this.items, other.items) && CollationApiPigeonUtils.deepEquals(this.locale, other.locale)
   }
 
@@ -287,7 +284,7 @@ data class CollationRequest (
     return result
   }
   override fun toString(): String {
-    return "CollationRequest(items=$items, locale=$locale)"
+    return "CollationAndroidRequest(items=$items, locale=$locale)"
   }
 }
 private open class CollationApiPigeonCodec : StandardMessageCodec() {
@@ -295,12 +292,12 @@ private open class CollationApiPigeonCodec : StandardMessageCodec() {
     return when (type) {
       129.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          CollationItem.fromList(it)
+          CollationAndroidItem.fromList(it)
         }
       }
       130.toByte() -> {
         return (readValue(buffer) as? List<Any?>)?.let {
-          CollationRequest.fromList(it)
+          CollationAndroidRequest.fromList(it)
         }
       }
       else -> super.readValueOfType(type, buffer)
@@ -308,11 +305,11 @@ private open class CollationApiPigeonCodec : StandardMessageCodec() {
   }
   override fun writeValue(stream: ByteArrayOutputStream, value: Any?)   {
     when (value) {
-      is CollationItem -> {
+      is CollationAndroidItem -> {
         stream.write(129)
         writeValue(stream, value.toList())
       }
-      is CollationRequest -> {
+      is CollationAndroidRequest -> {
         stream.write(130)
         writeValue(stream, value.toList())
       }
@@ -326,30 +323,30 @@ private open class CollationApiPigeonCodec : StandardMessageCodec() {
  *
  * Generated interface from Pigeon that represents a handler of messages from Flutter.
  */
-interface CollationHostApi {
+interface CollationAndroidHostApi {
   /**
    * Returns [request.items]' ids reordered so that their corresponding
    * values are in collation order.
    */
-  fun sortStrings(request: CollationRequest): List<String>
+  fun sort(request: CollationAndroidRequest): List<CollationAndroidItem>
 
   companion object {
-    /** The codec used by CollationHostApi. */
+    /** The codec used by CollationAndroidHostApi. */
     val codec: MessageCodec<Any?> by lazy {
       CollationApiPigeonCodec()
     }
-    /** Sets up an instance of `CollationHostApi` to handle messages through the `binaryMessenger`. */
+    /** Sets up an instance of `CollationAndroidHostApi` to handle messages through the `binaryMessenger`. */
     @JvmOverloads
-    fun setUp(binaryMessenger: BinaryMessenger, api: CollationHostApi?, messageChannelSuffix: String = "") {
+    fun setUp(binaryMessenger: BinaryMessenger, api: CollationAndroidHostApi?, messageChannelSuffix: String = "") {
       val separatedMessageChannelSuffix = if (messageChannelSuffix.isNotEmpty()) ".$messageChannelSuffix" else ""
       run {
-        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.native_natural_sort.CollationHostApi.sortStrings$separatedMessageChannelSuffix", codec)
+        val channel = BasicMessageChannel<Any?>(binaryMessenger, "dev.flutter.pigeon.native_natural_sort.CollationAndroidHostApi.sort$separatedMessageChannelSuffix", codec)
         if (api != null) {
           channel.setMessageHandler { message, reply ->
             val args = message as List<Any?>
-            val requestArg = args[0] as CollationRequest
+            val requestArg = args[0] as CollationAndroidRequest
             val wrapped: List<Any?> = try {
-              listOf(api.sortStrings(requestArg))
+              listOf(api.sort(requestArg))
             } catch (exception: Throwable) {
               CollationApiPigeonUtils.wrapError(exception)
             }

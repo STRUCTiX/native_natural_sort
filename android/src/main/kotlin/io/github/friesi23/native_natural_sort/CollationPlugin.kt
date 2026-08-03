@@ -3,11 +3,11 @@ package io.github.friesi23.native_natural_sort
 import android.icu.text.Collator
 import android.icu.util.ULocale
 
-class CollationPlugin : CollationHostApi {
-    override fun sortStrings(request: CollationRequest): List<String> {
+class CollationPlugin : CollationAndroidHostApi {
+    override fun sort(request: CollationAndroidRequest): List<CollationAndroidItem> {
         val uLocale = request.locale
             ?.takeIf { it.isNotBlank() }
-            ?.let { ULocale.forLanguageTag(it.replace("_", "-")) }
+            ?.let { ULocale.forLanguageTag(it) }
             ?.setKeywordValue("colNumeric", "yes")
             ?: ULocale.getDefault().setKeywordValue("colNumeric", "yes")
 

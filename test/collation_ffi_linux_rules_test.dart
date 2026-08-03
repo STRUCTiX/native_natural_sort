@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:native_natural_sort/src/collation_ffi_linux.dart';
+import 'package:native_natural_sort/src/linux/collation_ffi.dart';
 
 void main() {
   group('IcuCollationLinuxRules', () {
@@ -45,7 +45,10 @@ void main() {
       });
 
       test('prepends highest discovered version', () {
-        final result = rules.candidates(['libicui18n.so.75', 'libicui18n.so.74']);
+        final result = rules.candidates([
+          'libicui18n.so.75',
+          'libicui18n.so.74',
+        ]);
         expect(result, [
           'libicui18n.so',
           'libicui18n.so.72',

@@ -42,9 +42,9 @@ void main() {
       final collation = IcuCollation.test(mockCompare);
       final result = collation.sort<MapEntry<String, String>>(
         items: [
-          MapEntry('id2', 'same'),
-          MapEntry('id1', 'same'),
-          MapEntry('id3', 'same'),
+          const MapEntry('id2', 'same'),
+          const MapEntry('id1', 'same'),
+          const MapEntry('id3', 'same'),
         ],
         idOf: (e) => e.key,
         valueOf: (e) => e.value,
@@ -55,9 +55,9 @@ void main() {
     test('handles custom types with idOf/valueOf', () {
       final collation = IcuCollation.test(mockCompare);
       final items = [
-        _TestItem('b', '世界'),
-        _TestItem('a', '你好'),
-        _TestItem('c', 'Apple'),
+        const _TestItem('b', '世界'),
+        const _TestItem('a', '你好'),
+        const _TestItem('c', 'Apple'),
       ];
       final result = collation.sort<_TestItem>(
         items: items,
@@ -70,7 +70,7 @@ void main() {
 
     test('dispose does not throw for test instance', () {
       final collation = IcuCollation.test(mockCompare);
-      expect(() => collation.dispose(), returnsNormally);
+      expect(collation.dispose, returnsNormally);
     });
   });
 }

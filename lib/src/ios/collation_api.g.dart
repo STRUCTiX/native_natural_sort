@@ -10,9 +10,9 @@ import 'package:flutter/services.dart';
 import 'package:meta/meta.dart' show immutable, protected, visibleForTesting;
 
 Object? _extractReplyValueOrThrow(
-    List<Object?>? replyList,
-    String channelName, {
-    required bool isNullValid,
+  List<Object?>? replyList,
+  String channelName, {
+  required bool isNullValid,
 }) {
   if (replyList == null) {
     throw PlatformException(
@@ -46,8 +46,9 @@ bool _deepEquals(Object? a, Object? b) {
   }
   if (a is List && b is List) {
     return a.length == b.length &&
-        a.indexed
-            .every(((int, dynamic) item) => _deepEquals(item.$2, b[item.$1]));
+        a.indexed.every(
+          ((int, dynamic) item) => _deepEquals(item.$2, b[item.$1]),
+        );
   }
   if (a is Map && b is Map) {
     if (a.length != b.length) {
@@ -96,13 +97,9 @@ int _deepHash(Object? value) {
   return value.hashCode;
 }
 
-
 /// An id/value pair for collation sorting.
-class CollationItem {
-  CollationItem({
-    required this.id,
-    required this.value,
-  });
+class CollationIOSItem {
+  CollationIOSItem({required this.id, required this.value});
 
   /// Opaque identifier returned in the sorted result.
   String id;
@@ -111,18 +108,16 @@ class CollationItem {
   String value;
 
   List<Object?> _toList() {
-    return <Object?>[
-      id,
-      value,
-    ];
+    return <Object?>[id, value];
   }
 
   Object encode() {
-    return _toList();  }
+    return _toList();
+  }
 
-  static CollationItem decode(Object result) {
+  static CollationIOSItem decode(Object result) {
     result as List<Object?>;
-    return CollationItem(
+    return CollationIOSItem(
       id: result[0]! as String,
       value: result[1]! as String,
     );
@@ -131,7 +126,7 @@ class CollationItem {
   @override
   // ignore: avoid_equals_and_hash_code_on_mutable_classes
   bool operator ==(Object other) {
-    if (other is! CollationItem || other.runtimeType != runtimeType) {
+    if (other is! CollationIOSItem || other.runtimeType != runtimeType) {
       return false;
     }
     if (identical(this, other)) {
@@ -146,56 +141,44 @@ class CollationItem {
 
   @override
   String toString() {
-    return 'CollationItem(id: $id, value: $value)';
+    return 'CollationIOSItem(id: $id, value: $value)';
   }
 }
 
 /// Request to sort [items] by the collation order of their [value]s.
 ///
-/// [locale] selects the ICU collation locale (Android) or is currently
-/// unused (iOS/macOS use the system locale via
-/// `localizedStandardCompare`).
-///
-/// When [locale] is omitted, the platform uses its system-default
-/// collator. Returns the [CollationItem.id]s in collation order.
-class CollationRequest {
-  CollationRequest({
-    required this.items,
-    this.locale,
-  });
+/// iOS uses `localizedStandardCompare` with the system locale —
+/// [CollationIOSItem.id]s are returned in collation order.
+class CollationIOSRequest {
+  CollationIOSRequest({required this.items});
 
-  List<CollationItem> items;
-
-  String? locale;
+  List<CollationIOSItem> items;
 
   List<Object?> _toList() {
-    return <Object?>[
-      items,
-      locale,
-    ];
+    return <Object?>[items];
   }
 
   Object encode() {
-    return _toList();  }
+    return _toList();
+  }
 
-  static CollationRequest decode(Object result) {
+  static CollationIOSRequest decode(Object result) {
     result as List<Object?>;
-    return CollationRequest(
-      items: (result[0]! as List<Object?>).cast<CollationItem>(),
-      locale: result[1] as String?,
+    return CollationIOSRequest(
+      items: (result[0]! as List<Object?>).cast<CollationIOSItem>(),
     );
   }
 
   @override
   // ignore: avoid_equals_and_hash_code_on_mutable_classes
   bool operator ==(Object other) {
-    if (other is! CollationRequest || other.runtimeType != runtimeType) {
+    if (other is! CollationIOSRequest || other.runtimeType != runtimeType) {
       return false;
     }
     if (identical(this, other)) {
       return true;
     }
-    return _deepEquals(items, other.items) && _deepEquals(locale, other.locale);
+    return _deepEquals(items, other.items);
   }
 
   @override
@@ -204,10 +187,9 @@ class CollationRequest {
 
   @override
   String toString() {
-    return 'CollationRequest(items: $items, locale: $locale)';
+    return 'CollationIOSRequest(items: $items)';
   }
 }
-
 
 class _PigeonCodec extends StandardMessageCodec {
   const _PigeonCodec();
@@ -216,10 +198,10 @@ class _PigeonCodec extends StandardMessageCodec {
     if (value is int) {
       buffer.putUint8(4);
       buffer.putInt64(value);
-    }    else if (value is CollationItem) {
+    } else if (value is CollationIOSItem) {
       buffer.putUint8(129);
       writeValue(buffer, value.encode());
-    }    else if (value is CollationRequest) {
+    } else if (value is CollationIOSRequest) {
       buffer.putUint8(130);
       writeValue(buffer, value.encode());
     } else {
@@ -231,9 +213,9 @@ class _PigeonCodec extends StandardMessageCodec {
   Object? readValueOfType(int type, ReadBuffer buffer) {
     switch (type) {
       case 129:
-        return CollationItem.decode(readValue(buffer)!);
+        return CollationIOSItem.decode(readValue(buffer)!);
       case 130:
-        return CollationRequest.decode(readValue(buffer)!);
+        return CollationIOSRequest.decode(readValue(buffer)!);
       default:
         return super.readValueOfType(type, buffer);
     }
@@ -241,13 +223,17 @@ class _PigeonCodec extends StandardMessageCodec {
 }
 
 /// Platform-native string collation.
-class CollationHostApi {
-  /// Constructor for [CollationHostApi]. The [binaryMessenger] named argument is
+class CollationIOSHostApi {
+  /// Constructor for [CollationIOSHostApi]. The [binaryMessenger] named argument is
   /// available for dependency injection. If it is left null, the default
   /// BinaryMessenger will be used which routes to the host platform.
-  CollationHostApi({BinaryMessenger? binaryMessenger, String messageChannelSuffix = ''})
-      : pigeonVar_binaryMessenger = binaryMessenger,
-        pigeonVar_messageChannelSuffix = messageChannelSuffix.isNotEmpty ? '.$messageChannelSuffix' : '';
+  CollationIOSHostApi({
+    BinaryMessenger? binaryMessenger,
+    String messageChannelSuffix = '',
+  }) : pigeonVar_binaryMessenger = binaryMessenger,
+       pigeonVar_messageChannelSuffix = messageChannelSuffix.isNotEmpty
+           ? '.$messageChannelSuffix'
+           : '';
   final BinaryMessenger? pigeonVar_binaryMessenger;
 
   static const MessageCodec<Object?> pigeonChannelCodec = _PigeonCodec();
@@ -256,22 +242,24 @@ class CollationHostApi {
 
   /// Returns [request.items]' ids reordered so that their corresponding
   /// values are in collation order.
-  Future<List<String>> sortStrings(CollationRequest request) async {
-    final pigeonVar_channelName = 'dev.flutter.pigeon.native_natural_sort.CollationHostApi.sortStrings$pigeonVar_messageChannelSuffix';
+  Future<List<CollationIOSItem>> sort(CollationIOSRequest request) async {
+    final pigeonVar_channelName =
+        'dev.flutter.pigeon.native_natural_sort.CollationIOSHostApi.sort$pigeonVar_messageChannelSuffix';
     final pigeonVar_channel = BasicMessageChannel<Object?>(
       pigeonVar_channelName,
       pigeonChannelCodec,
       binaryMessenger: pigeonVar_binaryMessenger,
     );
-    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(<Object?>[request]);
+    final Future<Object?> pigeonVar_sendFuture = pigeonVar_channel.send(
+      <Object?>[request],
+    );
     final pigeonVar_replyList = await pigeonVar_sendFuture as List<Object?>?;
 
     final Object? pigeonVar_replyValue = _extractReplyValueOrThrow(
-        pigeonVar_replyList,
-        pigeonVar_channelName,
-        isNullValid: false,
-    )
-    ;
-    return (pigeonVar_replyValue! as List<Object?>).cast<String>();
+      pigeonVar_replyList,
+      pigeonVar_channelName,
+      isNullValid: false,
+    );
+    return (pigeonVar_replyValue! as List<Object?>).cast<CollationIOSItem>();
   }
 }

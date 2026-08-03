@@ -16,24 +16,16 @@ import 'package:pigeon/pigeon.dart';
 
 @ConfigurePigeon(
   PigeonOptions(
-    dartOut: 'lib/src/collation_api.g.dart',
-    swiftOut:
-        'darwin/CollationPlugin/Sources/CollationPlugin/CollationApi.g.swift',
-    kotlinOut:
-        'android/src/main/kotlin/io/github/friesi23/native_natural_sort/CollationApi.g.kt',
+    dartOut: 'lib/src/windows/collation_api.g.dart',
     cppHeaderOut: 'windows/collation_api.g.h',
     cppSourceOut: 'windows/collation_api.g.cpp',
     cppOptions: CppOptions(namespace: 'native_natural_sort'),
-    kotlinOptions: KotlinOptions(
-      package: 'io.github.friesi23.native_natural_sort',
-      errorClassName: 'CollationFlutterError',
-    ),
     dartOptions: DartOptions(),
   ),
 )
 /// An id/value pair for collation sorting.
-class CollationItem {
-  CollationItem({required this.id, required this.value});
+class CollationWindowsItem {
+  CollationWindowsItem({required this.id, required this.value});
 
   /// Opaque identifier returned in the sorted result.
   String id;
@@ -44,23 +36,20 @@ class CollationItem {
 
 /// Request to sort [items] by the collation order of their [value]s.
 ///
-/// [locale] selects the ICU collation locale (Android) or is currently
-/// unused (iOS/macOS use the system locale via
-/// `localizedStandardCompare`).
-///
-/// When [locale] is omitted, the platform uses its system-default
-/// collator. Returns the [CollationItem.id]s in collation order.
-class CollationRequest {
-  CollationRequest({required this.items, this.locale});
+/// [locale] selects the ICU collation locale.  When omitted, the
+/// platform uses its system-default collator.  Returns the
+/// [CollationWindowsItem.id]s in collation order.
+class CollationWindowsRequest {
+  CollationWindowsRequest({required this.items, this.locale});
 
-  List<CollationItem> items;
+  List<CollationWindowsItem> items;
   String? locale;
 }
 
 /// Platform-native string collation.
 @HostApi()
-abstract class CollationHostApi {
+abstract class CollationWindowsHostApi {
   /// Returns [request.items]' ids reordered so that their corresponding
   /// values are in collation order.
-  List<String> sortStrings(CollationRequest request);
+  List<CollationWindowsItem> sort(CollationWindowsRequest request);
 }

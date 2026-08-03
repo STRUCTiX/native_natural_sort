@@ -187,7 +187,7 @@ private func nilOrValue<T>(_ value: Any?) -> T? {
 /// An id/value pair for collation sorting.
 ///
 /// Generated class from Pigeon that represents data sent in messages.
-struct CollationItem: Hashable, CustomStringConvertible {
+struct CollationMacOSItem: Hashable, CustomStringConvertible {
   /// Opaque identifier returned in the sorted result.
   var id: String
   /// String whose collation order determines the sort position.
@@ -195,11 +195,11 @@ struct CollationItem: Hashable, CustomStringConvertible {
 
 
   // swift-format-ignore: AlwaysUseLowerCamelCase
-  static func fromList(_ pigeonVar_list: [Any?]) -> CollationItem? {
+  static func fromList(_ pigeonVar_list: [Any?]) -> CollationMacOSItem? {
     let id = pigeonVar_list[0] as! String
     let value = pigeonVar_list[1] as! String
 
-    return CollationItem(
+    return CollationMacOSItem(
       id: id,
       value: value
     )
@@ -210,7 +210,7 @@ struct CollationItem: Hashable, CustomStringConvertible {
       value,
     ]
   }
-  static func == (lhs: CollationItem, rhs: CollationItem) -> Bool {
+  static func == (lhs: CollationMacOSItem, rhs: CollationMacOSItem) -> Bool {
     if Swift.type(of: lhs) != Swift.type(of: rhs) {
       return false
     }
@@ -218,62 +218,53 @@ struct CollationItem: Hashable, CustomStringConvertible {
   }
 
   func hash(into hasher: inout Hasher) {
-    hasher.combine("CollationItem")
+    hasher.combine("CollationMacOSItem")
     CollationApiPigeonInternal.deepHash(value: id, hasher: &hasher)
     CollationApiPigeonInternal.deepHash(value: value, hasher: &hasher)
   }
 
   public var description: String {
-    return "CollationItem(id: \(String(describing: id)), value: \(String(describing: value)))"
+    return "CollationMacOSItem(id: \(String(describing: id)), value: \(String(describing: value)))"
   }
 }
 
 /// Request to sort [items] by the collation order of their [value]s.
 ///
-/// [locale] selects the ICU collation locale (Android) or is currently
-/// unused (iOS/macOS use the system locale via
-/// `localizedStandardCompare`).
-///
-/// When [locale] is omitted, the platform uses its system-default
-/// collator. Returns the [CollationItem.id]s in collation order.
+/// macOS uses `localizedStandardCompare` with the system locale —
+/// [CollationMacOSItem.id]s are returned in collation order.
 ///
 /// Generated class from Pigeon that represents data sent in messages.
-struct CollationRequest: Hashable, CustomStringConvertible {
-  var items: [CollationItem]
-  var locale: String? = nil
+struct CollationMacOSRequest: Hashable, CustomStringConvertible {
+  var items: [CollationMacOSItem]
 
 
   // swift-format-ignore: AlwaysUseLowerCamelCase
-  static func fromList(_ pigeonVar_list: [Any?]) -> CollationRequest? {
-    let items = pigeonVar_list[0] as! [CollationItem]
-    let locale: String? = nilOrValue(pigeonVar_list[1])
+  static func fromList(_ pigeonVar_list: [Any?]) -> CollationMacOSRequest? {
+    let items = pigeonVar_list[0] as! [CollationMacOSItem]
 
-    return CollationRequest(
-      items: items,
-      locale: locale
+    return CollationMacOSRequest(
+      items: items
     )
   }
   func toList() -> [Any?] {
     return [
-      items,
-      locale,
+      items
     ]
   }
-  static func == (lhs: CollationRequest, rhs: CollationRequest) -> Bool {
+  static func == (lhs: CollationMacOSRequest, rhs: CollationMacOSRequest) -> Bool {
     if Swift.type(of: lhs) != Swift.type(of: rhs) {
       return false
     }
-    return CollationApiPigeonInternal.deepEquals(lhs.items, rhs.items) && CollationApiPigeonInternal.deepEquals(lhs.locale, rhs.locale)
+    return CollationApiPigeonInternal.deepEquals(lhs.items, rhs.items)
   }
 
   func hash(into hasher: inout Hasher) {
-    hasher.combine("CollationRequest")
+    hasher.combine("CollationMacOSRequest")
     CollationApiPigeonInternal.deepHash(value: items, hasher: &hasher)
-    CollationApiPigeonInternal.deepHash(value: locale, hasher: &hasher)
   }
 
   public var description: String {
-    return "CollationRequest(items: \(String(describing: items)), locale: \(String(describing: locale)))"
+    return "CollationMacOSRequest(items: \(String(describing: items)))"
   }
 }
 
@@ -281,9 +272,9 @@ private class CollationApiPigeonCodecReader: FlutterStandardReader {
   override func readValue(ofType type: UInt8) -> Any? {
     switch type {
     case 129:
-      return CollationItem.fromList(self.readValue() as! [Any?])
+      return CollationMacOSItem.fromList(self.readValue() as! [Any?])
     case 130:
-      return CollationRequest.fromList(self.readValue() as! [Any?])
+      return CollationMacOSRequest.fromList(self.readValue() as! [Any?])
     default:
       return super.readValue(ofType: type)
     }
@@ -292,10 +283,10 @@ private class CollationApiPigeonCodecReader: FlutterStandardReader {
 
 private class CollationApiPigeonCodecWriter: FlutterStandardWriter {
   override func writeValue(_ value: Any) {
-    if let value = value as? CollationItem {
+    if let value = value as? CollationMacOSItem {
       super.writeByte(129)
       super.writeValue(value.toList())
-    } else if let value = value as? CollationRequest {
+    } else if let value = value as? CollationMacOSRequest {
       super.writeByte(130)
       super.writeValue(value.toList())
     } else {
@@ -321,34 +312,34 @@ class CollationApiPigeonCodec: FlutterStandardMessageCodec, @unchecked Sendable 
 /// Platform-native string collation.
 ///
 /// Generated protocol from Pigeon that represents a handler of messages from Flutter.
-protocol CollationHostApi {
+protocol CollationMacOSHostApi {
   /// Returns [request.items]' ids reordered so that their corresponding
   /// values are in collation order.
-  func sortStrings(request: CollationRequest) throws -> [String]
+  func sort(request: CollationMacOSRequest) throws -> [CollationMacOSItem]
 }
 
 /// Generated setup class from Pigeon to handle messages through the `binaryMessenger`.
-class CollationHostApiSetup {
+class CollationMacOSHostApiSetup {
   static var codec: FlutterStandardMessageCodec { CollationApiPigeonCodec.shared }
-  /// Sets up an instance of `CollationHostApi` to handle messages through the `binaryMessenger`.
-  static func setUp(binaryMessenger: FlutterBinaryMessenger, api: CollationHostApi?, messageChannelSuffix: String = "") {
+  /// Sets up an instance of `CollationMacOSHostApi` to handle messages through the `binaryMessenger`.
+  static func setUp(binaryMessenger: FlutterBinaryMessenger, api: CollationMacOSHostApi?, messageChannelSuffix: String = "") {
     let channelSuffix = messageChannelSuffix.count > 0 ? ".\(messageChannelSuffix)" : ""
     /// Returns [request.items]' ids reordered so that their corresponding
     /// values are in collation order.
-    let sortStringsChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.native_natural_sort.CollationHostApi.sortStrings\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
+    let sortChannel = FlutterBasicMessageChannel(name: "dev.flutter.pigeon.native_natural_sort.CollationMacOSHostApi.sort\(channelSuffix)", binaryMessenger: binaryMessenger, codec: codec)
     if let api = api {
-      sortStringsChannel.setMessageHandler { message, reply in
+      sortChannel.setMessageHandler { message, reply in
         let args = message as! [Any?]
-        let requestArg = args[0] as! CollationRequest
+        let requestArg = args[0] as! CollationMacOSRequest
         do {
-          let result = try api.sortStrings(request: requestArg)
+          let result = try api.sort(request: requestArg)
           reply(wrapResult(result))
         } catch {
           reply(wrapError(error))
         }
       }
     } else {
-      sortStringsChannel.setMessageHandler(nil)
+      sortChannel.setMessageHandler(nil)
     }
   }
 }

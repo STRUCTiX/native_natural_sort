@@ -1,9 +1,9 @@
 package io.github.friesi23.native_natural_sort
 
 fun sortByCollationKey(
-    items: List<CollationItem>,
+    items: List<CollationAndroidItem>,
     collationKeyOf: (String) -> Comparable<*>,
-): List<String> = items
+): List<CollationAndroidItem> = items
     .map {
         val key = collationKeyOf(it.value)
         Triple(it.id, it.value, key)
@@ -12,4 +12,4 @@ fun sortByCollationKey(
         compareBy<Triple<String, String, Comparable<*>>> { it.third }
             .thenBy { it.first },
     )
-    .map { it.first }
+    .map { CollationAndroidItem(id = it.first, value = it.second) }

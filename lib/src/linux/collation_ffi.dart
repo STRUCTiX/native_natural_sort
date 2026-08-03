@@ -15,16 +15,101 @@
 import 'dart:ffi';
 import 'dart:io';
 
-import 'package:flutter/foundation.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import '../collation_cache.dart';
+import '../collation_ffi.dart';
 
-import 'collation_ffi.dart';
+class LinuxCollationLoader implements CollationLibraryLoader {
+  /// Shared cache key for the resolved library path.
+  static const cacheKey = 'libicui18n_path';
+
+  final CollationCache _cache;
+  final IcuCollationLinuxRules _rules = IcuCollationLinuxRules();
+
+  DynamicLibrary? _lib;
+  String _icuVersionSuffix = '';
+  String? _loadedPath;
+  bool _available = false;
+
+  LinuxCollationLoader({CollationCache? cache, List<String>? searchDirs})
+    : _cache = cache ?? CollationCache.inMemory() {
+    if (searchDirs != null) _searchDirs = searchDirs;
+  }
+
+  List<String>? _searchDirs;
+
+  @override
+  bool get isAvailable => _available;
+
+  @override
+  Future<void> init() async {
+    if (_available) return;
+    try {
+      final cachedPath = await _cache.read();
+      if (cachedPath != null && _tryLoadPath(cachedPath)) return;
+
+      if (await _searchAndLoad()) {
+        final path = _loadedPath;
+        if (path != null) await _cache.write(path);
+        return;
+      }
+    } catch (_) {
+      _available = false;
+    }
+  }
+
+  @override
+  IcuCollationEngine engine(String? localeName) =>
+      LinuxCollationEngine(_requireLib(), _icuVersionSuffix, localeName);
+
+  @override
+  void dispose() {
+    _lib = null;
+    _available = false;
+  }
+
+  /// Applies a resolved library to the state.
+  void _applyResolved(DynamicLibrary lib, String suffix, String path) {
+    _lib = lib;
+    _icuVersionSuffix = suffix;
+    _loadedPath = path;
+    _available = true;
+  }
+
+  /// Attempts to resolve [path], applying the state on success.
+  bool _tryLoadPath(String path) {
+    final result = _rules.tryLoadPath(path);
+    if (result == null) return false;
+    _applyResolved(result.$1, result.$2, path);
+    return true;
+  }
+
+  Future<bool> _searchAndLoad() async {
+    final dirs = _searchDirs ?? _rules.searchDirs;
+    final discovered = await _rules.discoverCandidates(dirs);
+    for (final candidate in _rules.candidates(discovered)) {
+      if (_tryLoadPath(candidate)) return true;
+    }
+    return false;
+  }
+
+  DynamicLibrary _requireLib() {
+    final lib = _lib;
+    if (lib == null) {
+      throw StateError('LinuxCollationLoader not resolved; call init() first');
+    }
+    return lib;
+  }
+}
+
+final class LinuxCollationEngine extends CollationEngineBase {
+  LinuxCollationEngine(super.lib, super.suffix, super.localeName);
+}
 
 /// Pure `libicui18n` resolution rules for Linux.
 ///
 /// Encapsulates which sonames/directories to probe, how to parse and order
 /// candidates by ICU version, and how to validate a library (symbol probe).
-/// Kept separate from the cache/load orchestration in [IcuCollationLinux]
+/// Kept separate from the cache/load orchestration in `LinuxCollationLoader`
 /// so the rules can be unit-tested in isolation.
 final class IcuCollationLinuxRules {
   /// App-recommended stable ICU version, tried before the highest one
@@ -136,123 +221,4 @@ final class IcuCollationLinuxRules {
     if (suffix == null) return null;
     return (lib, suffix);
   }
-}
-
-/// Linux ICU collation resolver (singleton).
-///
-/// Resolves the system `libicui18n` eagerly at app startup ([init]) via
-/// directory search + SharedPreferences cache; sort callers branch on
-/// [isAvailable] rather than catching load exceptions.  Use [engine] to
-/// build a locale-specific collator.
-class IcuCollationLinux {
-  static IcuCollationLinux? _instance;
-
-  factory IcuCollationLinux() => _instance ??= IcuCollationLinux._();
-
-  IcuCollationLinux._();
-
-  /// SharedPreferences key for the resolved `libicui18n` path (hint only;
-  /// validated on read).
-  static const cacheKey = 'collationFfiIcuLib';
-
-  final IcuCollationLinuxRules _rules = IcuCollationLinuxRules();
-
-  DynamicLibrary? _lib;
-  String _icuVersionSuffix = '';
-  String? _loadedPath;
-  bool _available = false;
-
-  /// Whether a native collation engine was resolved successfully.
-  /// Safe to call on any platform — returns `false` when [init] was
-  /// never called or failed, without creating the singleton.
-  static bool get available => _instance?._available ?? false;
-
-  /// Whether a native collation engine was resolved successfully.
-  bool get isAvailable => _available;
-
-  /// Resolves the native engine once at app startup: cache hit → directory
-  /// search → static soname fallback.  On success caches the resolved path
-  /// (best-effort); any failure is logged and leaves [isAvailable] `false`.
-  Future<void> init({SharedPreferences? prefs}) async {
-    if (_available) return;
-    try {
-      final resolved = prefs ?? await SharedPreferences.getInstance();
-
-      final cachedPath = resolved.getString(cacheKey);
-      if (cachedPath != null && _tryLoadPath(cachedPath)) {
-        return;
-      }
-
-      if (await _searchAndLoad()) {
-        await _cacheWrite(resolved);
-        return;
-      }
-    } catch (_) {
-      // Init failed — natural sort falls back to plain sort.
-      _available = false;
-    }
-  }
-
-  /// Builds a collator engine for [localeName] from the resolved library.
-  IcuCollationEngine engine(String? localeName) =>
-      _IcuCollationLinuxEngine(_requireLib(), _icuVersionSuffix, localeName);
-
-  /// Best-effort cache write; failure must never affect availability.
-  Future<void> _cacheWrite(SharedPreferences prefs) async {
-    final loadedPath = _loadedPath;
-    if (loadedPath == null) return;
-    try {
-      await prefs.setString(cacheKey, loadedPath);
-    } catch (_) {
-      // Cache write is best-effort.
-    }
-  }
-
-  /// Applies a resolved library to the singleton state.
-  void _applyResolved(DynamicLibrary lib, String suffix, String path) {
-    _lib = lib;
-    _icuVersionSuffix = suffix;
-    _loadedPath = path;
-    _available = true;
-  }
-
-  /// Attempts to resolve [path], applying the state on success.
-  bool _tryLoadPath(String path) {
-    final result = _rules.tryLoadPath(path);
-    if (result == null) return false;
-    _applyResolved(result.$1, result.$2, path);
-    return true;
-  }
-
-  Future<bool> _searchAndLoad() async {
-    final discovered = await _rules.discoverCandidates(_rules.searchDirs);
-    for (final candidate in _rules.candidates(discovered)) {
-      if (_tryLoadPath(candidate)) return true;
-    }
-    return false;
-  }
-
-  DynamicLibrary _requireLib() {
-    final lib = _lib;
-    if (lib == null) {
-      throw StateError(
-        'IcuCollationLinux not resolved; call IcuCollationLinux().init() first',
-      );
-    }
-    return lib;
-  }
-
-  /// Resets the resolved state (tests only).
-  @visibleForTesting
-  void resetForTest() {
-    _lib = null;
-    _icuVersionSuffix = '';
-    _loadedPath = null;
-    _available = false;
-  }
-}
-
-/// Linux ICU collator backed by the resolved [IcuCollationLinux] library.
-final class _IcuCollationLinuxEngine extends IcuCollationBase {
-  _IcuCollationLinuxEngine(super.lib, super.suffix, super.localeName);
 }

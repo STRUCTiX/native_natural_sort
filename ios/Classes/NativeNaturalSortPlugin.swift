@@ -7,7 +7,7 @@ import UIKit
 /// via the Pigeon-generated CollationHostApi interface.
 public class NativeNaturalSortPlugin: NSObject, FlutterPlugin {
   public static func register(with registrar: FlutterPluginRegistrar) {
-    CollationHostApiSetup.setUp(
+    CollationIOSHostApiSetup.setUp(
       binaryMessenger: registrar.messenger(),
       api: CollationPlugin())
   }

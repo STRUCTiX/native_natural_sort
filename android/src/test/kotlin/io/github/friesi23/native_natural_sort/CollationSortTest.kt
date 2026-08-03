@@ -8,39 +8,49 @@ class CollationSortTest {
     @Test
     fun sortByCollationKey_sortsByIdentifier() {
         val items = listOf(
-            CollationItem("id2", "b"),
-            CollationItem("id1", "a"),
-            CollationItem("id3", "a"),
+            CollationAndroidItem("id2", "b"),
+            CollationAndroidItem("id1", "a"),
+            CollationAndroidItem("id3", "a"),
         )
-        // Simple compare function: identity-based comparison (for test purposes,
-        // we simulate the collation key returning the string itself).
         val result = sortByCollationKey(items) { it }
-        // Sorted by value first ('a' < 'b'), ties broken by id ('id1' < 'id3')
-        assertEquals(listOf("id1", "id3", "id2"), result)
+        assertEquals(
+            listOf(
+                CollationAndroidItem("id1", "a"),
+                CollationAndroidItem("id3", "a"),
+                CollationAndroidItem("id2", "b"),
+            ),
+            result,
+        )
     }
 
     @Test
     fun sortByCollationKey_handlesNumbersWithNaturalOrder() {
         val items = listOf(
-            CollationItem("10", "item10"),
-            CollationItem("2", "item2"),
-            CollationItem("1", "item1"),
+            CollationAndroidItem("10", "item10"),
+            CollationAndroidItem("2", "item2"),
+            CollationAndroidItem("1", "item1"),
         )
-        // With simple key comparison, 'item1' < 'item10' < 'item2' (lexical)
         val result = sortByCollationKey(items) { it }
-        assertEquals(listOf("1", "10", "2"), result)
+        assertEquals(
+            listOf(
+                CollationAndroidItem("1", "item1"),
+                CollationAndroidItem("10", "item10"),
+                CollationAndroidItem("2", "item2"),
+            ),
+            result,
+        )
     }
 
     @Test
     fun sortByCollationKey_emptyList() {
-        val result = sortByCollationKey(emptyList<CollationItem>()) { it }
+        val result = sortByCollationKey(emptyList<CollationAndroidItem>()) { it }
         assertEquals(emptyList(), result)
     }
 
     @Test
     fun sortByCollationKey_singleItem() {
-        val items = listOf(CollationItem("only", "value"))
+        val items = listOf(CollationAndroidItem("only", "value"))
         val result = sortByCollationKey(items) { it }
-        assertEquals(listOf("only"), result)
+        assertEquals(listOf(CollationAndroidItem("only", "value")), result)
     }
 }

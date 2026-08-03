@@ -8,10 +8,10 @@ import io.flutter.embedding.engine.plugins.FlutterPlugin
 /// collation via the Pigeon-generated [CollationHostApi] interface.
 class NativeNaturalSortPlugin : FlutterPlugin {
     override fun onAttachedToEngine(binding: FlutterPlugin.FlutterPluginBinding) {
-        CollationHostApi.setUp(binding.binaryMessenger, CollationPlugin())
+        CollationAndroidHostApi.setUp(binding.binaryMessenger, CollationPlugin())
     }
 
     override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {
-        CollationHostApi.setUp(binding.binaryMessenger, null)
+        CollationAndroidHostApi.setUp(binding.binaryMessenger, null)
     }
 }

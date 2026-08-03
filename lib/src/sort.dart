@@ -170,7 +170,7 @@ class NativeSort {
   /// [direction] overrides the default set via [init] options.
   /// [locale] overrides the default set via [init] options.
   /// Throws [StateError] if [init] has not been called first.
-  Future<List<SortItem>> sort(
+  FutureOr<List<SortItem>> sort(
     List<SortItem> items, {
     SortDirection? direction,
     Locale? locale,

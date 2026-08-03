@@ -24,7 +24,7 @@ abstract interface class LinuxSort {
   /// Whether the underlying ICU loader is available.
   bool get isAvailable;
 
-  Future<List<SortItem>> sort(
+  List<SortItem> sort(
     List<SortItem> items, {
     Locale? locale,
     SortDirection? direction,
@@ -69,11 +69,11 @@ class _LinuxSortImpl implements LinuxSort {
   bool get isAvailable => _loader.isAvailable;
 
   @override
-  Future<List<SortItem>> sort(
+  List<SortItem> sort(
     List<SortItem> items, {
     Locale? locale,
     SortDirection? direction,
-  }) async {
+  }) {
     final engine = _loader.engine(locale?.toLanguageTag());
     final c = IcuCollation(engine);
     try {

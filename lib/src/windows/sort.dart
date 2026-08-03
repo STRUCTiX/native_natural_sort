@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import 'dart:async';
 import 'dart:ui' show Locale;
 
 import '../collation_ffi.dart';
@@ -36,7 +37,7 @@ abstract interface class WindowsSort {
   /// Whether the underlying ICU loader is available (FFI path only).
   bool get isFfiAvailable;
 
-  Future<List<CollationWindowsItem>> sort(
+  FutureOr<List<CollationWindowsItem>> sort(
     List<CollationWindowsItem> items, {
     Locale? locale,
     WindowsCollationBackend? backend,
@@ -83,7 +84,7 @@ class _WindowsSortImpl implements WindowsSort {
   bool get isFfiAvailable => _ffi.isAvailable;
 
   @override
-  Future<List<CollationWindowsItem>> sort(
+  FutureOr<List<CollationWindowsItem>> sort(
     List<CollationWindowsItem> items, {
     Locale? locale,
     WindowsCollationBackend? backend,
@@ -131,11 +132,11 @@ class _FfiSort {
 
   bool get isAvailable => _loader.isAvailable;
 
-  Future<List<CollationWindowsItem>> sort(
+  List<CollationWindowsItem> sort(
     List<CollationWindowsItem> items, {
     Locale? locale,
     SortDirection? direction,
-  }) async {
+  }) {
     final engine = _loader.engine(locale?.toLanguageTag());
     final c = IcuCollation(engine);
     try {

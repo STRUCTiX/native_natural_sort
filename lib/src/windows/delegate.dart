@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import 'dart:async';
 import 'dart:ui' show Locale;
 
 import '../collation_ffi.dart';
@@ -41,20 +42,25 @@ class WindowsDelegate extends PlatformDelegate {
   }
 
   @override
-  Future<List<SortItem>> sort(
+  FutureOr<List<SortItem>> sort(
     List<SortItem> items, {
     SortDirection? direction,
     Locale? locale,
-  }) async {
+  }) {
     final platformItems = items
         .map((i) => CollationWindowsItem(id: i.id, value: i.value))
         .toList();
-    final result = await _sort.sort(
+    final result = _sort.sort(
       platformItems,
       locale: locale ?? _defaultLocale,
       backend: _defaultBackend,
       direction: direction ?? _defaultDirection,
     );
+    if (result is Future<List<CollationWindowsItem>>) {
+      return result.then(
+        (list) => list.map((i) => SortItem(id: i.id, value: i.value)).toList(),
+      );
+    }
     return result.map((i) => SortItem(id: i.id, value: i.value)).toList();
   }
 }

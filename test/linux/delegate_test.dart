@@ -19,7 +19,7 @@ void main() {
       );
 
       expect(mockLoader.initCalled, isTrue);
-      final result = await delegate.sort([const SortItem(id: 'a', value: 'x')]);
+      final result = delegate.sort([const SortItem(id: 'a', value: 'x')]);
       expect(result, [const SortItem(id: 'a', value: 'x')]);
     });
 
@@ -42,7 +42,7 @@ void main() {
         ),
       );
 
-      await delegate.sort(
+      delegate.sort(
         [const SortItem(id: 'a', value: 'x')],
         locale: const Locale('fr'),
         direction: SortDirection.descending,
@@ -66,7 +66,7 @@ void main() {
         ),
       );
 
-      await delegate.sort([const SortItem(id: 'a', value: 'x')]);
+      delegate.sort([const SortItem(id: 'a', value: 'x')]);
       expect(mockSort.lastLocale, const Locale('ja'));
       expect(mockSort.lastDirection, SortDirection.descending);
     });
@@ -107,11 +107,11 @@ class _MockLinuxSort implements LinuxSort {
   bool get isAvailable => true;
 
   @override
-  Future<List<SortItem>> sort(
+  List<SortItem> sort(
     List<SortItem> items, {
     Locale? locale,
     SortDirection? direction,
-  }) async {
+  }) {
     lastLocale = locale;
     lastDirection = direction;
     return items;

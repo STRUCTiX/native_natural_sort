@@ -39,7 +39,7 @@ class LinuxDelegate extends PlatformDelegate {
   }
 
   @override
-  Future<List<SortItem>> sort(
+  List<SortItem> sort(
     List<SortItem> items, {
     SortDirection? direction,
     Locale? locale,

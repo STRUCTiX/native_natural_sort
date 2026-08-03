@@ -12,13 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import 'dart:async';
 import 'dart:ui' show Locale;
 
 import 'sort.dart';
 
 abstract class PlatformDelegate {
   Future<void> init(SortOptions options);
-  Future<List<SortItem>> sort(
+  FutureOr<List<SortItem>> sort(
     List<SortItem> items, {
     SortDirection? direction,
     Locale? locale,

@@ -33,6 +33,8 @@ class LinuxCollationLoader implements CollationLibraryLoader {
   UcolOpenDart? _ucolOpen;
   UcolCloseDart? _ucolClose;
   UcolStrCollDart? _ucolStrColl;
+  UcolSetAttributeDart? _ucolSetAttribute;
+  UcolSetStrengthDart? _ucolSetStrength;
 
   LinuxCollationLoader({CollationCache? cache, List<String>? searchDirs})
     : _cache = cache ?? CollationCache.inMemory() {
@@ -66,11 +68,21 @@ class LinuxCollationLoader implements CollationLibraryLoader {
   }
 
   @override
-  IcuCollator collator(String? localeName) => LinuxCollator(
+  IcuCollator collator(
+    String? localeName, {
+    bool numeric = true,
+    int? strength,
+    int? decomposition,
+  }) => LinuxCollator(
     ucolOpen: _ucolOpen!,
     ucolClose: _ucolClose!,
     ucolStrColl: _ucolStrColl!,
+    ucolSetAttribute: _ucolSetAttribute,
+    ucolSetStrength: _ucolSetStrength,
     localeName: localeName,
+    numeric: numeric,
+    strength: strength,
+    decomposition: decomposition,
   );
 
   @override
@@ -99,6 +111,15 @@ class LinuxCollationLoader implements CollationLibraryLoader {
     _ucolStrColl = lib.lookupFunction<UcolStrCollNative, UcolStrCollDart>(
       'ucol_strcoll$suffix',
     );
+    // Tuning functions are non-fatal — every realistic ICU build has them.
+    _ucolSetAttribute = lib
+        .tryLookup<UcolSetAttributeNative, UcolSetAttributeDart>(
+          'ucol_setAttribute$suffix',
+        );
+    _ucolSetStrength = lib
+        .tryLookup<UcolSetStrengthNative, UcolSetStrengthDart>(
+          'ucol_setStrength$suffix',
+        );
   }
 
   /// Attempts to resolve [path], applying the state on success.
@@ -132,7 +153,12 @@ final class LinuxCollator extends CollatorBase {
     required super.ucolOpen,
     required super.ucolClose,
     required super.ucolStrColl,
+    super.ucolSetAttribute,
+    super.ucolSetStrength,
     required super.localeName,
+    super.numeric = true,
+    super.strength,
+    super.decomposition,
   });
 }
 

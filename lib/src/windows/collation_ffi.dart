@@ -26,6 +26,8 @@ class WindowsCollationLoader implements CollationLibraryLoader {
   UcolOpenDart? _ucolOpen;
   UcolCloseDart? _ucolClose;
   UcolStrCollDart? _ucolStrColl;
+  UcolSetAttributeDart? _ucolSetAttribute;
+  UcolSetStrengthDart? _ucolSetStrength;
 
   WindowsCollationLoader();
 
@@ -70,11 +72,21 @@ class WindowsCollationLoader implements CollationLibraryLoader {
   }
 
   @override
-  IcuCollator collator(String? localeName) => WindowsCollator(
+  IcuCollator collator(
+    String? localeName, {
+    bool numeric = true,
+    int? strength,
+    int? decomposition,
+  }) => WindowsCollator(
     ucolOpen: _ucolOpen!,
     ucolClose: _ucolClose!,
     ucolStrColl: _ucolStrColl!,
+    ucolSetAttribute: _ucolSetAttribute,
+    ucolSetStrength: _ucolSetStrength,
     localeName: localeName,
+    numeric: numeric,
+    strength: strength,
+    decomposition: decomposition,
   );
 
   @override
@@ -92,6 +104,15 @@ class WindowsCollationLoader implements CollationLibraryLoader {
     _ucolStrColl = lib.lookupFunction<UcolStrCollNative, UcolStrCollDart>(
       'ucol_strcoll',
     );
+    // Tuning functions are non-fatal.
+    _ucolSetAttribute = lib
+        .tryLookup<UcolSetAttributeNative, UcolSetAttributeDart>(
+          'ucol_setAttribute',
+        );
+    _ucolSetStrength = lib
+        .tryLookup<UcolSetStrengthNative, UcolSetStrengthDart>(
+          'ucol_setStrength',
+        );
   }
 
   /// Verifies the unversioned ICU entry symbols are exported by [lib].
@@ -122,6 +143,11 @@ final class WindowsCollator extends CollatorBase {
     required super.ucolOpen,
     required super.ucolClose,
     required super.ucolStrColl,
+    super.ucolSetAttribute,
+    super.ucolSetStrength,
     required super.localeName,
+    super.numeric = true,
+    super.strength,
+    super.decomposition,
   });
 }

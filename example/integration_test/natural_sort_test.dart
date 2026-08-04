@@ -9,14 +9,30 @@ part 'natural_sort_android_tests.dart';
 part 'natural_sort_apple_tests.dart';
 part 'natural_sort_basic_tests.dart';
 part 'natural_sort_edge_cases_tests.dart';
+part 'natural_sort_linux_tests.dart';
 part 'natural_sort_locale_tests.dart';
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
 
+  // Cross-platform tests — always run.
   registerBasicSortTests();
-  registerAndroidTests();
-  registerAppleTests();
   registerEdgeCaseTests();
   registerLocaleTests();
+
+  // Platform-specific tests — only register on matching platform.
+  switch (defaultTargetPlatform) {
+    case TargetPlatform.android:
+      registerAndroidTests();
+    case TargetPlatform.iOS:
+    case TargetPlatform.macOS:
+      registerAppleTests();
+    case TargetPlatform.linux:
+      registerLinuxTests();
+    case TargetPlatform.windows:
+      // No Windows-specific integration tests yet.
+      break;
+    case TargetPlatform.fuchsia:
+      break;
+  }
 }

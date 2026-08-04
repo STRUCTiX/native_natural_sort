@@ -99,7 +99,12 @@ class _MockLoader implements CollationLibraryLoader {
   }
 
   @override
-  IcuCollator collator(String? localeName) => _MockCollator();
+  IcuCollator collator(
+    String? localeName, {
+    bool numeric = true,
+    int? strength,
+    int? decomposition,
+  }) => _MockCollator();
 
   @override
   void dispose() {}

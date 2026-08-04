@@ -163,6 +163,34 @@ void main() {
         expect(options.diacriticInsensitive, isNull);
       },
     );
+
+    test('SortOptionsLinux stores strength, decomposition, numeric', () {
+      const options = SortOptionsLinux(
+        strength: CollatorStrength.primary,
+        decomposition: CollatorDecomposition.none,
+        numeric: false,
+      );
+      expect(options.strength, CollatorStrength.primary);
+      expect(options.decomposition, CollatorDecomposition.none);
+      expect(options.numeric, false);
+    });
+
+    test('SortOptionsLinux strength/decomposition/numeric default to null', () {
+      const options = SortOptionsLinux();
+      expect(options.strength, isNull);
+      expect(options.decomposition, isNull);
+      expect(options.numeric, isNull);
+    });
+
+    test('SortOptionsLinux stores locale', () {
+      const options = SortOptionsLinux(locale: Locale('de'));
+      expect(options.locale, const Locale('de'));
+    });
+
+    test('SortOptionsLinux locale defaults to null', () {
+      const options = SortOptionsLinux();
+      expect(options.locale, isNull);
+    });
   });
 
   group('CollatorStrength', () {

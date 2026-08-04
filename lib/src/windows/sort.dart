@@ -137,7 +137,7 @@ class _FfiSort {
     Locale? locale,
     SortDirection? direction,
   }) {
-    final collator = _loader.collator(locale?.toLanguageTag());
+    final collator = _loader.collator(locale?.toLanguageTag(), numeric: true);
     try {
       return collator.sort(
         items,

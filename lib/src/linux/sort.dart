@@ -14,6 +14,7 @@
 
 import 'dart:ui' show Locale;
 
+import '../android/sort.dart' show CollatorDecomposition, CollatorStrength;
 import '../collation_cache.dart';
 import '../collation_ffi.dart';
 import '../sort.dart';
@@ -28,6 +29,9 @@ abstract interface class LinuxSort {
     List<SortItem> items, {
     Locale? locale,
     SortDirection? direction,
+    CollatorStrength? strength,
+    CollatorDecomposition? decomposition,
+    bool? numeric,
   });
 
   factory LinuxSort({CollationLibraryLoader? loader}) = _LinuxSortImpl;
@@ -50,12 +54,24 @@ abstract interface class SortOptionsLinux {
   /// Sort direction (defaults to [SortDirection.ascending]).
   SortDirection get direction;
 
+  /// ICU collation strength (defaults to tertiary when `null`).
+  CollatorStrength? get strength;
+
+  /// Unicode normalisation mode (defaults to canonical when `null`).
+  CollatorDecomposition? get decomposition;
+
+  /// Whether to use natural numeric ordering (defaults to `true`).
+  bool? get numeric;
+
   const factory SortOptionsLinux({
     Locale? locale,
     LinuxSort? sort,
     CollationLibraryLoader? loader,
     CollationCache? cache,
     SortDirection direction,
+    CollatorStrength? strength,
+    CollatorDecomposition? decomposition,
+    bool? numeric,
   }) = _SortOptionsLinuxImpl;
 }
 
@@ -73,8 +89,16 @@ class _LinuxSortImpl implements LinuxSort {
     List<SortItem> items, {
     Locale? locale,
     SortDirection? direction,
+    CollatorStrength? strength,
+    CollatorDecomposition? decomposition,
+    bool? numeric,
   }) {
-    final collator = _loader.collator(locale?.toLanguageTag());
+    final collator = _loader.collator(
+      locale?.toLanguageTag(),
+      numeric: numeric ?? true,
+      strength: strength?.value,
+      decomposition: decomposition?.value,
+    );
     try {
       return collator.sort(
         items,
@@ -99,11 +123,20 @@ class _SortOptionsLinuxImpl implements SortOptionsLinux {
   final CollationCache? cache;
   @override
   final SortDirection direction;
+  @override
+  final CollatorStrength? strength;
+  @override
+  final CollatorDecomposition? decomposition;
+  @override
+  final bool? numeric;
   const _SortOptionsLinuxImpl({
     this.locale,
     this.sort,
     this.loader,
     this.cache,
     this.direction = SortDirection.ascending,
+    this.strength,
+    this.decomposition,
+    this.numeric,
   });
 }

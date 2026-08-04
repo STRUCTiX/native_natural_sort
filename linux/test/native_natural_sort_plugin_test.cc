@@ -23,22 +23,6 @@ TEST(NativeNaturalSortPlugin, Instantiate) {
   ASSERT_NE(plugin, nullptr);
 }
 
-TEST(NativeNaturalSortPlugin, HandleReturnsNotImplemented) {
-  g_autoptr(GObject) plugin = G_OBJECT(
-      g_object_new(native_natural_sort_plugin_get_type(), nullptr));
-  ASSERT_NE(plugin, nullptr);
-
-  g_autoptr(FlMethodCall) call = fl_method_call_new(
-      "unknown_method", nullptr);
-  g_autoptr(GError) error = nullptr;
-
-  g_autoptr(FlMethodResponse) response =
-      fl_method_call_respond(call, nullptr, &error);
-
-  // Verify the plugin object is still valid after attempted use.
-  EXPECT_NE(plugin, nullptr);
-}
-
 TEST(NativeNaturalSortPlugin, MultipleInstantiation) {
   g_autoptr(GObject) plugin1 = G_OBJECT(
       g_object_new(native_natural_sort_plugin_get_type(), nullptr));

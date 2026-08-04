@@ -110,7 +110,13 @@ test-kotlin:
 test-linux:
 	@echo "=== Linux C++ tests ==="
 	@cd $(EXAMPLE_DIR) && $(FLUTTER) build linux --debug && \
-		cd build/linux/x64/debug/plugins/$(PROJECT_NAME) \
+		ARCH=$$(uname -m); \
+		case "$$ARCH" in \
+			x86_64) BUILD_ARCH=x64 ;; \
+			aarch64) BUILD_ARCH=arm64 ;; \
+			*) echo "ERROR: unsupported architecture $$ARCH"; exit 1 ;; \
+		esac; \
+		cd build/linux/$$BUILD_ARCH/debug/plugins/$(PROJECT_NAME) \
 			&& ctest --output-on-failure $(NATIVE_TFLAGS)
 
 test-windows:
@@ -145,6 +151,22 @@ ifeq ($(DEVICE),)
 	@exit 1
 endif
 endif
+ifeq ($(DEVICE),)
+ifeq ($(OS),Windows_NT)
+	@$(SUBMAKE) _test-integration DEVICE=windows
+else
+	@UNAME_S=$$(uname -s); \
+	case "$$UNAME_S" in \
+		Linux)  $(SUBMAKE) _test-integration DEVICE=linux ;; \
+		Darwin) $(SUBMAKE) _test-integration DEVICE=macos ;; \
+		*)      $(SUBMAKE) _test-integration ;; \
+	esac
+endif
+else
+	@$(SUBMAKE) _test-integration DEVICE=$(DEVICE)
+endif
+
+_test-integration:
 	@cd $(EXAMPLE_DIR) && $(FLUTTER) test integration_test $(if $(DEVICE),-d $(DEVICE),)
 
 # test-integration is always run standalone; test-all no longer chains it.

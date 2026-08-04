@@ -14,6 +14,7 @@
 
 import 'dart:ui' show Locale;
 
+import '../android/sort.dart' show CollatorDecomposition, CollatorStrength;
 import '../collation_ffi.dart';
 import '../delegate.dart';
 import '../sort.dart';
@@ -25,6 +26,9 @@ class LinuxDelegate extends PlatformDelegate {
   late final LinuxSort _sort;
   Locale? _defaultLocale;
   SortDirection _defaultDirection = SortDirection.ascending;
+  CollatorStrength? _defaultStrength;
+  CollatorDecomposition? _defaultDecomposition;
+  bool? _defaultNumeric;
 
   LinuxDelegate();
 
@@ -36,6 +40,9 @@ class LinuxDelegate extends PlatformDelegate {
     _sort = linux?.sort ?? LinuxSort(loader: _loader);
     _defaultLocale = linux?.locale;
     _defaultDirection = linux?.direction ?? SortDirection.ascending;
+    _defaultStrength = linux?.strength;
+    _defaultDecomposition = linux?.decomposition;
+    _defaultNumeric = linux?.numeric;
   }
 
   @override
@@ -48,6 +55,31 @@ class LinuxDelegate extends PlatformDelegate {
       items,
       locale: locale ?? _defaultLocale,
       direction: direction ?? _defaultDirection,
+      strength: _defaultStrength,
+      decomposition: _defaultDecomposition,
+      numeric: _defaultNumeric,
+    );
+  }
+
+  /// Sorts [items] with full Linux-specific collator overrides.
+  ///
+  /// Each named parameter, when non-null, overrides the default set
+  /// via [SortOptionsLinux] during [init].
+  List<SortItem> sortWithOptions(
+    List<SortItem> items, {
+    SortDirection? direction,
+    Locale? locale,
+    CollatorStrength? strength,
+    CollatorDecomposition? decomposition,
+    bool? numeric,
+  }) {
+    return _sort.sort(
+      items,
+      locale: locale ?? _defaultLocale,
+      direction: direction ?? _defaultDirection,
+      strength: strength ?? _defaultStrength,
+      decomposition: decomposition ?? _defaultDecomposition,
+      numeric: numeric ?? _defaultNumeric,
     );
   }
 }

@@ -99,13 +99,13 @@ class _MockLoader implements CollationLibraryLoader {
   }
 
   @override
-  IcuCollationEngine engine(String? localeName) => _MockEngine();
+  IcuCollator collator(String? localeName) => _MockCollator();
 
   @override
   void dispose() {}
 }
 
-class _MockEngine implements IcuCollationEngine {
+class _MockCollator implements IcuCollator {
   @override
   int compare(String a, String b) => a.compareTo(b);
 

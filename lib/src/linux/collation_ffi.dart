@@ -30,6 +30,10 @@ class LinuxCollationLoader implements CollationLibraryLoader {
   String? _loadedPath;
   bool _available = false;
 
+  UcolOpenDart? _ucolOpen;
+  UcolCloseDart? _ucolClose;
+  UcolStrCollDart? _ucolStrColl;
+
   LinuxCollationLoader({CollationCache? cache, List<String>? searchDirs})
     : _cache = cache ?? CollationCache.inMemory() {
     if (searchDirs != null) _searchDirs = searchDirs;
@@ -45,11 +49,15 @@ class LinuxCollationLoader implements CollationLibraryLoader {
     if (_available) return;
     try {
       final cachedPath = await _cache.read();
-      if (cachedPath != null && _tryLoadPath(cachedPath)) return;
+      if (cachedPath != null && _tryLoadPath(cachedPath)) {
+        _resolveFunctions();
+        return;
+      }
 
       if (await _searchAndLoad()) {
         final path = _loadedPath;
         if (path != null) await _cache.write(path);
+        _resolveFunctions();
         return;
       }
     } catch (_) {
@@ -58,8 +66,12 @@ class LinuxCollationLoader implements CollationLibraryLoader {
   }
 
   @override
-  IcuCollationEngine engine(String? localeName) =>
-      LinuxCollationEngine(_requireLib(), _icuVersionSuffix, localeName);
+  IcuCollator collator(String? localeName) => LinuxCollator(
+    ucolOpen: _ucolOpen!,
+    ucolClose: _ucolClose!,
+    ucolStrColl: _ucolStrColl!,
+    localeName: localeName,
+  );
 
   @override
   void dispose() {
@@ -73,6 +85,20 @@ class LinuxCollationLoader implements CollationLibraryLoader {
     _icuVersionSuffix = suffix;
     _loadedPath = path;
     _available = true;
+  }
+
+  void _resolveFunctions() {
+    final lib = _requireLib();
+    final suffix = _icuVersionSuffix;
+    _ucolOpen = lib.lookupFunction<UcolOpenNative, UcolOpenDart>(
+      'ucol_open$suffix',
+    );
+    _ucolClose = lib.lookupFunction<UcolCloseNative, UcolCloseDart>(
+      'ucol_close$suffix',
+    );
+    _ucolStrColl = lib.lookupFunction<UcolStrCollNative, UcolStrCollDart>(
+      'ucol_strcoll$suffix',
+    );
   }
 
   /// Attempts to resolve [path], applying the state on success.
@@ -101,8 +127,13 @@ class LinuxCollationLoader implements CollationLibraryLoader {
   }
 }
 
-final class LinuxCollationEngine extends CollationEngineBase {
-  LinuxCollationEngine(super.lib, super.suffix, super.localeName);
+final class LinuxCollator extends CollatorBase {
+  LinuxCollator({
+    required super.ucolOpen,
+    required super.ucolClose,
+    required super.ucolStrColl,
+    required super.localeName,
+  });
 }
 
 /// Pure `libicui18n` resolution rules for Linux.

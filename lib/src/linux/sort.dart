@@ -74,18 +74,16 @@ class _LinuxSortImpl implements LinuxSort {
     Locale? locale,
     SortDirection? direction,
   }) {
-    final engine = _loader.engine(locale?.toLanguageTag());
-    final c = IcuCollation(engine);
+    final collator = _loader.collator(locale?.toLanguageTag());
     try {
-      final sorted = c.sort<SortItem>(
-        items: items,
+      return collator.sort(
+        items,
         idOf: (i) => i.id,
         valueOf: (i) => i.value,
         descending: direction == SortDirection.descending,
       );
-      return sorted;
     } finally {
-      c.dispose();
+      collator.dispose();
     }
   }
 }

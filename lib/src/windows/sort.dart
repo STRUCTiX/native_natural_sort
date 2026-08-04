@@ -137,17 +137,16 @@ class _FfiSort {
     Locale? locale,
     SortDirection? direction,
   }) {
-    final engine = _loader.engine(locale?.toLanguageTag());
-    final c = IcuCollation(engine);
+    final collator = _loader.collator(locale?.toLanguageTag());
     try {
-      return c.sort<CollationWindowsItem>(
-        items: items,
+      return collator.sort(
+        items,
         idOf: (i) => i.id,
         valueOf: (i) => i.value,
         descending: direction == SortDirection.descending,
       );
     } finally {
-      c.dispose();
+      collator.dispose();
     }
   }
 }

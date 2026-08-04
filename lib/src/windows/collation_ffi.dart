@@ -23,6 +23,10 @@ class WindowsCollationLoader implements CollationLibraryLoader {
   DynamicLibrary? _lib;
   bool _available = false;
 
+  UcolOpenDart? _ucolOpen;
+  UcolCloseDart? _ucolClose;
+  UcolStrCollDart? _ucolStrColl;
+
   WindowsCollationLoader();
 
   @override
@@ -31,28 +35,63 @@ class WindowsCollationLoader implements CollationLibraryLoader {
   @override
   Future<void> init() async {
     if (_available) return;
-    for (final candidate in _dllCandidates) {
-      try {
-        final lib = DynamicLibrary.open(candidate);
-        if (!_hasSymbols(lib)) continue;
-        _lib = lib;
-        _available = true;
+    try {
+      if (_searchAndLoad()) {
+        _resolveFunctions();
         return;
+      }
+    } catch (_) {
+      _available = false;
+    }
+  }
+
+  bool _searchAndLoad() {
+    for (final candidate in _dllCandidates) {
+      if (_tryLoad(candidate)) return true;
+    }
+    return false;
+  }
+
+  bool _tryLoad(String candidate) {
+    DynamicLibrary? open(String name) {
+      try {
+        return DynamicLibrary.open(name);
       } catch (_) {
-        continue;
+        return null;
       }
     }
-    // Windows system ICU unavailable — natural sort falls back to platform.
+
+    final lib = open(candidate);
+    if (lib == null) return false;
+    if (!_hasSymbols(lib)) return false;
+    _lib = lib;
+    _available = true;
+    return true;
   }
 
   @override
-  IcuCollationEngine engine(String? localeName) =>
-      WindowsCollationEngine(_requireLib(), '', localeName);
+  IcuCollator collator(String? localeName) => WindowsCollator(
+    ucolOpen: _ucolOpen!,
+    ucolClose: _ucolClose!,
+    ucolStrColl: _ucolStrColl!,
+    localeName: localeName,
+  );
 
   @override
   void dispose() {
     _lib = null;
     _available = false;
+  }
+
+  void _resolveFunctions() {
+    final lib = _requireLib();
+    _ucolOpen = lib.lookupFunction<UcolOpenNative, UcolOpenDart>('ucol_open');
+    _ucolClose = lib.lookupFunction<UcolCloseNative, UcolCloseDart>(
+      'ucol_close',
+    );
+    _ucolStrColl = lib.lookupFunction<UcolStrCollNative, UcolStrCollDart>(
+      'ucol_strcoll',
+    );
   }
 
   /// Verifies the unversioned ICU entry symbols are exported by [lib].
@@ -78,6 +117,11 @@ class WindowsCollationLoader implements CollationLibraryLoader {
   }
 }
 
-final class WindowsCollationEngine extends CollationEngineBase {
-  WindowsCollationEngine(super.lib, super.suffix, super.localeName);
+final class WindowsCollator extends CollatorBase {
+  WindowsCollator({
+    required super.ucolOpen,
+    required super.ucolClose,
+    required super.ucolStrColl,
+    required super.localeName,
+  });
 }

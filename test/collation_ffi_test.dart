@@ -2,15 +2,26 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:native_natural_sort/native_natural_sort.dart';
 import 'package:native_natural_sort/src/collation_ffi.dart';
 
+class _TestCollator implements IcuCollator {
+  final CollationCompareFn _compare;
+  const _TestCollator(this._compare);
+
+  @override
+  int compare(String a, String b) => _compare(a, b);
+
+  @override
+  void dispose() {}
+}
+
 void main() {
-  group('IcuCollation', () {
+  group('CollatorSort extension', () {
     /// Mock compare function: standard Dart string comparison.
     int mockCompare(String a, String b) => a.compareTo(b);
 
     test('empty items returns empty list', () {
-      final collation = IcuCollation.test(mockCompare);
-      final result = collation.sort<String>(
-        items: [],
+      final collator = _TestCollator(mockCompare);
+      final result = collator.sort(
+        <String>[],
         idOf: (s) => s,
         valueOf: (s) => s,
       );
@@ -18,9 +29,9 @@ void main() {
     });
 
     test('sorts by value ascending', () {
-      final collation = IcuCollation.test(mockCompare);
-      final result = collation.sort<String>(
-        items: ['banana', 'apple', 'cherry'],
+      final collator = _TestCollator(mockCompare);
+      final result = collator.sort(
+        ['banana', 'apple', 'cherry'],
         idOf: (s) => s,
         valueOf: (s) => s,
       );
@@ -28,9 +39,9 @@ void main() {
     });
 
     test('sorts by value descending', () {
-      final collation = IcuCollation.test(mockCompare);
-      final result = collation.sort<String>(
-        items: ['banana', 'apple', 'cherry'],
+      final collator = _TestCollator(mockCompare);
+      final result = collator.sort(
+        ['banana', 'apple', 'cherry'],
         idOf: (s) => s,
         valueOf: (s) => s,
         descending: true,
@@ -39,9 +50,9 @@ void main() {
     });
 
     test('ties broken by idOf', () {
-      final collation = IcuCollation.test(mockCompare);
-      final result = collation.sort<MapEntry<String, String>>(
-        items: [
+      final collator = _TestCollator(mockCompare);
+      final result = collator.sort(
+        [
           const MapEntry('id2', 'same'),
           const MapEntry('id1', 'same'),
           const MapEntry('id3', 'same'),
@@ -53,14 +64,13 @@ void main() {
     });
 
     test('handles custom types with idOf/valueOf', () {
-      final collation = IcuCollation.test(mockCompare);
-      final items = [
-        const _TestItem('b', '世界'),
-        const _TestItem('a', '你好'),
-        const _TestItem('c', 'Apple'),
-      ];
-      final result = collation.sort<_TestItem>(
-        items: items,
+      final collator = _TestCollator(mockCompare);
+      final result = collator.sort(
+        [
+          const _TestItem('b', '世界'),
+          const _TestItem('a', '你好'),
+          const _TestItem('c', 'Apple'),
+        ],
         idOf: (t) => t.id,
         valueOf: (t) => t.label,
       );
@@ -68,9 +78,14 @@ void main() {
       expect(result.map((t) => t.label), ['Apple', '世界', '你好']);
     });
 
-    test('dispose does not throw for test instance', () {
-      final collation = IcuCollation.test(mockCompare);
-      expect(collation.dispose, returnsNormally);
+    test('single-element list is unchanged', () {
+      final collator = _TestCollator(mockCompare);
+      final result = collator.sort(
+        ['only'],
+        idOf: (s) => s,
+        valueOf: (s) => s,
+      );
+      expect(result, ['only']);
     });
   });
 }

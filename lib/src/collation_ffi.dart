@@ -16,21 +16,41 @@ import 'dart:ffi';
 import 'dart:io';
 
 import 'package:ffi/ffi.dart';
-import 'package:flutter/foundation.dart';
 
 /// Compares [a] and [b] by collation order: negative if [a] sorts first,
 /// zero if collation-equal, positive if [b] sorts first.
 typedef CollationCompareFn = int Function(String a, String b);
 
+/// `UCollator* ucol_open(const char* loc, UErrorCode* status)`
+typedef UcolOpenNative = Pointer<Void> Function(Pointer<Uint8>, Pointer<Int32>);
+typedef UcolOpenDart = Pointer<Void> Function(Pointer<Uint8>, Pointer<Int32>);
+
+/// `void ucol_close(UCollator* coll)`
+typedef UcolCloseNative = Void Function(Pointer<Void>);
+typedef UcolCloseDart = void Function(Pointer<Void>);
+
+/// `int32_t ucol_strcoll(const UCollator* coll, const UChar* s1,
+/// int32_t len1, const UChar* s2, int32_t len2)`
+typedef UcolStrCollNative =
+    Int32 Function(
+      Pointer<Void>,
+      Pointer<Uint16>,
+      Int32,
+      Pointer<Uint16>,
+      Int32,
+    );
+typedef UcolStrCollDart =
+    int Function(Pointer<Void>, Pointer<Uint16>, int, Pointer<Uint16>, int);
+
 /// Contract for platform-native ICU collation engines.
 ///
-/// Implemented by [CollationEngineBase] subclasses and consumed by
-/// [IcuCollation].
-abstract interface class IcuCollationEngine {
+/// Engine lifecycle is managed by the caller — call [dispose]
+/// to release the native collator.
+abstract interface class IcuCollator {
   /// Compares [a] and [b] by collation order.
   int compare(String a, String b);
 
-  /// Releases native resources.  No-op for test doubles.
+  /// Releases the native collator.
   void dispose();
 }
 
@@ -43,74 +63,42 @@ abstract interface class CollationLibraryLoader {
   /// Whether the native ICU library was resolved successfully.
   bool get isAvailable;
 
-  /// Resolves the native ICU library (async, cache-aware).
+  /// Resolves the native ICU library and its function pointers.
   Future<void> init();
 
-  /// Builds a collator engine for [localeName] from the resolved library.
-  IcuCollationEngine engine(String? localeName);
+  /// Returns a new collator for [localeName].
+  IcuCollator collator(String? localeName);
 
-  /// Releases native resources.
+  /// Releases the library handle.
   void dispose();
 }
 
 /// Base for platform FFI collation engines (Linux / Windows).
 ///
-/// Resolves the ICU C API from [lib] (symbols may carry a version
-/// [suffix], e.g. `_78`), opens a collator for [localeName] with numeric
-/// ordering enabled via the `-u-kn` locale keyword, and compares strings
-/// pairwise with [ucol_strcoll].
+/// Receives pre-resolved ICU C function pointers from the loader,
+/// opens a collator for [localeName] with numeric ordering enabled
+/// via the `-u-kn` locale keyword, and compares strings pairwise
+/// with `ucol_strcoll`.
 ///
 /// Numeric ordering must be requested at open time — setting the
 /// UCOL_NUMERIC_COLLATION attribute afterwards has no effect — and sort
 /// keys cannot represent numeric order ("2"/"10" collapse to equal keys),
-/// hence direct [ucol_strcoll] comparison.
-abstract class CollationEngineBase implements IcuCollationEngine {
-  CollationEngineBase(DynamicLibrary lib, String suffix, String? localeName) {
-    _ucolOpen = lib
-        .lookupFunction<
-          Pointer<Void> Function(Pointer<Uint8>, Pointer<Int32>),
-          Pointer<Void> Function(Pointer<Uint8>, Pointer<Int32>)
-        >('ucol_open$suffix');
-    _ucolClose = lib
-        .lookupFunction<
-          Void Function(Pointer<Void>),
-          void Function(Pointer<Void>)
-        >('ucol_close$suffix');
-    _ucolStrColl = lib
-        .lookupFunction<
-          Int32 Function(
-            Pointer<Void>,
-            Pointer<Uint16>,
-            Int32,
-            Pointer<Uint16>,
-            Int32,
-          ),
-          int Function(
-            Pointer<Void>,
-            Pointer<Uint16>,
-            int,
-            Pointer<Uint16>,
-            int,
-          )
-        >('ucol_strcoll$suffix');
+/// hence direct `ucol_strcoll` comparison.
+abstract class CollatorBase implements IcuCollator {
+  CollatorBase({
+    required UcolOpenDart ucolOpen,
+    required UcolCloseDart ucolClose,
+    required UcolStrCollDart ucolStrColl,
+    required String? localeName,
+  }) : _ucolOpen = ucolOpen,
+       _ucolClose = ucolClose,
+       _ucolStrColl = ucolStrColl {
     _coll = _openCollator(localeName);
   }
 
-  // UCollator* ucol_open(const char* loc, UErrorCode* status)
-  late final Pointer<Void> Function(Pointer<Uint8>, Pointer<Int32>) _ucolOpen;
-  // void ucol_close(UCollator* coll)
-  late final void Function(Pointer<Void>) _ucolClose;
-  // int32_t ucol_strcoll(
-  //   const UCollator* coll, const UChar* s1, int32_t len1,
-  //   const UChar* s2, int32_t len2)
-  late final int Function(
-    Pointer<Void>,
-    Pointer<Uint16>,
-    int,
-    Pointer<Uint16>,
-    int,
-  )
-  _ucolStrColl;
+  final UcolOpenDart _ucolOpen;
+  final UcolCloseDart _ucolClose;
+  final UcolStrCollDart _ucolStrColl;
   late final Pointer<Void> _coll;
 
   Pointer<Void> _openCollator(String? localeName) {
@@ -158,48 +146,23 @@ abstract class CollationEngineBase implements IcuCollationEngine {
   });
 }
 
-/// Synchronous collation sort using an injectable comparison function.
-///
-/// Pure-Dart [sort] logic fed by the injected [_compare] closure.
-/// Production instances wrap a platform-native [IcuCollationEngine];
-/// tests inject a mock via [IcuCollation.test].
-class IcuCollation {
-  final CollationCompareFn _compare;
-  final void Function() _dispose;
-
-  /// Production: wraps a platform-native [IcuCollationEngine].
-  IcuCollation(IcuCollationEngine engine)
-    : _compare = engine.compare,
-      _dispose = engine.dispose;
-
-  /// Test: inject a mock comparison function.  No native resources.
-  @visibleForTesting
-  IcuCollation.test(CollationCompareFn compare)
-    : _compare = compare,
-      _dispose = _noop;
-
-  static void _noop() {}
-
-  /// Releases native resources (no-op for test instances).
-  void dispose() => _dispose();
-
-  /// Sorts [items] by collation order of their values.
+extension CollatorSort on IcuCollator {
+  /// Returns a new list sorted by collation order.
   ///
-  /// Returns a new sorted list.  Collation ties are broken by [idOf].
-  List<T> sort<T>({
-    required List<T> items,
+  /// Ties are broken by [idOf].  Set [descending] to `true` for
+  /// reverse order.
+  List<T> sort<T>(
+    List<T> items, {
     required String Function(T) idOf,
     required String Function(T) valueOf,
     bool descending = false,
   }) {
     if (items.isEmpty) return items;
-
-    final sorted = items.toList()
-      ..sort((a, b) {
-        final cmp = _compare(valueOf(a), valueOf(b));
-        if (cmp != 0) return cmp;
-        return idOf(a).compareTo(idOf(b));
-      });
-    return descending ? sorted.reversed.toList() : sorted;
+    return [...items]..sort((a, b) {
+      final cmp = compare(valueOf(a), valueOf(b));
+      if (cmp != 0) return descending ? -cmp : cmp;
+      final idCmp = idOf(a).compareTo(idOf(b));
+      return descending ? -idCmp : idCmp;
+    });
   }
 }

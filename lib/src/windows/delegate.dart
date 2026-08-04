@@ -15,17 +15,13 @@
 import 'dart:async';
 import 'dart:ui' show Locale;
 
-import '../collation_ffi.dart';
 import '../delegate.dart';
 import '../sort.dart';
-import 'collation_ffi.dart';
 import 'sort.dart';
 
 class WindowsDelegate extends PlatformDelegate {
-  late final CollationLibraryLoader _loader;
   late final WindowsSort _sort;
   Locale? _defaultLocale;
-  WindowsCollationBackend? _defaultBackend;
   SortDirection? _defaultDirection;
 
   WindowsDelegate();
@@ -33,11 +29,9 @@ class WindowsDelegate extends PlatformDelegate {
   @override
   Future<void> init(SortOptions options) async {
     final windows = options.windows;
-    _loader = windows?.loader ?? WindowsCollationLoader();
-    await _loader.init();
-    _sort = windows?.sort ?? WindowsSort(loader: _loader);
+    _sort = windows?.sort ?? WindowsSort.pigeon();
+    await _sort.init();
     _defaultLocale = windows?.locale;
-    _defaultBackend = windows?.backend;
     _defaultDirection = windows?.direction;
   }
 
@@ -46,6 +40,25 @@ class WindowsDelegate extends PlatformDelegate {
     List<SortItem> items, {
     SortDirection? direction,
     Locale? locale,
+  }) => _doSort(items, locale: locale, direction: direction);
+
+  @override
+  FutureOr<List<SortItem>> sortWithOptions(
+    List<SortItem> items, {
+    SortOptions? options,
+  }) {
+    final windows = options?.windows;
+    return _doSort(
+      items,
+      locale: windows?.locale ?? _defaultLocale,
+      direction: windows?.direction ?? _defaultDirection,
+    );
+  }
+
+  FutureOr<List<SortItem>> _doSort(
+    List<SortItem> items, {
+    Locale? locale,
+    SortDirection? direction,
   }) {
     final platformItems = items
         .map((i) => CollationWindowsItem(id: i.id, value: i.value))
@@ -53,42 +66,15 @@ class WindowsDelegate extends PlatformDelegate {
     final result = _sort.sort(
       platformItems,
       locale: locale ?? _defaultLocale,
-      backend: _defaultBackend,
       direction: direction ?? _defaultDirection,
     );
-    if (result is Future<List<CollationWindowsItem>>) {
-      return result.then(
-        (list) => list.map((i) => SortItem(id: i.id, value: i.value)).toList(),
-      );
-    }
-    return result.map((i) => SortItem(id: i.id, value: i.value)).toList();
-  }
 
-  /// Sorts [items] with full Windows-specific collator overrides.
-  ///
-  /// Each field in [options.windows], when non-null, overrides the default
-  /// set via [SortOptionsWindows] during [init].  A `null` field, or
-  /// [options] itself being `null`, falls back to the init default.
-  @override
-  FutureOr<List<SortItem>> sortWithOptions(
-    List<SortItem> items, {
-    SortOptions? options,
-  }) {
-    final windows = options?.windows;
-    final platformItems = items
-        .map((i) => CollationWindowsItem(id: i.id, value: i.value))
-        .toList();
-    final result = _sort.sort(
-      platformItems,
-      locale: windows?.locale ?? _defaultLocale,
-      backend: windows?.backend ?? _defaultBackend,
-      direction: windows?.direction ?? _defaultDirection,
-    );
+    List<SortItem> mapBack(List<CollationWindowsItem> list) =>
+        list.map((i) => SortItem(id: i.id, value: i.value)).toList();
+
     if (result is Future<List<CollationWindowsItem>>) {
-      return result.then(
-        (list) => list.map((i) => SortItem(id: i.id, value: i.value)).toList(),
-      );
+      return result.then(mapBack);
     }
-    return result.map((i) => SortItem(id: i.id, value: i.value)).toList();
+    return mapBack(result);
   }
 }

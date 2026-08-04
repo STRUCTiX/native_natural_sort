@@ -122,7 +122,7 @@ test-linux:
 test-windows:
 	@echo "=== Windows C++ tests ==="
 	@cd $(EXAMPLE_DIR) && $(FLUTTER) build windows --debug
-	@cd $(EXAMPLE_DIR)/build/windows/x64/debug/plugins/$(PROJECT_NAME) \
+	@cd $(EXAMPLE_DIR)/build/windows/x64/plugins/$(PROJECT_NAME)/Debug \
 		&& $(PROJECT_NAME)_test.exe $(NATIVE_TFLAGS)
 
 test:

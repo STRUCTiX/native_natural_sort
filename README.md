@@ -28,7 +28,7 @@ await sort.init(SortOptions(
   ),
   windows: SortOptionsWindows(
     locale: Locale('en'),
-    backend: WindowsCollationBackend.ffi,  // or .pigeon (default)
+    sort: WindowsSort.ffi(),  // or WindowsSort.pigeon() (default)
   ),
 ));
 ```
@@ -47,8 +47,8 @@ final sorted = await sort.sort(
 
 | Backend | Technology | Notes |
 |---------|-----------|-------|
-| `WindowsCollationBackend.pigeon` | `CompareStringEx` (Win32) | Default |
-| `WindowsCollationBackend.ffi` | OS-bundled ICU DLL | Requires Windows 10 1703+ |
+| `WindowsSort.pigeon()` | `CompareStringEx` (Win32) | Default |
+| `WindowsSort.ffi()` | OS-bundled ICU DLL | Requires Windows 10 1703+ |
 
 ### Direct FFI access
 

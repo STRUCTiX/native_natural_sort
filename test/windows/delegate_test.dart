@@ -5,36 +5,43 @@ import 'package:native_natural_sort/native_natural_sort.dart';
 
 void main() {
   group('WindowsDelegate', () {
-    test('init resolves loader and stores locale/backend/direction', () async {
-      final mockLoader = _MockLoader();
+    test('init creates default sort when none provided', () async {
+      final delegate = WindowsDelegate();
+      await delegate.init(const SortOptions());
+    });
+
+    test('init calls sort.init()', () async {
+      final mockSort = _MockWindowsSort();
+      final delegate = WindowsDelegate();
+      await delegate.init(
+        SortOptions(windows: SortOptionsWindows(sort: mockSort)),
+      );
+      expect(mockSort.initCalled, isTrue);
+    });
+
+    test('init stores locale and direction from options', () async {
+      final mockSort = _MockWindowsSort();
       final delegate = WindowsDelegate();
       await delegate.init(
         SortOptions(
           windows: SortOptionsWindows(
             locale: const Locale('de'),
-            backend: WindowsCollationBackend.ffi,
             direction: SortDirection.descending,
-            loader: mockLoader,
+            sort: mockSort,
           ),
         ),
       );
 
-      expect(mockLoader.initCalled, isTrue);
-    });
-
-    test('init creates default loader when none provided', () async {
-      final delegate = WindowsDelegate();
-      await delegate.init(const SortOptions());
+      await delegate.sort([const SortItem(id: 'a', value: 'x')]);
+      expect(mockSort.lastLocale, const Locale('de'));
+      expect(mockSort.lastDirection, SortDirection.descending);
     });
 
     test('sort maps SortItem to CollationWindowsItem and back', () async {
       final mockSort = _MockWindowsSort();
-      final mockLoader = _MockLoader();
       final delegate = WindowsDelegate();
       await delegate.init(
-        SortOptions(
-          windows: SortOptionsWindows(loader: mockLoader, sort: mockSort),
-        ),
+        SortOptions(windows: SortOptionsWindows(sort: mockSort)),
       );
 
       final result = await delegate.sort([
@@ -44,33 +51,13 @@ void main() {
       expect(result.map((i) => i.id), mockSort.lastRequestedIds);
     });
 
-    test('sort passes backend from options to WindowsSort', () async {
-      final mockSort = _MockWindowsSort();
-      final mockLoader = _MockLoader();
-      final delegate = WindowsDelegate();
-      await delegate.init(
-        SortOptions(
-          windows: SortOptionsWindows(
-            loader: mockLoader,
-            sort: mockSort,
-            backend: WindowsCollationBackend.ffi,
-          ),
-        ),
-      );
-
-      await delegate.sort([const SortItem(id: 'a', value: 'x')]);
-      expect(mockSort.lastBackend, WindowsCollationBackend.ffi);
-    });
-
     test('sort overrides locale and direction from call arguments', () async {
       final mockSort = _MockWindowsSort();
-      final mockLoader = _MockLoader();
       final delegate = WindowsDelegate();
       await delegate.init(
         SortOptions(
           windows: SortOptionsWindows(
             locale: const Locale('en'),
-            loader: mockLoader,
             sort: mockSort,
           ),
         ),
@@ -85,40 +72,14 @@ void main() {
       expect(mockSort.lastDirection, SortDirection.descending);
     });
 
-    test('sortWithOptions overrides backend per-call', () async {
+    test('sortWithOptions overrides per-call', () async {
       final mockSort = _MockWindowsSort();
-      final mockLoader = _MockLoader();
-      final delegate = WindowsDelegate();
-      await delegate.init(
-        SortOptions(
-          windows: SortOptionsWindows(
-            loader: mockLoader,
-            sort: mockSort,
-            backend: WindowsCollationBackend.pigeon,
-          ),
-        ),
-      );
-
-      await delegate.sortWithOptions(
-        [const SortItem(id: 'a', value: 'x')],
-        options: const SortOptions(
-          windows: SortOptionsWindows(backend: WindowsCollationBackend.ffi),
-        ),
-      );
-      expect(mockSort.lastBackend, WindowsCollationBackend.ffi);
-    });
-
-    test('sortWithOptions falls back to init defaults', () async {
-      final mockSort = _MockWindowsSort();
-      final mockLoader = _MockLoader();
       final delegate = WindowsDelegate();
       await delegate.init(
         SortOptions(
           windows: SortOptionsWindows(
             locale: const Locale('ja'),
             direction: SortDirection.descending,
-            backend: WindowsCollationBackend.ffi,
-            loader: mockLoader,
             sort: mockSort,
           ),
         ),
@@ -132,35 +93,31 @@ void main() {
       );
       expect(mockSort.lastLocale, const Locale('ja'));
       expect(mockSort.lastDirection, SortDirection.ascending);
-      expect(mockSort.lastBackend, WindowsCollationBackend.pigeon);
     });
 
     test('sortWithOptions with null options uses init defaults', () async {
       final mockSort = _MockWindowsSort();
-      final mockLoader = _MockLoader();
       final delegate = WindowsDelegate();
       await delegate.init(
         SortOptions(
           windows: SortOptionsWindows(
-            loader: mockLoader,
+            locale: const Locale('es'),
+            direction: SortDirection.descending,
             sort: mockSort,
-            backend: WindowsCollationBackend.ffi,
           ),
         ),
       );
 
       await delegate.sortWithOptions([const SortItem(id: 'a', value: 'x')]);
-      expect(mockSort.lastBackend, WindowsCollationBackend.ffi);
+      expect(mockSort.lastLocale, const Locale('es'));
+      expect(mockSort.lastDirection, SortDirection.descending);
     });
 
     test('sortWithOptions with empty list does not throw', () async {
       final mockSort = _MockWindowsSort();
-      final mockLoader = _MockLoader();
       final delegate = WindowsDelegate();
       await delegate.init(
-        SortOptions(
-          windows: SortOptionsWindows(loader: mockLoader, sort: mockSort),
-        ),
+        SortOptions(windows: SortOptionsWindows(sort: mockSort)),
       );
 
       final result = await delegate.sortWithOptions([]);
@@ -169,8 +126,11 @@ void main() {
   });
 }
 
-class _MockLoader implements CollationLibraryLoader {
+class _MockWindowsSort implements WindowsSort {
   bool initCalled = false;
+  Locale? lastLocale;
+  SortDirection? lastDirection;
+  List<String> lastRequestedIds = [];
 
   @override
   bool get isAvailable => true;
@@ -181,44 +141,13 @@ class _MockLoader implements CollationLibraryLoader {
   }
 
   @override
-  IcuCollator collator(
-    String? localeName, {
-    bool numeric = true,
-    int? strength,
-    int? decomposition,
-  }) => _MockCollator();
-
-  @override
-  void dispose() {}
-}
-
-class _MockCollator implements IcuCollator {
-  @override
-  int compare(String a, String b) => a.compareTo(b);
-
-  @override
-  void dispose() {}
-}
-
-class _MockWindowsSort implements WindowsSort {
-  Locale? lastLocale;
-  SortDirection? lastDirection;
-  WindowsCollationBackend? lastBackend;
-  List<String> lastRequestedIds = [];
-
-  @override
-  bool get isFfiAvailable => true;
-
-  @override
   Future<List<CollationWindowsItem>> sort(
     List<CollationWindowsItem> items, {
     Locale? locale,
-    WindowsCollationBackend? backend,
     SortDirection? direction,
   }) async {
     lastLocale = locale;
     lastDirection = direction;
-    lastBackend = backend;
     lastRequestedIds = items.map((i) => i.id).toList();
     return items;
   }

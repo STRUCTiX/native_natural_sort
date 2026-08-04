@@ -23,94 +23,49 @@ import 'collation_ffi.dart';
 export 'collation_api.g.dart'
     show CollationWindowsHostApi, CollationWindowsItem, CollationWindowsRequest;
 
-/// Backend selection for Windows collation.
-enum WindowsCollationBackend {
-  /// Use the Pigeon MethodChannel path (CompareStringEx, default).
-  pigeon,
-
-  /// Use the Dart FFI path (OS-bundled ICU).
-  ffi,
-}
-
-/// Windows sort — dispatches to Pigeon or FFI based on options.
+/// Windows collation interface.
+///
+/// Two built-in backends are available via named constructors:
+/// - [WindowsSort.pigeon] — MethodChannel → CompareStringEx (default).
+/// - [WindowsSort.ffi] — Dart FFI → OS-bundled ICU.
 abstract interface class WindowsSort {
-  /// Whether the underlying ICU loader is available (FFI path only).
-  bool get isFfiAvailable;
+  /// Whether the backend is ready to use.
+  bool get isAvailable;
 
+  /// Initialize the backend (load native libraries if needed).
+  Future<void> init();
+
+  /// Sort [items] using platform-native collation.
   FutureOr<List<CollationWindowsItem>> sort(
     List<CollationWindowsItem> items, {
     Locale? locale,
-    WindowsCollationBackend? backend,
     SortDirection? direction,
   });
 
-  factory WindowsSort({CollationLibraryLoader? loader}) = _WindowsSortImpl;
+  /// Pigeon (MethodChannel → CompareStringEx) backend.
+  ///
+  /// Always available — no native library loading required.
+  factory WindowsSort.pigeon() = _WindowsPigeonSort;
+
+  /// FFI (OS-bundled ICU) backend.
+  ///
+  /// Loads `icu.dll` / `icuin.dll` via [init].  Check [isAvailable] after
+  /// initialization to verify the library was found.
+  factory WindowsSort.ffi({CollationLibraryLoader? loader}) = _WindowsFfiSort;
 }
 
-/// Per-platform options for Windows.
-abstract interface class SortOptionsWindows {
-  /// Collation locale; `null` means system default.
-  Locale? get locale;
+final class _WindowsPigeonSort implements WindowsSort {
+  final CollationWindowsHostApi _host = CollationWindowsHostApi();
 
-  /// Which native backend to use (defaults to [WindowsCollationBackend.pigeon]).
-  WindowsCollationBackend get backend;
-
-  /// Injectable sort implementation; `null` uses the default.
-  WindowsSort? get sort;
-
-  /// Injectable ICU library loader; `null` uses the default.
-  CollationLibraryLoader? get loader;
-
-  /// Sort direction (defaults to [SortDirection.ascending]).
-  SortDirection get direction;
-
-  const factory SortOptionsWindows({
-    Locale? locale,
-    WindowsCollationBackend backend,
-    WindowsSort? sort,
-    CollationLibraryLoader? loader,
-    SortDirection direction,
-  }) = _SortOptionsWindowsImpl;
-}
-
-class _WindowsSortImpl implements WindowsSort {
-  final _pigeon = _PigeonSort();
-  final _FfiSort _ffi;
-
-  _WindowsSortImpl({CollationLibraryLoader? loader})
-    : _ffi = _FfiSort(loader: loader);
+  _WindowsPigeonSort();
 
   @override
-  bool get isFfiAvailable => _ffi.isAvailable;
+  bool get isAvailable => true;
 
   @override
-  FutureOr<List<CollationWindowsItem>> sort(
-    List<CollationWindowsItem> items, {
-    Locale? locale,
-    WindowsCollationBackend? backend,
-    SortDirection? direction,
-  }) {
-    final effectiveBackend = backend ?? WindowsCollationBackend.pigeon;
-    return switch (effectiveBackend) {
-      WindowsCollationBackend.pigeon => _pigeon.sort(
-        items,
-        locale: locale,
-        direction: direction,
-      ),
-      WindowsCollationBackend.ffi => _ffi.sort(
-        items,
-        locale: locale,
-        direction: direction,
-      ),
-    };
-  }
-}
+  Future<void> init() async {}
 
-class _PigeonSort {
-  final _host = CollationWindowsHostApi();
-
-  _PigeonSort();
-
+  @override
   Future<List<CollationWindowsItem>> sort(
     List<CollationWindowsItem> items, {
     Locale? locale,
@@ -124,14 +79,19 @@ class _PigeonSort {
   }
 }
 
-class _FfiSort {
+final class _WindowsFfiSort implements WindowsSort {
   final CollationLibraryLoader _loader;
 
-  _FfiSort({CollationLibraryLoader? loader})
+  _WindowsFfiSort({CollationLibraryLoader? loader})
     : _loader = loader ?? WindowsCollationLoader();
 
+  @override
   bool get isAvailable => _loader.isAvailable;
 
+  @override
+  Future<void> init() => _loader.init();
+
+  @override
   List<CollationWindowsItem> sort(
     List<CollationWindowsItem> items, {
     Locale? locale,
@@ -151,22 +111,35 @@ class _FfiSort {
   }
 }
 
+/// Per-platform options for Windows.
+abstract interface class SortOptionsWindows {
+  /// Collation locale; `null` means system default.
+  Locale? get locale;
+
+  /// Sort implementation (defaults to [WindowsSort.pigeon] when `null`).
+  WindowsSort? get sort;
+
+  /// Sort direction (defaults to [SortDirection.ascending]).
+  SortDirection get direction;
+
+  const factory SortOptionsWindows({
+    Locale? locale,
+    WindowsSort? sort,
+    SortDirection direction,
+  }) = _SortOptionsWindowsImpl;
+}
+
 class _SortOptionsWindowsImpl implements SortOptionsWindows {
   @override
   final Locale? locale;
   @override
-  final WindowsCollationBackend backend;
-  @override
   final WindowsSort? sort;
   @override
-  final CollationLibraryLoader? loader;
-  @override
   final SortDirection direction;
+
   const _SortOptionsWindowsImpl({
     this.locale,
-    this.backend = WindowsCollationBackend.pigeon,
     this.sort,
-    this.loader,
     this.direction = SortDirection.ascending,
   });
 }

@@ -60,22 +60,22 @@ void main() {
     });
 
     test('per-platform options are preserved', () {
-      const options = SortOptions(
-        android: SortOptionsAndroid(locale: Locale('zh')),
-        ios: SortOptionsIOS(
+      final options = SortOptions(
+        android: const SortOptionsAndroid(locale: Locale('zh')),
+        ios: const SortOptionsIOS(
           locale: Locale('ja'),
           direction: SortDirection.descending,
           caseSensitive: true,
         ),
-        macOS: SortOptionsMacOS(
+        macOS: const SortOptionsMacOS(
           locale: Locale('ko'),
           direction: SortDirection.descending,
           diacriticInsensitive: true,
         ),
-        linux: SortOptionsLinux(locale: Locale('de')),
+        linux: const SortOptionsLinux(locale: Locale('de')),
         windows: SortOptionsWindows(
-          locale: Locale('en'),
-          backend: WindowsCollationBackend.ffi,
+          locale: const Locale('en'),
+          sort: WindowsSort.ffi(),
         ),
       );
       expect(options.android?.locale, const Locale('zh'));
@@ -87,7 +87,7 @@ void main() {
       expect(options.macOS?.diacriticInsensitive, true);
       expect(options.linux?.locale, const Locale('de'));
       expect(options.windows?.locale, const Locale('en'));
-      expect(options.windows?.backend, WindowsCollationBackend.ffi);
+      expect(options.windows?.sort, isA<WindowsSort>());
     });
 
     test('SortOptionsAndroid stores collator fields', () {
@@ -227,19 +227,13 @@ void main() {
     });
   });
 
-  group('WindowsCollationBackend', () {
-    test('has pigeon and ffi values', () {
-      expect(WindowsCollationBackend.values, [
-        WindowsCollationBackend.pigeon,
-        WindowsCollationBackend.ffi,
-      ]);
+  group('WindowsSort', () {
+    test('WindowsSort.pigeon is always available', () {
+      expect(WindowsSort.pigeon().isAvailable, isTrue);
     });
 
-    test('default is pigeon', () {
-      expect(
-        const SortOptionsWindows().backend,
-        WindowsCollationBackend.pigeon,
-      );
+    test('SortOptionsWindows default sort is null', () {
+      expect(const SortOptionsWindows().sort, isNull);
     });
   });
 

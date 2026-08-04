@@ -84,6 +84,88 @@ void main() {
       expect(mockSort.lastLocale, const Locale('fr'));
       expect(mockSort.lastDirection, SortDirection.descending);
     });
+
+    test('sortWithOptions overrides backend per-call', () async {
+      final mockSort = _MockWindowsSort();
+      final mockLoader = _MockLoader();
+      final delegate = WindowsDelegate();
+      await delegate.init(
+        SortOptions(
+          windows: SortOptionsWindows(
+            loader: mockLoader,
+            sort: mockSort,
+            backend: WindowsCollationBackend.pigeon,
+          ),
+        ),
+      );
+
+      await delegate.sortWithOptions(
+        [const SortItem(id: 'a', value: 'x')],
+        options: const SortOptions(
+          windows: SortOptionsWindows(backend: WindowsCollationBackend.ffi),
+        ),
+      );
+      expect(mockSort.lastBackend, WindowsCollationBackend.ffi);
+    });
+
+    test('sortWithOptions falls back to init defaults', () async {
+      final mockSort = _MockWindowsSort();
+      final mockLoader = _MockLoader();
+      final delegate = WindowsDelegate();
+      await delegate.init(
+        SortOptions(
+          windows: SortOptionsWindows(
+            locale: const Locale('ja'),
+            direction: SortDirection.descending,
+            backend: WindowsCollationBackend.ffi,
+            loader: mockLoader,
+            sort: mockSort,
+          ),
+        ),
+      );
+
+      await delegate.sortWithOptions(
+        [const SortItem(id: 'a', value: 'x')],
+        options: const SortOptions(
+          windows: SortOptionsWindows(direction: SortDirection.ascending),
+        ),
+      );
+      expect(mockSort.lastLocale, const Locale('ja'));
+      expect(mockSort.lastDirection, SortDirection.ascending);
+      expect(mockSort.lastBackend, WindowsCollationBackend.pigeon);
+    });
+
+    test('sortWithOptions with null options uses init defaults', () async {
+      final mockSort = _MockWindowsSort();
+      final mockLoader = _MockLoader();
+      final delegate = WindowsDelegate();
+      await delegate.init(
+        SortOptions(
+          windows: SortOptionsWindows(
+            loader: mockLoader,
+            sort: mockSort,
+            backend: WindowsCollationBackend.ffi,
+          ),
+        ),
+      );
+
+      await delegate.sortWithOptions([const SortItem(id: 'a', value: 'x')]);
+      expect(mockSort.lastBackend, WindowsCollationBackend.ffi);
+    });
+
+    test('sortWithOptions with empty list does not throw', () async {
+      final mockSort = _MockWindowsSort();
+      final mockLoader = _MockLoader();
+      final delegate = WindowsDelegate();
+      await delegate.init(
+        SortOptions(
+          windows: SortOptionsWindows(loader: mockLoader, sort: mockSort),
+        ),
+      );
+
+      final result = await delegate.sortWithOptions([]);
+      expect(result, isEmpty);
+    });
   });
 }
 

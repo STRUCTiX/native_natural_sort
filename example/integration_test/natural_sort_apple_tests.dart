@@ -72,8 +72,14 @@ void registerAppleTests() {
       ) async {
         await sort.init(
           const SortOptions(
-            ios: SortOptionsIOS(caseSensitive: true),
-            macOS: SortOptionsMacOS(caseSensitive: true),
+            ios: SortOptionsIOS(
+              locale: Locale('en'),
+              caseSensitive: true,
+            ),
+            macOS: SortOptionsMacOS(
+              locale: Locale('en'),
+              caseSensitive: true,
+            ),
           ),
         );
 
@@ -81,7 +87,7 @@ void registerAppleTests() {
           const SortItem(id: 'lower', value: 'apple'),
           const SortItem(id: 'upper', value: 'Apple'),
         ]);
-        // caseSensitive: true → case matters.
+        // en locale + caseSensitive → 'a' < 'A'.
         expect(result.map((i) => i.id), ['lower', 'upper']);
       });
 
@@ -119,13 +125,16 @@ void registerAppleTests() {
       testWidgets('diacriticInsensitive: false (default) — e before é', (
         tester,
       ) async {
-        await sort.init(const SortOptions());
+        await sort.init(const SortOptions(
+          ios: SortOptionsIOS(locale: Locale('en')),
+          macOS: SortOptionsMacOS(locale: Locale('en')),
+        ));
 
         final result = await sort.sort([
           const SortItem(id: 'accent', value: 'café'),
           const SortItem(id: 'plain', value: 'cafe'),
         ]);
-        // Default: diacritics distinct → 'e' < 'é'.
+        // en locale + diacritics distinct → 'e' < 'é'.
         expect(result.map((i) => i.id), ['plain', 'accent']);
       });
 
@@ -134,10 +143,12 @@ void registerAppleTests() {
         await sort.init(
           const SortOptions(
             ios: SortOptionsIOS(
+              locale: Locale('en'),
               caseSensitive: true,
               diacriticInsensitive: true,
             ),
             macOS: SortOptionsMacOS(
+              locale: Locale('en'),
               caseSensitive: true,
               diacriticInsensitive: true,
             ),
@@ -148,7 +159,7 @@ void registerAppleTests() {
           const SortItem(id: 'upper_accent', value: 'Café'),
           const SortItem(id: 'lower_plain', value: 'cafe'),
         ]);
-        // 'C' ≠ 'c' + 'é' ≈ 'e' → forcedOrdering.
+        // en locale: 'c' < 'C' + 'é' ≈ 'e' → lowercase first.
         expect(result.map((i) => i.id), ['lower_plain', 'upper_accent']);
       });
 

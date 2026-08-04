@@ -26,7 +26,7 @@ class WindowsDelegate extends PlatformDelegate {
   late final WindowsSort _sort;
   Locale? _defaultLocale;
   WindowsCollationBackend? _defaultBackend;
-  SortDirection _defaultDirection = SortDirection.ascending;
+  SortDirection? _defaultDirection;
 
   WindowsDelegate();
 
@@ -38,7 +38,7 @@ class WindowsDelegate extends PlatformDelegate {
     _sort = windows?.sort ?? WindowsSort(loader: _loader);
     _defaultLocale = windows?.locale;
     _defaultBackend = windows?.backend;
-    _defaultDirection = windows?.direction ?? SortDirection.ascending;
+    _defaultDirection = windows?.direction;
   }
 
   @override
@@ -55,6 +55,34 @@ class WindowsDelegate extends PlatformDelegate {
       locale: locale ?? _defaultLocale,
       backend: _defaultBackend,
       direction: direction ?? _defaultDirection,
+    );
+    if (result is Future<List<CollationWindowsItem>>) {
+      return result.then(
+        (list) => list.map((i) => SortItem(id: i.id, value: i.value)).toList(),
+      );
+    }
+    return result.map((i) => SortItem(id: i.id, value: i.value)).toList();
+  }
+
+  /// Sorts [items] with full Windows-specific collator overrides.
+  ///
+  /// Each field in [options.windows], when non-null, overrides the default
+  /// set via [SortOptionsWindows] during [init].  A `null` field, or
+  /// [options] itself being `null`, falls back to the init default.
+  @override
+  FutureOr<List<SortItem>> sortWithOptions(
+    List<SortItem> items, {
+    SortOptions? options,
+  }) {
+    final windows = options?.windows;
+    final platformItems = items
+        .map((i) => CollationWindowsItem(id: i.id, value: i.value))
+        .toList();
+    final result = _sort.sort(
+      platformItems,
+      locale: windows?.locale ?? _defaultLocale,
+      backend: windows?.backend ?? _defaultBackend,
+      direction: windows?.direction ?? _defaultDirection,
     );
     if (result is Future<List<CollationWindowsItem>>) {
       return result.then(

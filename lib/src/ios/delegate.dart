@@ -21,7 +21,7 @@ import 'sort.dart';
 class IOSDelegate extends PlatformDelegate {
   late final IOSSort _sort;
   Locale? _defaultLocale;
-  SortDirection _defaultDirection = SortDirection.ascending;
+  SortDirection? _defaultDirection;
   bool? _defaultCaseSensitive;
   bool? _defaultDiacriticInsensitive;
 
@@ -32,7 +32,7 @@ class IOSDelegate extends PlatformDelegate {
     final ios = options.ios;
     _sort = ios?.sort ?? IOSSort();
     _defaultLocale = ios?.locale;
-    _defaultDirection = ios?.direction ?? SortDirection.ascending;
+    _defaultDirection = ios?.direction;
     _defaultCaseSensitive = ios?.caseSensitive;
     _defaultDiacriticInsensitive = ios?.diacriticInsensitive;
   }
@@ -52,6 +52,31 @@ class IOSDelegate extends PlatformDelegate {
       direction: direction ?? _defaultDirection,
       caseSensitive: _defaultCaseSensitive,
       diacriticInsensitive: _defaultDiacriticInsensitive,
+    );
+    return result.map((i) => SortItem(id: i.id, value: i.value)).toList();
+  }
+
+  /// Sorts [items] with full iOS-specific collator overrides.
+  ///
+  /// Each field in [options.ios], when non-null, overrides the default set
+  /// via [SortOptionsIOS] during [init].  A `null` field, or [options]
+  /// itself being `null`, falls back to the init default.
+  @override
+  Future<List<SortItem>> sortWithOptions(
+    List<SortItem> items, {
+    SortOptions? options,
+  }) async {
+    final ios = options?.ios;
+    final platformItems = items
+        .map((i) => CollationIOSItem(id: i.id, value: i.value))
+        .toList();
+    final result = await _sort.sort(
+      platformItems,
+      locale: ios?.locale ?? _defaultLocale,
+      direction: ios?.direction ?? _defaultDirection,
+      caseSensitive: ios?.caseSensitive ?? _defaultCaseSensitive,
+      diacriticInsensitive:
+          ios?.diacriticInsensitive ?? _defaultDiacriticInsensitive,
     );
     return result.map((i) => SortItem(id: i.id, value: i.value)).toList();
   }

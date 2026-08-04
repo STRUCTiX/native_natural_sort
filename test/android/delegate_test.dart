@@ -126,8 +126,12 @@ void main() {
 
       await delegate.sortWithOptions(
         [const SortItem(id: 'a', value: 'x')],
-        strength: CollatorStrength.primary,
-        numeric: false,
+        options: const SortOptions(
+          android: SortOptionsAndroid(
+            strength: CollatorStrength.primary,
+            numeric: false,
+          ),
+        ),
       );
       expect(mockSort.lastStrength, CollatorStrength.primary);
       expect(mockSort.lastNumeric, false);
@@ -145,9 +149,12 @@ void main() {
         ),
       );
 
-      await delegate.sortWithOptions([
-        const SortItem(id: 'a', value: 'x'),
-      ], direction: SortDirection.descending);
+      await delegate.sortWithOptions(
+        [const SortItem(id: 'a', value: 'x')],
+        options: const SortOptions(
+          android: SortOptionsAndroid(direction: SortDirection.descending),
+        ),
+      );
       expect(mockSort.lastDecomposition, CollatorDecomposition.none);
       expect(mockSort.lastDirection, SortDirection.descending);
     });

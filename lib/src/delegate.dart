@@ -24,4 +24,8 @@ abstract class PlatformDelegate {
     SortDirection? direction,
     Locale? locale,
   });
+  FutureOr<List<SortItem>> sortWithOptions(
+    List<SortItem> items, {
+    SortOptions? options,
+  });
 }

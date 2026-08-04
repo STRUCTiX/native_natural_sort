@@ -25,7 +25,7 @@ class LinuxDelegate extends PlatformDelegate {
   late final CollationLibraryLoader _loader;
   late final LinuxSort _sort;
   Locale? _defaultLocale;
-  SortDirection _defaultDirection = SortDirection.ascending;
+  SortDirection? _defaultDirection;
   CollatorStrength? _defaultStrength;
   CollatorDecomposition? _defaultDecomposition;
   bool? _defaultNumeric;
@@ -39,7 +39,7 @@ class LinuxDelegate extends PlatformDelegate {
     await _loader.init();
     _sort = linux?.sort ?? LinuxSort(loader: _loader);
     _defaultLocale = linux?.locale;
-    _defaultDirection = linux?.direction ?? SortDirection.ascending;
+    _defaultDirection = linux?.direction;
     _defaultStrength = linux?.strength;
     _defaultDecomposition = linux?.decomposition;
     _defaultNumeric = linux?.numeric;
@@ -63,23 +63,19 @@ class LinuxDelegate extends PlatformDelegate {
 
   /// Sorts [items] with full Linux-specific collator overrides.
   ///
-  /// Each named parameter, when non-null, overrides the default set
-  /// via [SortOptionsLinux] during [init].
-  List<SortItem> sortWithOptions(
-    List<SortItem> items, {
-    SortDirection? direction,
-    Locale? locale,
-    CollatorStrength? strength,
-    CollatorDecomposition? decomposition,
-    bool? numeric,
-  }) {
+  /// Each field in [options.linux], when non-null, overrides the default
+  /// set via [SortOptionsLinux] during [init].  A `null` field, or
+  /// [options] itself being `null`, falls back to the init default.
+  @override
+  List<SortItem> sortWithOptions(List<SortItem> items, {SortOptions? options}) {
+    final linux = options?.linux;
     return _sort.sort(
       items,
-      locale: locale ?? _defaultLocale,
-      direction: direction ?? _defaultDirection,
-      strength: strength ?? _defaultStrength,
-      decomposition: decomposition ?? _defaultDecomposition,
-      numeric: numeric ?? _defaultNumeric,
+      locale: linux?.locale ?? _defaultLocale,
+      direction: linux?.direction ?? _defaultDirection,
+      strength: linux?.strength ?? _defaultStrength,
+      decomposition: linux?.decomposition ?? _defaultDecomposition,
+      numeric: linux?.numeric ?? _defaultNumeric,
     );
   }
 }

@@ -98,7 +98,9 @@ void registerAndroidTests() {
           const SortItem(id: '10', value: 'item10'),
           const SortItem(id: '2', value: 'item2'),
           const SortItem(id: '1', value: 'item1'),
-        ], numeric: false);
+        ], options: SortOptions(
+          android: SortOptionsAndroid(numeric: false),
+        ));
         expect(result.map((i) => i.id), ['1', '10', '2']);
       });
 
@@ -112,8 +114,13 @@ void registerAndroidTests() {
           const SortItem(id: 'B', value: 'Banana'),
           const SortItem(id: 'a', value: 'apple'),
           const SortItem(id: 'C', value: 'cherry'),
-        ], strength: CollatorStrength.primary);
-        // a = A → forced ordering (ICU deterministic).
+        ], options: SortOptions(
+          android: SortOptionsAndroid(
+            locale: Locale('en'),
+            strength: CollatorStrength.primary,
+          ),
+        ));
+        // en locale → forced ordering (ICU deterministic).
         expect(result.map((i) => i.id), ['a', 'B', 'C']);
       });
 
@@ -126,8 +133,13 @@ void registerAndroidTests() {
         final result = await androidSort.sortWithOptions([
           const SortItem(id: 'accent', value: 'café'),
           const SortItem(id: 'plain', value: 'cafe'),
-        ], strength: CollatorStrength.secondary);
-        // café ≠ cafe (é ≠ e), case ignored → 'e' < 'é'.
+        ], options: SortOptions(
+          android: SortOptionsAndroid(
+            locale: Locale('en'),
+            strength: CollatorStrength.secondary,
+          ),
+        ));
+        // en locale: café ≠ cafe (é ≠ e), case ignored → 'e' < 'é'.
         expect(result.map((i) => i.id), ['plain', 'accent']);
       });
 
@@ -140,8 +152,13 @@ void registerAndroidTests() {
         final result = await androidSort.sortWithOptions([
           const SortItem(id: 'upper', value: 'Café'),
           const SortItem(id: 'plain', value: 'cafe'),
-        ], strength: CollatorStrength.tertiary);
-        // 'C' ≠ 'c' + 'é' ≠ 'e' → both matter.
+        ], options: SortOptions(
+          android: SortOptionsAndroid(
+            locale: Locale('en'),
+            strength: CollatorStrength.tertiary,
+          ),
+        ));
+        // en locale: 'C' ≠ 'c' + 'é' ≠ 'e' → both matter.
         expect(result.length, 2);
         expect(result.map((i) => i.id).toSet(), {'upper', 'plain'});
       });
@@ -157,7 +174,9 @@ void registerAndroidTests() {
           const SortItem(id: 'upper', value: 'Apple'),
           const SortItem(id: 'lower', value: 'apple'),
           const SortItem(id: 'cjk', value: '啊'),
-        ], strength: CollatorStrength.primary);
+        ], options: SortOptions(
+          android: SortOptionsAndroid(strength: CollatorStrength.primary),
+        ));
         // zh: 啊 first; Latin case+accent ignored → forced ordering.
         expect(result.map((i) => i.id), ['cjk', 'lower', 'upper']);
       });
@@ -173,7 +192,9 @@ void registerAndroidTests() {
           const SortItem(id: 'upper', value: 'Apple'),
           const SortItem(id: 'lower', value: 'apple'),
           const SortItem(id: 'cjk', value: '啊'),
-        ], strength: CollatorStrength.secondary);
+        ], options: SortOptions(
+          android: SortOptionsAndroid(strength: CollatorStrength.secondary),
+        ));
         // en: Latin first, case ignored; then 啊.
         expect(result.map((i) => i.id), ['lower', 'upper', 'cjk']);
       });
@@ -189,7 +210,9 @@ void registerAndroidTests() {
           const SortItem(id: 'big', value: 'file123'),
           const SortItem(id: 'small', value: 'file98'),
           const SortItem(id: 'cjk', value: '啊'),
-        ], numeric: false);
+        ], options: SortOptions(
+          android: SortOptionsAndroid(numeric: false),
+        ));
         // zh: 啊 first; then lexicographic: '1' < '9'.
         expect(result.map((i) => i.id), ['cjk', 'big', 'small']);
       });
@@ -210,7 +233,13 @@ void registerAndroidTests() {
         final result = await androidSort.sortWithOptions([
           const SortItem(id: 'lat', value: 'apple'),
           const SortItem(id: 'cjk', value: '中文'),
-        ], strength: CollatorStrength.primary, numeric: false);
+        ], options: SortOptions(
+          android: SortOptionsAndroid(
+            strength: CollatorStrength.primary,
+            numeric: false,
+            direction: SortDirection.descending,
+          ),
+        ));
         // zh ascending: 中文 before apple;
         // descending flips it: apple before 中文.
         expect(result.map((i) => i.id), ['lat', 'cjk']);

@@ -154,6 +154,79 @@ void main() {
       ], locale: const Locale('fr'));
       expect(mockSort.lastLocale, const Locale('fr'));
     });
+
+    test(
+      'sortWithOptions overrides caseSensitive and diacriticInsensitive',
+      () async {
+        final mockSort = _MockMacOSSort();
+        final delegate = MacOSDelegate();
+        await delegate.init(
+          SortOptions(macOS: SortOptionsMacOS(sort: mockSort)),
+        );
+
+        await delegate.sortWithOptions(
+          [const SortItem(id: 'a', value: 'x')],
+          options: const SortOptions(
+            macOS: SortOptionsMacOS(
+              caseSensitive: true,
+              diacriticInsensitive: true,
+            ),
+          ),
+        );
+        expect(mockSort.lastCaseSensitive, true);
+        expect(mockSort.lastDiacriticInsensitive, true);
+      },
+    );
+
+    test('sortWithOptions falls back to init defaults', () async {
+      final mockSort = _MockMacOSSort();
+      final delegate = MacOSDelegate();
+      await delegate.init(
+        SortOptions(
+          macOS: SortOptionsMacOS(
+            sort: mockSort,
+            direction: SortDirection.descending,
+            caseSensitive: false,
+            diacriticInsensitive: false,
+          ),
+        ),
+      );
+
+      await delegate.sortWithOptions(
+        [const SortItem(id: 'a', value: 'x')],
+        options: const SortOptions(
+          macOS: SortOptionsMacOS(caseSensitive: true),
+        ),
+      );
+      expect(mockSort.lastDirection, SortDirection.ascending);
+      expect(mockSort.lastCaseSensitive, true);
+      expect(mockSort.lastDiacriticInsensitive, false);
+    });
+
+    test('sortWithOptions with null options uses init defaults', () async {
+      final mockSort = _MockMacOSSort();
+      final delegate = MacOSDelegate();
+      await delegate.init(
+        SortOptions(
+          macOS: SortOptionsMacOS(
+            sort: mockSort,
+            direction: SortDirection.descending,
+          ),
+        ),
+      );
+
+      await delegate.sortWithOptions([const SortItem(id: 'a', value: 'x')]);
+      expect(mockSort.lastDirection, SortDirection.descending);
+    });
+
+    test('sortWithOptions with empty list does not throw', () async {
+      final mockSort = _MockMacOSSort();
+      final delegate = MacOSDelegate();
+      await delegate.init(SortOptions(macOS: SortOptionsMacOS(sort: mockSort)));
+
+      final result = await delegate.sortWithOptions([]);
+      expect(result, isEmpty);
+    });
   });
 }
 

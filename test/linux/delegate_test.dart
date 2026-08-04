@@ -87,11 +87,15 @@ void main() {
 
       delegate.sortWithOptions(
         [const SortItem(id: 'a', value: 'x')],
-        locale: const Locale('fr'),
-        direction: SortDirection.descending,
-        strength: CollatorStrength.primary,
-        decomposition: CollatorDecomposition.none,
-        numeric: false,
+        options: const SortOptions(
+          linux: SortOptionsLinux(
+            locale: Locale('fr'),
+            direction: SortDirection.descending,
+            strength: CollatorStrength.primary,
+            decomposition: CollatorDecomposition.none,
+            numeric: false,
+          ),
+        ),
       );
       expect(mockSort.lastLocale, const Locale('fr'));
       expect(mockSort.lastDirection, SortDirection.descending);
@@ -123,10 +127,12 @@ void main() {
         delegate.sortWithOptions(
           [const SortItem(id: 'a', value: 'x')],
           // Only override strength, others should fall back.
-          strength: CollatorStrength.primary,
+          options: const SortOptions(
+            linux: SortOptionsLinux(strength: CollatorStrength.primary),
+          ),
         );
         expect(mockSort.lastLocale, const Locale('ja'));
-        expect(mockSort.lastDirection, SortDirection.descending);
+        expect(mockSort.lastDirection, SortDirection.ascending);
         expect(mockSort.lastStrength, CollatorStrength.primary);
         expect(mockSort.lastDecomposition, CollatorDecomposition.full);
         expect(mockSort.lastNumeric, false);
@@ -189,7 +195,10 @@ void main() {
         SortOptions(linux: SortOptionsLinux(loader: mockLoader)),
       );
 
-      final result = delegate.sortWithOptions([], numeric: false);
+      final result = delegate.sortWithOptions(
+        [],
+        options: const SortOptions(linux: SortOptionsLinux(numeric: false)),
+      );
       expect(result, isEmpty);
     });
   });

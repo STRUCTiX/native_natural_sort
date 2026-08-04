@@ -21,7 +21,7 @@ import 'sort.dart';
 class AndroidDelegate extends PlatformDelegate {
   late final AndroidSort _sort;
   Locale? _defaultLocale;
-  SortDirection _defaultDirection = SortDirection.ascending;
+  SortDirection? _defaultDirection;
   CollatorStrength? _defaultStrength;
   CollatorDecomposition? _defaultDecomposition;
   bool? _defaultNumeric;
@@ -33,7 +33,7 @@ class AndroidDelegate extends PlatformDelegate {
     final android = options.android;
     _sort = android?.sort ?? AndroidSort();
     _defaultLocale = android?.locale;
-    _defaultDirection = android?.direction ?? SortDirection.ascending;
+    _defaultDirection = android?.direction;
     _defaultStrength = android?.strength;
     _defaultDecomposition = android?.decomposition;
     _defaultNumeric = android?.numeric;
@@ -48,23 +48,24 @@ class AndroidDelegate extends PlatformDelegate {
 
   /// Sorts [items] with full Android-specific collator overrides.
   ///
-  /// Each named parameter, when non-null, overrides the default set
-  /// via [SortOptionsAndroid] during [init].
+  /// Each field in [options.android], when non-null, overrides the default
+  /// set via [SortOptionsAndroid] during [init].  A `null` field, or
+  /// [options] itself being `null`, falls back to the init default.
+  @override
   Future<List<SortItem>> sortWithOptions(
     List<SortItem> items, {
-    SortDirection? direction,
-    Locale? locale,
-    CollatorStrength? strength,
-    CollatorDecomposition? decomposition,
-    bool? numeric,
-  }) async => _doSort(
-    items,
-    direction: direction,
-    locale: locale,
-    strength: strength,
-    decomposition: decomposition,
-    numeric: numeric,
-  );
+    SortOptions? options,
+  }) async {
+    final android = options?.android;
+    return _doSort(
+      items,
+      direction: android?.direction ?? _defaultDirection,
+      locale: android?.locale ?? _defaultLocale,
+      strength: android?.strength ?? _defaultStrength,
+      decomposition: android?.decomposition ?? _defaultDecomposition,
+      numeric: android?.numeric ?? _defaultNumeric,
+    );
+  }
 
   Future<List<SortItem>> _doSort(
     List<SortItem> items, {

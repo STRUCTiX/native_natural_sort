@@ -50,7 +50,7 @@ NATIVE_TFLAGS =
 endif
 
 .PHONY: help format fix analyze test \
-        test-integration test-all \
+        test-integration test-integration-no-device test-all \
         test-kotlin test-linux test-windows \
         gen aio aio-all
 
@@ -77,7 +77,7 @@ help:
 	@echo "  aio-all         gen → format → fix → analyze → gen → test-all"
 	$(BLANK_LINE)
 	@echo "Integration tests (require device, pass DEVICE=<id> to select):"
-	@echo "  test-integration  Flutter integration tests"
+	@echo "  test-integration / test-integration-no-device Flutter integration tests"
 
 format:
 	@$(DART) format lib test
@@ -165,6 +165,9 @@ endif
 else
 	@$(SUBMAKE) _test-integration DEVICE=$(DEVICE)
 endif
+
+test-integration-no-device:
+	@$(SUBMAKE) _test-integration
 
 _test-integration:
 	@cd $(EXAMPLE_DIR) && $(FLUTTER) test integration_test $(if $(DEVICE),-d $(DEVICE),)

@@ -26,6 +26,8 @@ import 'linux/delegate_stub.dart' if (dart.library.io) 'linux/delegate.dart';
 import 'linux/sort.dart' show SortOptionsLinux;
 import 'macos/delegate.dart';
 import 'macos/sort.dart' show SortOptionsMacOS;
+import 'web/delegate.dart';
+import 'web/sort.dart' show SortOptionsWeb;
 import 'windows/delegate_stub.dart'
     if (dart.library.io) 'windows/delegate.dart';
 import 'windows/sort.dart' show SortOptionsWindows;
@@ -83,12 +85,16 @@ class SortOptions {
   /// Windows-specific options.
   final SortOptionsWindows? windows;
 
+  /// Web-specific options.
+  final SortOptionsWeb? web;
+
   const SortOptions({
     this.android,
     this.ios,
     this.macOS,
     this.linux,
     this.windows,
+    this.web,
   });
 }
 
@@ -137,6 +143,7 @@ class NativeSort {
   NativeSort._() : _delegate = _resolveDelegate();
 
   static PlatformDelegate _resolveDelegate() {
+    if (kIsWeb) return WebDelegate();
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
         return AndroidDelegate();

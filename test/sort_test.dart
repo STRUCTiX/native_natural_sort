@@ -50,6 +50,7 @@ void main() {
       expect(options.macOS, isNull);
       expect(options.linux, isNull);
       expect(options.windows, isNull);
+      expect(options.web, isNull);
     });
 
     test('per-platform direction defaults to ascending', () {
@@ -58,6 +59,7 @@ void main() {
       expect(const SortOptionsMacOS().direction, SortDirection.ascending);
       expect(const SortOptionsLinux().direction, SortDirection.ascending);
       expect(const SortOptionsWindows().direction, SortDirection.ascending);
+      expect(const SortOptionsWeb().direction, SortDirection.ascending);
     });
 
     test('per-platform options are preserved', () {
@@ -78,6 +80,7 @@ void main() {
           locale: const Locale('en'),
           sort: WindowsSort.ffi(),
         ),
+        web: const SortOptionsWeb(locale: Locale('en')),
       );
       expect(options.android?.locale, const Locale('zh'));
       expect(options.ios?.locale, const Locale('ja'));
@@ -89,6 +92,7 @@ void main() {
       expect(options.linux?.locale, const Locale('de'));
       expect(options.windows?.locale, const Locale('en'));
       expect(options.windows?.sort, isA<WindowsSort>());
+      expect(options.web?.locale, const Locale('en'));
     });
 
     test('SortOptionsAndroid stores collator fields', () {
@@ -190,6 +194,34 @@ void main() {
 
     test('SortOptionsLinux locale defaults to null', () {
       const options = SortOptionsLinux();
+      expect(options.locale, isNull);
+    });
+
+    test('SortOptionsWeb stores strength, decomposition, numeric', () {
+      const options = SortOptionsWeb(
+        strength: CollatorStrength.primary,
+        decomposition: CollatorDecomposition.none,
+        numeric: false,
+      );
+      expect(options.strength, CollatorStrength.primary);
+      expect(options.decomposition, CollatorDecomposition.none);
+      expect(options.numeric, false);
+    });
+
+    test('SortOptionsWeb strength/decomposition/numeric default to null', () {
+      const options = SortOptionsWeb();
+      expect(options.strength, isNull);
+      expect(options.decomposition, isNull);
+      expect(options.numeric, isNull);
+    });
+
+    test('SortOptionsWeb stores locale', () {
+      const options = SortOptionsWeb(locale: Locale('en'));
+      expect(options.locale, const Locale('en'));
+    });
+
+    test('SortOptionsWeb locale defaults to null', () {
+      const options = SortOptionsWeb();
       expect(options.locale, isNull);
     });
   });
@@ -451,6 +483,7 @@ void main() {
           isA<MacOSDelegate>(),
           isA<LinuxDelegate>(),
           isA<WindowsDelegate>(),
+          isA<WebDelegate>(),
         ),
       );
     });

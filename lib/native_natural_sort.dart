@@ -24,4 +24,6 @@ export 'src/linux/sort.dart';
 export 'src/macos/delegate.dart';
 export 'src/macos/sort.dart';
 export 'src/sort.dart';
+export 'src/web/delegate.dart';
+export 'src/web/sort.dart';
 export 'src/windows/sort.dart';

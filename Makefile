@@ -49,7 +49,7 @@ KOTLIN_TFLAGS =
 NATIVE_TFLAGS =
 endif
 
-.PHONY: help format fix analyze test \
+.PHONY: help format fix analyze test test-web \
         test-integration test-integration-no-device test-all \
         test-kotlin test-linux test-windows \
         gen aio aio-all
@@ -66,6 +66,7 @@ help:
 	@echo "  analyze         Run Dart static analysis"
 	@echo "  gen             Regenerate Pigeon platform-channel code"
 	@echo "  test            Dart unit tests (Flutter only)"
+	@echo "  test-web        Dart unit tests on web (Flutter, --platform chrome)"
 	@echo "                  (make test CI=1 for CI-friendly output)"
 	@echo "  aio             gen → format → fix → analyze → gen → test"
 	$(BLANK_LINE)
@@ -128,8 +129,14 @@ test-windows:
 test:
 	@$(SUBMAKE) _test-dart
 
+test-web:
+	@echo "=== Dart web tests ==="
+	@$(FLUTTER) test --platform chrome test/web $(FLUTTER_TFLAGS)
+
 test-all:
 	@$(SUBMAKE) _test-dart
+	@$(BLANK_LINE)
+	@$(SUBMAKE) test-web
 	@$(BLANK_LINE)
 	@$(SUBMAKE) test-kotlin
 	@$(BLANK_LINE)

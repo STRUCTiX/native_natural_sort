@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import 'dart:convert';
-import 'dart:io';
+import 'collation_cache_stub.dart'
+    if (dart.library.io) 'collation_cache_io.dart';
 
 /// Simple string-cache abstraction for loader path persistence.
 ///
 /// Built-in implementations:
 /// - [CollationCache.inMemory] — no persistence, default.
-/// - [CollationCache.file] — plain-text file using `dart:io`.
+/// - [CollationCache.file] — simple file-based cache using `dart:io`.
 abstract interface class CollationCache {
   /// Reads the cached value, or `null` on miss.
   Future<String?> read();
@@ -33,7 +33,7 @@ abstract interface class CollationCache {
   /// Simple file-based cache.
   ///
   /// [path] is the absolute path to the cache file.
-  const factory CollationCache.file(String path) = _FileCache;
+  factory CollationCache.file(String path) = FileCache;
 }
 
 class _InMemoryCache implements CollationCache {
@@ -46,30 +46,4 @@ class _InMemoryCache implements CollationCache {
 
   @override
   Future<void> write(String value) async => _value = value;
-}
-
-class _FileCache implements CollationCache {
-  final String _path;
-
-  const _FileCache(String path) : _path = path;
-
-  @override
-  Future<String?> read() async {
-    try {
-      final file = File(_path);
-      if (!await file.exists()) return null;
-      return utf8.decode(await file.readAsBytes()).trim();
-    } catch (_) {
-      return null;
-    }
-  }
-
-  @override
-  Future<void> write(String value) async {
-    try {
-      await File(_path).writeAsBytes(utf8.encode(value));
-    } catch (_) {
-      // Best-effort.
-    }
-  }
 }

@@ -14,7 +14,7 @@
 
 import 'dart:ui' show Locale;
 
-import '../collation_ffi.dart';
+import '../collation.dart';
 import '../common.dart';
 import '../delegate.dart';
 import '../sort.dart';

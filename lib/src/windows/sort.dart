@@ -15,11 +15,12 @@
 import 'dart:async';
 import 'dart:ui' show Locale;
 
-import '../collation_ffi.dart';
+import '../collation.dart';
 import '../common.dart';
 import '../sort.dart' show SortDirection;
 import 'collation_api.g.dart';
-import 'collation_ffi.dart';
+
+import 'sort_stub.dart' if (dart.library.io) 'sort_ffi.dart';
 
 export 'collation_api.g.dart'
     show CollationWindowsHostApi, CollationWindowsItem, CollationWindowsRequest;
@@ -63,7 +64,7 @@ abstract interface class WindowsSort {
   ///
   /// Loads `icu.dll` / `icuin.dll` via [init].  Check [isAvailable] after
   /// initialization to verify the library was found.
-  factory WindowsSort.ffi({CollationLibraryLoader? loader}) = _WindowsFfiSort;
+  factory WindowsSort.ffi({CollationLibraryLoader? loader}) = WindowsFfiSort;
 }
 
 final class _WindowsPigeonSort implements WindowsSort {
@@ -96,48 +97,6 @@ final class _WindowsPigeonSort implements WindowsSort {
       diacriticInsensitive: diacriticInsensitive,
     );
     return _host.sort(request);
-  }
-}
-
-final class _WindowsFfiSort implements WindowsSort {
-  final CollationLibraryLoader _loader;
-
-  _WindowsFfiSort({CollationLibraryLoader? loader})
-    : _loader = loader ?? WindowsCollationLoader();
-
-  @override
-  bool get isAvailable => _loader.isAvailable;
-
-  @override
-  Future<void> init() => _loader.init();
-
-  @override
-  List<CollationWindowsItem> sort(
-    List<CollationWindowsItem> items, {
-    Locale? locale,
-    SortDirection? direction,
-    CollatorStrength? strength,
-    CollatorDecomposition? decomposition,
-    bool? numeric,
-    bool? caseSensitive,
-    bool? diacriticInsensitive,
-  }) {
-    final collator = _loader.collator(
-      locale?.toLanguageTag(),
-      numeric: numeric ?? true,
-      strength: strength?.value,
-      decomposition: decomposition?.value,
-    );
-    try {
-      return collator.sort(
-        items,
-        idOf: (i) => i.id,
-        valueOf: (i) => i.value,
-        descending: direction == SortDirection.descending,
-      );
-    } finally {
-      collator.dispose();
-    }
   }
 }
 

@@ -14,6 +14,7 @@
 
 import 'dart:ffi';
 
+import '../collation.dart';
 import '../collation_ffi.dart';
 
 class WindowsCollationLoader implements CollationLibraryLoader {

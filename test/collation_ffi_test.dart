@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:native_natural_sort/native_natural_sort.dart';
-import 'package:native_natural_sort/src/collation_ffi.dart';
+import 'package:native_natural_sort/src/collation.dart';
 
 class _TestCollator implements IcuCollator {
   final CollationCompareFn _compare;

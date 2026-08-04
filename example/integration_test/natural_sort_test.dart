@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';
 import 'package:native_natural_sort/native_natural_sort.dart';
+import 'package:native_natural_sort/native_natural_sort_io.dart';
 
 part 'natural_sort_android_tests.dart';
 part 'natural_sort_apple_tests.dart';

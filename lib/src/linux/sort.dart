@@ -14,11 +14,12 @@
 
 import 'dart:ui' show Locale;
 
+import '../collation.dart';
 import '../collation_cache.dart';
-import '../collation_ffi.dart';
 import '../common.dart';
 import '../sort.dart';
-import 'collation_ffi.dart';
+
+import 'sort_stub.dart' if (dart.library.io) 'sort_ffi.dart';
 
 /// Linux sort — Dart FFI → system libicui18n.
 abstract interface class LinuxSort {
@@ -34,7 +35,7 @@ abstract interface class LinuxSort {
     bool? numeric,
   });
 
-  factory LinuxSort({CollationLibraryLoader? loader}) = _LinuxSortImpl;
+  factory LinuxSort({CollationLibraryLoader? loader}) = LinuxSortImpl;
 }
 
 /// Per-platform options for Linux.
@@ -73,43 +74,6 @@ abstract interface class SortOptionsLinux {
     CollatorDecomposition? decomposition,
     bool? numeric,
   }) = _SortOptionsLinuxImpl;
-}
-
-class _LinuxSortImpl implements LinuxSort {
-  final CollationLibraryLoader _loader;
-
-  _LinuxSortImpl({CollationLibraryLoader? loader})
-    : _loader = loader ?? LinuxCollationLoader();
-
-  @override
-  bool get isAvailable => _loader.isAvailable;
-
-  @override
-  List<SortItem> sort(
-    List<SortItem> items, {
-    Locale? locale,
-    SortDirection? direction,
-    CollatorStrength? strength,
-    CollatorDecomposition? decomposition,
-    bool? numeric,
-  }) {
-    final collator = _loader.collator(
-      locale?.toLanguageTag(),
-      numeric: numeric ?? true,
-      strength: strength?.value,
-      decomposition: decomposition?.value,
-    );
-    try {
-      return collator.sort(
-        items,
-        idOf: (i) => i.id,
-        valueOf: (i) => i.value,
-        descending: direction == SortDirection.descending,
-      );
-    } finally {
-      collator.dispose();
-    }
-  }
 }
 
 class _SortOptionsLinuxImpl implements SortOptionsLinux {

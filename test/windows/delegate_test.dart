@@ -2,6 +2,7 @@ import 'dart:ui' show Locale;
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:native_natural_sort/native_natural_sort.dart';
+import 'package:native_natural_sort/native_natural_sort_io.dart';
 
 void main() {
   group('WindowsDelegate', () {

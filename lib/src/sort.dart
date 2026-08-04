@@ -22,11 +22,12 @@ import 'android/sort.dart' show SortOptionsAndroid;
 import 'delegate.dart';
 import 'ios/delegate.dart';
 import 'ios/sort.dart' show SortOptionsIOS;
-import 'linux/delegate.dart';
+import 'linux/delegate_stub.dart' if (dart.library.io) 'linux/delegate.dart';
 import 'linux/sort.dart' show SortOptionsLinux;
 import 'macos/delegate.dart';
 import 'macos/sort.dart' show SortOptionsMacOS;
-import 'windows/delegate.dart';
+import 'windows/delegate_stub.dart'
+    if (dart.library.io) 'windows/delegate.dart';
 import 'windows/sort.dart' show SortOptionsWindows;
 
 /// Sort direction for collation ordering.

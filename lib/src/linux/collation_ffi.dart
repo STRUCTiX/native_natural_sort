@@ -15,6 +15,7 @@
 import 'dart:ffi';
 import 'dart:io';
 
+import '../collation.dart';
 import '../collation_cache.dart';
 import '../collation_ffi.dart';
 

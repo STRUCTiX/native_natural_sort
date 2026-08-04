@@ -80,11 +80,7 @@ void main() {
 
     test('single-element list is unchanged', () {
       final collator = _TestCollator(mockCompare);
-      final result = collator.sort(
-        ['only'],
-        idOf: (s) => s,
-        valueOf: (s) => s,
-      );
+      final result = collator.sort(['only'], idOf: (s) => s, valueOf: (s) => s);
       expect(result, ['only']);
     });
   });

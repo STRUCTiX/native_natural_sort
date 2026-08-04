@@ -51,10 +51,11 @@ endif
 
 .PHONY: help format fix analyze test \
         test-integration test-all \
-        gen aio
+        test-kotlin test-linux test-windows \
+        gen aio aio-all
 
 # Internal targets
-.PHONY: _test-dart _test-kotlin _test-native
+.PHONY: _test-dart
 
 help:
 	@echo "native_natural_sort — automation entrypoints"
@@ -64,13 +65,19 @@ help:
 	@echo "  fix             Apply Dart fixes then format"
 	@echo "  analyze         Run Dart static analysis"
 	@echo "  gen             Regenerate Pigeon platform-channel code"
-	@echo "  test            Dart + Kotlin + native unit tests"
+	@echo "  test            Dart unit tests (Flutter only)"
 	@echo "                  (make test CI=1 for CI-friendly output)"
 	@echo "  aio             gen → format → fix → analyze → gen → test"
 	$(BLANK_LINE)
+	@echo "Per-platform tests:"
+	@echo "  test-kotlin     Kotlin unit tests (JVM, no device)"
+	@echo "  test-linux      Linux C++ native tests"
+	@echo "  test-windows    Windows C++ native tests"
+	@echo "  test-all        Dart + Kotlin + native unit tests (no integration)"
+	@echo "  aio-all         gen → format → fix → analyze → gen → test-all"
+	$(BLANK_LINE)
 	@echo "Integration tests (require device, pass DEVICE=<id> to select):"
 	@echo "  test-integration  Flutter integration tests"
-	@echo "  test-all          Unit tests + integration tests"
 
 format:
 	@$(DART) format lib test
@@ -90,38 +97,46 @@ gen:
 
 aio: gen format fix analyze gen test
 
+aio-all: gen format fix analyze gen test-all
+
 _test-dart:
 	@echo "=== Dart tests ==="
 	@$(FLUTTER) test $(FLUTTER_TFLAGS)
 
-_test-kotlin:
+test-kotlin:
 	@echo "=== Kotlin unit tests (JVM, no device) ==="
 	@cd $(ANDROID_DIR) && PATH="$(FLUTTER_BIN_DIR)$(PATH_SEP)$$PATH" $(GRADLEW) $(ANDROID_TEST_TASK) $(KOTLIN_TFLAGS)
 
-_test-native:
-ifeq ($(OS),Windows_NT)
+test-linux:
+	@echo "=== Linux C++ tests ==="
+	@cd $(EXAMPLE_DIR) && $(FLUTTER) build linux --debug && \
+		cd build/linux/x64/debug/plugins/$(PROJECT_NAME) \
+			&& ctest --output-on-failure $(NATIVE_TFLAGS)
+
+test-windows:
 	@echo "=== Windows C++ tests ==="
 	@cd $(EXAMPLE_DIR) && $(FLUTTER) build windows --debug
 	@cd $(EXAMPLE_DIR)/build/windows/x64/debug/plugins/$(PROJECT_NAME) \
 		&& $(PROJECT_NAME)_test.exe $(NATIVE_TFLAGS)
+
+test:
+	@$(SUBMAKE) _test-dart
+
+test-all:
+	@$(SUBMAKE) _test-dart
+	@$(BLANK_LINE)
+	@$(SUBMAKE) test-kotlin
+	@$(BLANK_LINE)
+ifeq ($(OS),Windows_NT)
+	@$(SUBMAKE) test-windows
 else
 	@UNAME_S=$$(uname -s); \
 	if [ "$$UNAME_S" = "Linux" ]; then \
-		echo "=== Linux C++ tests ==="; \
-		cd $(EXAMPLE_DIR) && $(FLUTTER) build linux --debug && \
-		cd build/linux/x64/debug/plugins/$(PROJECT_NAME) \
-			&& ctest --output-on-failure $(NATIVE_TFLAGS); \
+		$(SUBMAKE) test-linux; \
 	else \
 		echo "=== no platform-native tests for $$UNAME_S, skipping ==="; \
 	fi
 endif
-
-test:
-	@$(SUBMAKE) _test-dart
-	@$(BLANK_LINE)
-	@$(SUBMAKE) _test-kotlin
-	@$(BLANK_LINE)
-	@$(SUBMAKE) _test-native
 
 test-integration:
 ifeq ($(CI),1)
@@ -132,6 +147,4 @@ endif
 endif
 	@cd $(EXAMPLE_DIR) && $(FLUTTER) test integration_test $(if $(DEVICE),-d $(DEVICE),)
 
-test-all: test
-	@$(BLANK_LINE)
-	@$(SUBMAKE) test-integration DEVICE=$(DEVICE)
+# test-integration is always run standalone; test-all no longer chains it.

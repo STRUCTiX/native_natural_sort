@@ -16,6 +16,7 @@ import 'dart:async';
 import 'dart:ui' show Locale;
 
 import '../collation_ffi.dart';
+import '../common.dart';
 import '../sort.dart' show SortDirection;
 import 'collation_api.g.dart';
 import 'collation_ffi.dart';
@@ -36,10 +37,21 @@ abstract interface class WindowsSort {
   Future<void> init();
 
   /// Sort [items] using platform-native collation.
+  ///
+  /// Tuning parameters are backend-specific — each backend ignores
+  /// parameters it does not support:
+  /// - Pigeon (CompareStringEx): [direction], [caseSensitive],
+  ///   [diacriticInsensitive]
+  /// - FFI (ICU): [direction], [strength], [decomposition], [numeric]
   FutureOr<List<CollationWindowsItem>> sort(
     List<CollationWindowsItem> items, {
     Locale? locale,
     SortDirection? direction,
+    CollatorStrength? strength,
+    CollatorDecomposition? decomposition,
+    bool? numeric,
+    bool? caseSensitive,
+    bool? diacriticInsensitive,
   });
 
   /// Pigeon (MethodChannel → CompareStringEx) backend.
@@ -70,10 +82,18 @@ final class _WindowsPigeonSort implements WindowsSort {
     List<CollationWindowsItem> items, {
     Locale? locale,
     SortDirection? direction,
+    CollatorStrength? strength,
+    CollatorDecomposition? decomposition,
+    bool? numeric,
+    bool? caseSensitive,
+    bool? diacriticInsensitive,
   }) async {
     final request = CollationWindowsRequest(
       items: items,
       locale: locale?.toLanguageTag(),
+      direction: direction?.value,
+      caseSensitive: caseSensitive,
+      diacriticInsensitive: diacriticInsensitive,
     );
     return _host.sort(request);
   }
@@ -96,8 +116,18 @@ final class _WindowsFfiSort implements WindowsSort {
     List<CollationWindowsItem> items, {
     Locale? locale,
     SortDirection? direction,
+    CollatorStrength? strength,
+    CollatorDecomposition? decomposition,
+    bool? numeric,
+    bool? caseSensitive,
+    bool? diacriticInsensitive,
   }) {
-    final collator = _loader.collator(locale?.toLanguageTag(), numeric: true);
+    final collator = _loader.collator(
+      locale?.toLanguageTag(),
+      numeric: numeric ?? true,
+      strength: strength?.value,
+      decomposition: decomposition?.value,
+    );
     try {
       return collator.sort(
         items,
@@ -112,21 +142,93 @@ final class _WindowsFfiSort implements WindowsSort {
 }
 
 /// Per-platform options for Windows.
+///
+/// Use the named constructors for convenience:
+/// - [SortOptionsWindows.ffi] — pre-selects the ICU-backed FFI backend
+///   and exposes its tuning parameters.
+/// - [SortOptionsWindows.pigeon] — pre-selects the CompareStringEx-backed
+///   Pigeon backend and exposes its tuning parameters.
+///
+/// The unnamed constructor exposes all parameters for advanced use;
+/// when [sort] is `null` the delegate defaults to [WindowsSort.ffi].
 abstract interface class SortOptionsWindows {
   /// Collation locale; `null` means system default.
   Locale? get locale;
 
-  /// Sort implementation (defaults to [WindowsSort.pigeon] when `null`).
+  /// Sort implementation (defaults to [WindowsSort.ffi] when `null`).
   WindowsSort? get sort;
 
   /// Sort direction (defaults to [SortDirection.ascending]).
   SortDirection get direction;
 
+  /// ICU collation strength (defaults to tertiary when `null`).
+  /// Only used by the FFI (ICU) backend.
+  CollatorStrength? get strength;
+
+  /// Unicode normalisation mode (defaults to canonical when `null`).
+  /// Only used by the FFI (ICU) backend.
+  CollatorDecomposition? get decomposition;
+
+  /// Whether to use natural numeric ordering (defaults to `true`).
+  /// Only used by the FFI (ICU) backend.
+  bool? get numeric;
+
+  /// Whether case differences affect sort order.
+  /// `null` or `false` (default) ignores case; `true` makes
+  /// comparison case-sensitive.  Only used by the Pigeon backend.
+  bool? get caseSensitive;
+
+  /// Whether diacritics are ignored.
+  /// `null` or `false` (default) treats diacritics as distinct;
+  /// `true` ignores them.  Only used by the Pigeon backend.
+  bool? get diacriticInsensitive;
+
+  /// Unnamed constructor — all params, no pre-selected backend.
   const factory SortOptionsWindows({
     Locale? locale,
     WindowsSort? sort,
     SortDirection direction,
+    CollatorStrength? strength,
+    CollatorDecomposition? decomposition,
+    bool? numeric,
+    bool? caseSensitive,
+    bool? diacriticInsensitive,
   }) = _SortOptionsWindowsImpl;
+
+  /// FFI (ICU) backend — pre-selects [WindowsSort.ffi].
+  ///
+  /// Only exposes ICU-relevant tuning parameters.
+  factory SortOptionsWindows.ffi({
+    Locale? locale,
+    SortDirection direction = SortDirection.ascending,
+    CollatorStrength? strength,
+    CollatorDecomposition? decomposition,
+    bool? numeric,
+    CollationLibraryLoader? loader,
+  }) => SortOptionsWindows(
+    locale: locale,
+    sort: WindowsSort.ffi(loader: loader),
+    direction: direction,
+    strength: strength,
+    decomposition: decomposition,
+    numeric: numeric,
+  );
+
+  /// Pigeon (CompareStringEx) backend — pre-selects [WindowsSort.pigeon].
+  ///
+  /// Only exposes CompareStringEx-relevant tuning parameters.
+  factory SortOptionsWindows.pigeon({
+    Locale? locale,
+    SortDirection direction = SortDirection.ascending,
+    bool? caseSensitive,
+    bool? diacriticInsensitive,
+  }) => SortOptionsWindows(
+    locale: locale,
+    sort: WindowsSort.pigeon(),
+    direction: direction,
+    caseSensitive: caseSensitive,
+    diacriticInsensitive: diacriticInsensitive,
+  );
 }
 
 class _SortOptionsWindowsImpl implements SortOptionsWindows {
@@ -136,10 +238,25 @@ class _SortOptionsWindowsImpl implements SortOptionsWindows {
   final WindowsSort? sort;
   @override
   final SortDirection direction;
+  @override
+  final CollatorStrength? strength;
+  @override
+  final CollatorDecomposition? decomposition;
+  @override
+  final bool? numeric;
+  @override
+  final bool? caseSensitive;
+  @override
+  final bool? diacriticInsensitive;
 
   const _SortOptionsWindowsImpl({
     this.locale,
     this.sort,
     this.direction = SortDirection.ascending,
+    this.strength,
+    this.decomposition,
+    this.numeric,
+    this.caseSensitive,
+    this.diacriticInsensitive,
   });
 }

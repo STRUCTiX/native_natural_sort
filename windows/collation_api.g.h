@@ -95,8 +95,18 @@ class CollationWindowsItem {
 // Request to sort [items] by the collation order of their [value]s.
 //
 // [locale] selects the ICU collation locale.  When omitted, the
-// platform uses its system-default collator.  Returns the
-// [CollationWindowsItem.id]s in collation order.
+// platform uses its system-default collator.
+//
+// [direction] sets sort direction: 0 = ascending (default),
+// 1 = descending.
+//
+// [caseSensitive] controls case sensitivity in comparison.
+// `null` or `false` (default) ignores case; `true` makes
+// comparison case-sensitive.
+//
+// [diacriticInsensitive] when `true`, ignores diacritics
+// (accents) during comparison; `null` or `false` (default)
+// treats diacritics as distinct.
 //
 // Generated class from Pigeon that represents data sent in messages.
 class CollationWindowsRequest {
@@ -107,7 +117,10 @@ class CollationWindowsRequest {
   // Constructs an object setting all fields.
   explicit CollationWindowsRequest(
     const ::flutter::EncodableList& items,
-    const std::string* locale);
+    const std::string* locale,
+    const int64_t* direction,
+    const bool* case_sensitive,
+    const bool* diacritic_insensitive);
 
   const ::flutter::EncodableList& items() const;
   void set_items(const ::flutter::EncodableList& value_arg);
@@ -115,6 +128,18 @@ class CollationWindowsRequest {
   const std::string* locale() const;
   void set_locale(const std::string_view* value_arg);
   void set_locale(std::string_view value_arg);
+
+  const int64_t* direction() const;
+  void set_direction(const int64_t* value_arg);
+  void set_direction(int64_t value_arg);
+
+  const bool* case_sensitive() const;
+  void set_case_sensitive(const bool* value_arg);
+  void set_case_sensitive(bool value_arg);
+
+  const bool* diacritic_insensitive() const;
+  void set_diacritic_insensitive(const bool* value_arg);
+  void set_diacritic_insensitive(bool value_arg);
 
   bool operator==(const CollationWindowsRequest& other) const;
   bool operator!=(const CollationWindowsRequest& other) const;
@@ -129,6 +154,9 @@ class CollationWindowsRequest {
   friend class PigeonInternalCodecSerializer;
   ::flutter::EncodableList items_;
   std::optional<std::string> locale_;
+  std::optional<int64_t> direction_;
+  std::optional<bool> case_sensitive_;
+  std::optional<bool> diacritic_insensitive_;
 };
 
 

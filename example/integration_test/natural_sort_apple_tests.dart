@@ -72,14 +72,8 @@ void registerAppleTests() {
       ) async {
         await sort.init(
           const SortOptions(
-            ios: SortOptionsIOS(
-              locale: Locale('en'),
-              caseSensitive: true,
-            ),
-            macOS: SortOptionsMacOS(
-              locale: Locale('en'),
-              caseSensitive: true,
-            ),
+            ios: SortOptionsIOS(locale: Locale('en'), caseSensitive: true),
+            macOS: SortOptionsMacOS(locale: Locale('en'), caseSensitive: true),
           ),
         );
 
@@ -125,10 +119,12 @@ void registerAppleTests() {
       testWidgets('diacriticInsensitive: false (default) — e before é', (
         tester,
       ) async {
-        await sort.init(const SortOptions(
-          ios: SortOptionsIOS(locale: Locale('en')),
-          macOS: SortOptionsMacOS(locale: Locale('en')),
-        ));
+        await sort.init(
+          const SortOptions(
+            ios: SortOptionsIOS(locale: Locale('en')),
+            macOS: SortOptionsMacOS(locale: Locale('en')),
+          ),
+        );
 
         final result = await sort.sort([
           const SortItem(id: 'accent', value: 'café'),

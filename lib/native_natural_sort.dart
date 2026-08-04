@@ -16,6 +16,7 @@ export 'src/android/delegate.dart';
 export 'src/android/extensions.dart';
 export 'src/android/sort.dart';
 export 'src/collation_ffi.dart';
+export 'src/common.dart';
 export 'src/delegate.dart';
 export 'src/ios/delegate.dart';
 export 'src/ios/sort.dart';

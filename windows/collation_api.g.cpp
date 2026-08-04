@@ -398,9 +398,15 @@ CollationWindowsRequest::CollationWindowsRequest(const EncodableList& items)
 
 CollationWindowsRequest::CollationWindowsRequest(
   const EncodableList& items,
-  const std::string* locale)
+  const std::string* locale,
+  const int64_t* direction,
+  const bool* case_sensitive,
+  const bool* diacritic_insensitive)
  : items_(items),
-    locale_(locale ? std::optional<std::string>(*locale) : std::nullopt) {}
+    locale_(locale ? std::optional<std::string>(*locale) : std::nullopt),
+    direction_(direction ? std::optional<int64_t>(*direction) : std::nullopt),
+    case_sensitive_(case_sensitive ? std::optional<bool>(*case_sensitive) : std::nullopt),
+    diacritic_insensitive_(diacritic_insensitive ? std::optional<bool>(*diacritic_insensitive) : std::nullopt) {}
 
 const EncodableList& CollationWindowsRequest::items() const {
   return items_;
@@ -424,11 +430,53 @@ void CollationWindowsRequest::set_locale(std::string_view value_arg) {
 }
 
 
+const int64_t* CollationWindowsRequest::direction() const {
+  return direction_ ? &(*direction_) : nullptr;
+}
+
+void CollationWindowsRequest::set_direction(const int64_t* value_arg) {
+  direction_ = value_arg ? std::optional<int64_t>(*value_arg) : std::nullopt;
+}
+
+void CollationWindowsRequest::set_direction(int64_t value_arg) {
+  direction_ = value_arg;
+}
+
+
+const bool* CollationWindowsRequest::case_sensitive() const {
+  return case_sensitive_ ? &(*case_sensitive_) : nullptr;
+}
+
+void CollationWindowsRequest::set_case_sensitive(const bool* value_arg) {
+  case_sensitive_ = value_arg ? std::optional<bool>(*value_arg) : std::nullopt;
+}
+
+void CollationWindowsRequest::set_case_sensitive(bool value_arg) {
+  case_sensitive_ = value_arg;
+}
+
+
+const bool* CollationWindowsRequest::diacritic_insensitive() const {
+  return diacritic_insensitive_ ? &(*diacritic_insensitive_) : nullptr;
+}
+
+void CollationWindowsRequest::set_diacritic_insensitive(const bool* value_arg) {
+  diacritic_insensitive_ = value_arg ? std::optional<bool>(*value_arg) : std::nullopt;
+}
+
+void CollationWindowsRequest::set_diacritic_insensitive(bool value_arg) {
+  diacritic_insensitive_ = value_arg;
+}
+
+
 EncodableList CollationWindowsRequest::ToEncodableList() const {
   EncodableList list;
-  list.reserve(2);
+  list.reserve(5);
   list.push_back(EncodableValue(items_));
   list.push_back(locale_ ? EncodableValue(*locale_) : EncodableValue());
+  list.push_back(direction_ ? EncodableValue(*direction_) : EncodableValue());
+  list.push_back(case_sensitive_ ? EncodableValue(*case_sensitive_) : EncodableValue());
+  list.push_back(diacritic_insensitive_ ? EncodableValue(*diacritic_insensitive_) : EncodableValue());
   return list;
 }
 
@@ -439,11 +487,23 @@ CollationWindowsRequest CollationWindowsRequest::FromEncodableList(const Encodab
   if (!encodable_locale.IsNull()) {
     decoded.set_locale(std::get<std::string>(encodable_locale));
   }
+  auto& encodable_direction = list[2];
+  if (!encodable_direction.IsNull()) {
+    decoded.set_direction(std::get<int64_t>(encodable_direction));
+  }
+  auto& encodable_case_sensitive = list[3];
+  if (!encodable_case_sensitive.IsNull()) {
+    decoded.set_case_sensitive(std::get<bool>(encodable_case_sensitive));
+  }
+  auto& encodable_diacritic_insensitive = list[4];
+  if (!encodable_diacritic_insensitive.IsNull()) {
+    decoded.set_diacritic_insensitive(std::get<bool>(encodable_diacritic_insensitive));
+  }
   return decoded;
 }
 
 bool CollationWindowsRequest::operator==(const CollationWindowsRequest& other) const {
-  return PigeonInternalDeepEquals(items_, other.items_) && PigeonInternalDeepEquals(locale_, other.locale_);
+  return PigeonInternalDeepEquals(items_, other.items_) && PigeonInternalDeepEquals(locale_, other.locale_) && PigeonInternalDeepEquals(direction_, other.direction_) && PigeonInternalDeepEquals(case_sensitive_, other.case_sensitive_) && PigeonInternalDeepEquals(diacritic_insensitive_, other.diacritic_insensitive_);
 }
 
 bool CollationWindowsRequest::operator!=(const CollationWindowsRequest& other) const {
@@ -454,6 +514,9 @@ size_t CollationWindowsRequest::Hash() const {
   size_t result = 1;
   result = result * 31 + PigeonInternalDeepHash(items_);
   result = result * 31 + PigeonInternalDeepHash(locale_);
+  result = result * 31 + PigeonInternalDeepHash(direction_);
+  result = result * 31 + PigeonInternalDeepHash(case_sensitive_);
+  result = result * 31 + PigeonInternalDeepHash(diacritic_insensitive_);
   return result;
 }
 
@@ -466,6 +529,27 @@ std::ostream& operator<<(
   os << ", locale: ";
   if (obj.locale_) {
     os << PigeonInternalToString(*obj.locale_);
+  }
+  else {
+    os << "null";
+  }
+  os << ", direction: ";
+  if (obj.direction_) {
+    os << PigeonInternalToString(*obj.direction_);
+  }
+  else {
+    os << "null";
+  }
+  os << ", case_sensitive: ";
+  if (obj.case_sensitive_) {
+    os << PigeonInternalToString(*obj.case_sensitive_);
+  }
+  else {
+    os << "null";
+  }
+  os << ", diacritic_insensitive: ";
+  if (obj.diacritic_insensitive_) {
+    os << PigeonInternalToString(*obj.diacritic_insensitive_);
   }
   else {
     os << "null";

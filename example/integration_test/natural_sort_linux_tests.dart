@@ -47,9 +47,7 @@ void registerLinuxTests() {
       expect(result.map((i) => i.id), ['1', '10', '2']);
     });
 
-    testWidgets('numeric: true via sortWithOptions override', (
-      tester,
-    ) async {
+    testWidgets('numeric: true via sortWithOptions override', (tester) async {
       await sort.init(
         const SortOptions(linux: SortOptionsLinux(numeric: false)),
       );
@@ -120,20 +118,16 @@ void registerLinuxTests() {
     testWidgets('empty list with descending direction', (tester) async {
       await sort.init(const SortOptions());
 
-      final result = await sort.sort(
-        [],
-        direction: SortDirection.descending,
-      );
+      final result = await sort.sort([], direction: SortDirection.descending);
       expect(result, isEmpty);
     });
 
     testWidgets('single element with descending direction', (tester) async {
       await sort.init(const SortOptions());
 
-      final result = await sort.sort(
-        [const SortItem(id: 'only', value: 'x')],
-        direction: SortDirection.descending,
-      );
+      final result = await sort.sort([
+        const SortItem(id: 'only', value: 'x'),
+      ], direction: SortDirection.descending);
       expect(result, [const SortItem(id: 'only', value: 'x')]);
     });
 
@@ -152,12 +146,10 @@ void registerLinuxTests() {
     testWidgets('init is idempotent — does not throw', (tester) async {
       await sort.init(const SortOptions());
       // Second init should be a no-op and not throw.
-      await sort.init(const SortOptions(linux: SortOptionsLinux(
-        numeric: false,
-      )));
-      final result = await sort.sort([
-        const SortItem(id: 'a', value: 'test'),
-      ]);
+      await sort.init(
+        const SortOptions(linux: SortOptionsLinux(numeric: false)),
+      );
+      final result = await sort.sort([const SortItem(id: 'a', value: 'test')]);
       expect(result, [const SortItem(id: 'a', value: 'test')]);
     });
 

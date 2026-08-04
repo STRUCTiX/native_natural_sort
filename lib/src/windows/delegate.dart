@@ -15,6 +15,7 @@
 import 'dart:async';
 import 'dart:ui' show Locale;
 
+import '../common.dart';
 import '../delegate.dart';
 import '../sort.dart';
 import 'sort.dart';
@@ -23,16 +24,26 @@ class WindowsDelegate extends PlatformDelegate {
   late final WindowsSort _sort;
   Locale? _defaultLocale;
   SortDirection? _defaultDirection;
+  CollatorStrength? _defaultStrength;
+  CollatorDecomposition? _defaultDecomposition;
+  bool? _defaultNumeric;
+  bool? _defaultCaseSensitive;
+  bool? _defaultDiacriticInsensitive;
 
   WindowsDelegate();
 
   @override
   Future<void> init(SortOptions options) async {
     final windows = options.windows;
-    _sort = windows?.sort ?? WindowsSort.pigeon();
+    _sort = windows?.sort ?? WindowsSort.ffi();
     await _sort.init();
     _defaultLocale = windows?.locale;
     _defaultDirection = windows?.direction;
+    _defaultStrength = windows?.strength;
+    _defaultDecomposition = windows?.decomposition;
+    _defaultNumeric = windows?.numeric;
+    _defaultCaseSensitive = windows?.caseSensitive;
+    _defaultDiacriticInsensitive = windows?.diacriticInsensitive;
   }
 
   @override
@@ -40,7 +51,16 @@ class WindowsDelegate extends PlatformDelegate {
     List<SortItem> items, {
     SortDirection? direction,
     Locale? locale,
-  }) => _doSort(items, locale: locale, direction: direction);
+  }) => _doSort(
+    items,
+    locale: locale,
+    direction: direction,
+    strength: _defaultStrength,
+    decomposition: _defaultDecomposition,
+    numeric: _defaultNumeric,
+    caseSensitive: _defaultCaseSensitive,
+    diacriticInsensitive: _defaultDiacriticInsensitive,
+  );
 
   @override
   FutureOr<List<SortItem>> sortWithOptions(
@@ -52,6 +72,12 @@ class WindowsDelegate extends PlatformDelegate {
       items,
       locale: windows?.locale ?? _defaultLocale,
       direction: windows?.direction ?? _defaultDirection,
+      strength: windows?.strength ?? _defaultStrength,
+      decomposition: windows?.decomposition ?? _defaultDecomposition,
+      numeric: windows?.numeric ?? _defaultNumeric,
+      caseSensitive: windows?.caseSensitive ?? _defaultCaseSensitive,
+      diacriticInsensitive:
+          windows?.diacriticInsensitive ?? _defaultDiacriticInsensitive,
     );
   }
 
@@ -59,6 +85,11 @@ class WindowsDelegate extends PlatformDelegate {
     List<SortItem> items, {
     Locale? locale,
     SortDirection? direction,
+    CollatorStrength? strength,
+    CollatorDecomposition? decomposition,
+    bool? numeric,
+    bool? caseSensitive,
+    bool? diacriticInsensitive,
   }) {
     final platformItems = items
         .map((i) => CollationWindowsItem(id: i.id, value: i.value))
@@ -67,6 +98,11 @@ class WindowsDelegate extends PlatformDelegate {
       platformItems,
       locale: locale ?? _defaultLocale,
       direction: direction ?? _defaultDirection,
+      strength: strength,
+      decomposition: decomposition,
+      numeric: numeric,
+      caseSensitive: caseSensitive,
+      diacriticInsensitive: diacriticInsensitive,
     );
 
     List<SortItem> mapBack(List<CollationWindowsItem> list) =>

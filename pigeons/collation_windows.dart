@@ -37,13 +37,32 @@ class CollationWindowsItem {
 /// Request to sort [items] by the collation order of their [value]s.
 ///
 /// [locale] selects the ICU collation locale.  When omitted, the
-/// platform uses its system-default collator.  Returns the
-/// [CollationWindowsItem.id]s in collation order.
+/// platform uses its system-default collator.
+///
+/// [direction] sets sort direction: 0 = ascending (default),
+/// 1 = descending.
+///
+/// [caseSensitive] controls case sensitivity in comparison.
+/// `null` or `false` (default) ignores case; `true` makes
+/// comparison case-sensitive.
+///
+/// [diacriticInsensitive] when `true`, ignores diacritics
+/// (accents) during comparison; `null` or `false` (default)
+/// treats diacritics as distinct.
 class CollationWindowsRequest {
-  CollationWindowsRequest({required this.items, this.locale});
+  CollationWindowsRequest({
+    required this.items,
+    this.locale,
+    this.direction,
+    this.caseSensitive,
+    this.diacriticInsensitive,
+  });
 
   List<CollationWindowsItem> items;
   String? locale;
+  int? direction;
+  bool? caseSensitive;
+  bool? diacriticInsensitive;
 }
 
 /// Platform-native string collation.

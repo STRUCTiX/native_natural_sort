@@ -235,6 +235,102 @@ void main() {
     test('SortOptionsWindows default sort is null', () {
       expect(const SortOptionsWindows().sort, isNull);
     });
+
+    test('SortOptionsWindows stores strength, decomposition, numeric', () {
+      const options = SortOptionsWindows(
+        strength: CollatorStrength.primary,
+        decomposition: CollatorDecomposition.none,
+        numeric: false,
+      );
+      expect(options.strength, CollatorStrength.primary);
+      expect(options.decomposition, CollatorDecomposition.none);
+      expect(options.numeric, false);
+    });
+
+    test('SortOptionsWindows FFI fields default to null', () {
+      const options = SortOptionsWindows();
+      expect(options.strength, isNull);
+      expect(options.decomposition, isNull);
+      expect(options.numeric, isNull);
+    });
+
+    test(
+      'SortOptionsWindows stores caseSensitive and diacriticInsensitive',
+      () {
+        const options = SortOptionsWindows(
+          caseSensitive: true,
+          diacriticInsensitive: true,
+        );
+        expect(options.caseSensitive, true);
+        expect(options.diacriticInsensitive, true);
+      },
+    );
+
+    test(
+      'SortOptionsWindows caseSensitive/diacriticInsensitive default to null',
+      () {
+        const options = SortOptionsWindows();
+        expect(options.caseSensitive, isNull);
+        expect(options.diacriticInsensitive, isNull);
+      },
+    );
+
+    test('SortOptionsWindows stores locale', () {
+      const options = SortOptionsWindows(locale: Locale('en'));
+      expect(options.locale, const Locale('en'));
+    });
+
+    test('SortOptionsWindows locale defaults to null', () {
+      const options = SortOptionsWindows();
+      expect(options.locale, isNull);
+    });
+
+    test('SortOptionsWindows.ffi pre-selects FFI backend', () {
+      final options = SortOptionsWindows.ffi();
+      expect(options.sort, isA<WindowsSort>());
+      expect(options.direction, SortDirection.ascending);
+    });
+
+    test('SortOptionsWindows.ffi exposes FFI params', () {
+      final options = SortOptionsWindows.ffi(
+        locale: const Locale('de'),
+        direction: SortDirection.descending,
+        strength: CollatorStrength.primary,
+        decomposition: CollatorDecomposition.none,
+        numeric: false,
+      );
+      expect(options.locale, const Locale('de'));
+      expect(options.direction, SortDirection.descending);
+      expect(options.strength, CollatorStrength.primary);
+      expect(options.decomposition, CollatorDecomposition.none);
+      expect(options.numeric, false);
+      // Pigeon params should remain null.
+      expect(options.caseSensitive, isNull);
+      expect(options.diacriticInsensitive, isNull);
+    });
+
+    test('SortOptionsWindows.pigeon pre-selects Pigeon backend', () {
+      final options = SortOptionsWindows.pigeon();
+      expect(options.sort, isA<WindowsSort>());
+      expect(options.direction, SortDirection.ascending);
+    });
+
+    test('SortOptionsWindows.pigeon exposes Pigeon params', () {
+      final options = SortOptionsWindows.pigeon(
+        locale: const Locale('fr'),
+        direction: SortDirection.descending,
+        caseSensitive: true,
+        diacriticInsensitive: true,
+      );
+      expect(options.locale, const Locale('fr'));
+      expect(options.direction, SortDirection.descending);
+      expect(options.caseSensitive, true);
+      expect(options.diacriticInsensitive, true);
+      // FFI params should remain null.
+      expect(options.strength, isNull);
+      expect(options.decomposition, isNull);
+      expect(options.numeric, isNull);
+    });
   });
 
   group('NativeSort', () {

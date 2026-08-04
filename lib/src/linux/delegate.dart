@@ -14,8 +14,8 @@
 
 import 'dart:ui' show Locale;
 
-import '../android/sort.dart' show CollatorDecomposition, CollatorStrength;
 import '../collation_ffi.dart';
+import '../common.dart';
 import '../delegate.dart';
 import '../sort.dart';
 import 'collation_ffi.dart';

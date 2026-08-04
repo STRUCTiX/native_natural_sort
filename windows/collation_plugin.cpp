@@ -11,11 +11,30 @@ namespace native_natural_sort {
 
 namespace {
 
+/// Builds CompareStringEx flags from request parameters.
+DWORD BuildFlags(const CollationWindowsRequest &request) {
+  DWORD flags = SORT_DIGITSASNUMBERS;
+
+  // caseSensitive: null/false → NORM_IGNORECASE (backward-compatible default)
+  const auto *case_sens = request.case_sensitive();
+  if (!case_sens || !*case_sens) {
+    flags |= NORM_IGNORECASE;
+  }
+
+  // diacriticInsensitive: true → NORM_IGNORENONSPACE
+  const auto *diac_ins = request.diacritic_insensitive();
+  if (diac_ins && *diac_ins) {
+    flags |= NORM_IGNORENONSPACE;
+  }
+
+  return flags;
+}
+
 /// Compares two wide strings using CompareStringEx.
 int CompareWide(const std::wstring &a, const std::wstring &b,
-                const wchar_t *locale_name) {
-  return CompareStringEx(locale_name, NORM_IGNORECASE | SORT_DIGITSASNUMBERS,
-                         a.c_str(), static_cast<int>(a.length()), b.c_str(),
+                const wchar_t *locale_name, DWORD flags) {
+  return CompareStringEx(locale_name, flags, a.c_str(),
+                         static_cast<int>(a.length()), b.c_str(),
                          static_cast<int>(b.length()), nullptr, nullptr, 0);
 }
 
@@ -74,18 +93,29 @@ CollationPlugin::Sort(const CollationWindowsRequest &request) {
   const wchar_t *effective_locale =
       locale_name.empty() ? LOCALE_NAME_USER_DEFAULT : locale_name.c_str();
 
+  // Build CompareStringEx flags from request tuning parameters.
+  const DWORD flags = BuildFlags(request);
+
+  // Resolve sort direction.
+  const auto *direction = request.direction();
+  const bool descending = direction && *direction == 1;
+
   // Sort by collation order (using pre-converted wide strings),
   // then by id as tie-break for consistency with other platforms.
-  std::stable_sort(entries.begin(), entries.end(),
-                   [effective_locale](const auto &a, const auto &b) {
-                     int cmp = CompareWide(a.wide_value, b.wide_value,
-                                           effective_locale);
-                     if (cmp == CSTR_LESS_THAN)
-                       return true;
-                     if (cmp == CSTR_GREATER_THAN)
-                       return false;
-                     return a.id < b.id;
-                   });
+  std::stable_sort(
+      entries.begin(), entries.end(),
+      [effective_locale, flags, descending](const auto &a, const auto &b) {
+        int cmp = CompareWide(a.wide_value, b.wide_value, effective_locale,
+                              flags);
+        bool less;
+        if (cmp == CSTR_LESS_THAN)
+          less = true;
+        else if (cmp == CSTR_GREATER_THAN)
+          less = false;
+        else
+          return descending ? a.id > b.id : a.id < b.id;
+        return descending ? !less : less;
+      });
 
   ::flutter::EncodableList result;
   result.reserve(entries.size());

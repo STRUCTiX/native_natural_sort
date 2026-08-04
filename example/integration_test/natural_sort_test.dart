@@ -11,6 +11,8 @@ part 'natural_sort_basic_tests.dart';
 part 'natural_sort_edge_cases_tests.dart';
 part 'natural_sort_linux_tests.dart';
 part 'natural_sort_locale_tests.dart';
+part 'natural_sort_windows_ffi_tests.dart';
+part 'natural_sort_windows_pigeon_tests.dart';
 
 void main() {
   IntegrationTestWidgetsFlutterBinding.ensureInitialized();
@@ -30,8 +32,8 @@ void main() {
     case TargetPlatform.linux:
       registerLinuxTests();
     case TargetPlatform.windows:
-      // No Windows-specific integration tests yet.
-      break;
+      registerWindowsPigeonTests();
+      registerWindowsFfiTests();
     case TargetPlatform.fuchsia:
       break;
   }

@@ -123,6 +123,100 @@ void main() {
       final result = await delegate.sortWithOptions([]);
       expect(result, isEmpty);
     });
+
+    test('init stores FFI tuning params from options', () async {
+      final mockSort = _MockWindowsSort();
+      final delegate = WindowsDelegate();
+      await delegate.init(
+        SortOptions(
+          windows: SortOptionsWindows(
+            sort: mockSort,
+            strength: CollatorStrength.primary,
+            decomposition: CollatorDecomposition.none,
+            numeric: false,
+          ),
+        ),
+      );
+
+      await delegate.sort([const SortItem(id: 'a', value: 'x')]);
+      expect(mockSort.lastStrength, CollatorStrength.primary);
+      expect(mockSort.lastDecomposition, CollatorDecomposition.none);
+      expect(mockSort.lastNumeric, false);
+    });
+
+    test('init stores Pigeon tuning params from options', () async {
+      final mockSort = _MockWindowsSort();
+      final delegate = WindowsDelegate();
+      await delegate.init(
+        SortOptions(
+          windows: SortOptionsWindows(
+            sort: mockSort,
+            caseSensitive: true,
+            diacriticInsensitive: true,
+          ),
+        ),
+      );
+
+      await delegate.sort([const SortItem(id: 'a', value: 'x')]);
+      expect(mockSort.lastCaseSensitive, true);
+      expect(mockSort.lastDiacriticInsensitive, true);
+    });
+
+    test('sortWithOptions overrides tuning params per-call', () async {
+      final mockSort = _MockWindowsSort();
+      final delegate = WindowsDelegate();
+      await delegate.init(
+        SortOptions(
+          windows: SortOptionsWindows(
+            sort: mockSort,
+            strength: CollatorStrength.tertiary,
+            numeric: true,
+            caseSensitive: false,
+          ),
+        ),
+      );
+
+      await delegate.sortWithOptions(
+        [const SortItem(id: 'a', value: 'x')],
+        options: const SortOptions(
+          windows: SortOptionsWindows(
+            strength: CollatorStrength.primary,
+            numeric: false,
+            caseSensitive: true,
+          ),
+        ),
+      );
+      expect(mockSort.lastStrength, CollatorStrength.primary);
+      expect(mockSort.lastNumeric, false);
+      expect(mockSort.lastCaseSensitive, true);
+    });
+
+    test(
+      'sortWithOptions falls back to init defaults for tuning params',
+      () async {
+        final mockSort = _MockWindowsSort();
+        final delegate = WindowsDelegate();
+        await delegate.init(
+          SortOptions(
+            windows: SortOptionsWindows(
+              sort: mockSort,
+              decomposition: CollatorDecomposition.none,
+              diacriticInsensitive: true,
+            ),
+          ),
+        );
+
+        await delegate.sortWithOptions(
+          [const SortItem(id: 'a', value: 'x')],
+          options: const SortOptions(
+            windows: SortOptionsWindows(direction: SortDirection.descending),
+          ),
+        );
+        expect(mockSort.lastDecomposition, CollatorDecomposition.none);
+        expect(mockSort.lastDiacriticInsensitive, true);
+        expect(mockSort.lastDirection, SortDirection.descending);
+      },
+    );
   });
 }
 
@@ -130,6 +224,11 @@ class _MockWindowsSort implements WindowsSort {
   bool initCalled = false;
   Locale? lastLocale;
   SortDirection? lastDirection;
+  CollatorStrength? lastStrength;
+  CollatorDecomposition? lastDecomposition;
+  bool? lastNumeric;
+  bool? lastCaseSensitive;
+  bool? lastDiacriticInsensitive;
   List<String> lastRequestedIds = [];
 
   @override
@@ -145,9 +244,19 @@ class _MockWindowsSort implements WindowsSort {
     List<CollationWindowsItem> items, {
     Locale? locale,
     SortDirection? direction,
+    CollatorStrength? strength,
+    CollatorDecomposition? decomposition,
+    bool? numeric,
+    bool? caseSensitive,
+    bool? diacriticInsensitive,
   }) async {
     lastLocale = locale;
     lastDirection = direction;
+    lastStrength = strength;
+    lastDecomposition = decomposition;
+    lastNumeric = numeric;
+    lastCaseSensitive = caseSensitive;
+    lastDiacriticInsensitive = diacriticInsensitive;
     lastRequestedIds = items.map((i) => i.id).toList();
     return items;
   }

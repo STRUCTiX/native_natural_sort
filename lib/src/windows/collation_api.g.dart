@@ -148,17 +148,45 @@ class CollationWindowsItem {
 /// Request to sort [items] by the collation order of their [value]s.
 ///
 /// [locale] selects the ICU collation locale.  When omitted, the
-/// platform uses its system-default collator.  Returns the
-/// [CollationWindowsItem.id]s in collation order.
+/// platform uses its system-default collator.
+///
+/// [direction] sets sort direction: 0 = ascending (default),
+/// 1 = descending.
+///
+/// [caseSensitive] controls case sensitivity in comparison.
+/// `null` or `false` (default) ignores case; `true` makes
+/// comparison case-sensitive.
+///
+/// [diacriticInsensitive] when `true`, ignores diacritics
+/// (accents) during comparison; `null` or `false` (default)
+/// treats diacritics as distinct.
 class CollationWindowsRequest {
-  CollationWindowsRequest({required this.items, this.locale});
+  CollationWindowsRequest({
+    required this.items,
+    this.locale,
+    this.direction,
+    this.caseSensitive,
+    this.diacriticInsensitive,
+  });
 
   List<CollationWindowsItem> items;
 
   String? locale;
 
+  int? direction;
+
+  bool? caseSensitive;
+
+  bool? diacriticInsensitive;
+
   List<Object?> _toList() {
-    return <Object?>[items, locale];
+    return <Object?>[
+      items,
+      locale,
+      direction,
+      caseSensitive,
+      diacriticInsensitive,
+    ];
   }
 
   Object encode() {
@@ -170,6 +198,9 @@ class CollationWindowsRequest {
     return CollationWindowsRequest(
       items: (result[0]! as List<Object?>).cast<CollationWindowsItem>(),
       locale: result[1] as String?,
+      direction: result[2] as int?,
+      caseSensitive: result[3] as bool?,
+      diacriticInsensitive: result[4] as bool?,
     );
   }
 
@@ -182,7 +213,11 @@ class CollationWindowsRequest {
     if (identical(this, other)) {
       return true;
     }
-    return _deepEquals(items, other.items) && _deepEquals(locale, other.locale);
+    return _deepEquals(items, other.items) &&
+        _deepEquals(locale, other.locale) &&
+        _deepEquals(direction, other.direction) &&
+        _deepEquals(caseSensitive, other.caseSensitive) &&
+        _deepEquals(diacriticInsensitive, other.diacriticInsensitive);
   }
 
   @override
@@ -191,7 +226,7 @@ class CollationWindowsRequest {
 
   @override
   String toString() {
-    return 'CollationWindowsRequest(items: $items, locale: $locale)';
+    return 'CollationWindowsRequest(items: $items, locale: $locale, direction: $direction, caseSensitive: $caseSensitive, diacriticInsensitive: $diacriticInsensitive)';
   }
 }
 

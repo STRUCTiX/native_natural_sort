@@ -14,49 +14,12 @@
 
 import 'dart:ui' show Locale;
 
+import '../common.dart';
 import '../sort.dart' show SortDirection;
 import 'collation_api.g.dart';
 
 export 'collation_api.g.dart'
     show CollationAndroidHostApi, CollationAndroidItem, CollationAndroidRequest;
-
-/// ICU collation strength level.
-///
-/// Controls whether case and accent differences affect sort order.
-/// Maps to Android [java.text.Collator] strength constants.
-enum CollatorStrength {
-  /// Base letter differences only (a ≠ b, but a = A = á = À).
-  primary(0),
-
-  /// Base letter + accent differences (a ≠ á, but a = A).
-  secondary(1),
-
-  /// Base letter + accent + case differences (a ≠ A). Default.
-  tertiary(2),
-
-  /// All differences including punctuation.
-  identical(3);
-
-  final int value;
-  const CollatorStrength(this.value);
-}
-
-/// Unicode normalisation mode for collation.
-///
-/// Controls whether composed characters are decomposed before comparison.
-enum CollatorDecomposition {
-  /// No decomposition.
-  none(0),
-
-  /// Canonical decomposition (NFD). Default.
-  canonical(1),
-
-  /// Full decomposition (NFKD) — also decomposes compatibility characters.
-  full(2);
-
-  final int value;
-  const CollatorDecomposition(this.value);
-}
 
 /// Android platform sort — Pigeon MethodChannel → ICU Collator.
 abstract interface class AndroidSort {

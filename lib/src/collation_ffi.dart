@@ -174,31 +174,3 @@ abstract class CollatorBase implements IcuCollator {
     );
   });
 }
-
-/// Non-fatal variant of [DynamicLibrary.lookupFunction].
-///
-/// Returns `null` instead of throwing [ArgumentError] when the named
-/// native function is not exported by the library.
-///
-/// Accepts plain FFI function typedefs directly — no need to wrap the
-/// native signature in [NativeFunction]:
-///
-/// ```dart
-/// final fn = lib.tryLookup<UcolSetAttributeNative, UcolSetAttributeDart>(
-///   'ucol_setAttribute',
-/// );
-/// ```
-///
-/// See [DynamicLibrary.lookupFunction] for the full type contract.
-extension TryLookup on DynamicLibrary {
-  D? tryLookup<T, D extends Function>(String symbolName) {
-    try {
-      // Dynamic dispatch bypasses the static-type limitation that prevents
-      // generic wrappers around lookupFunction — the compiler allows the
-      // call directly on DynamicLibrary but not through a generic indirection.
-      return (this as dynamic).lookupFunction<T, D>(symbolName) as D;
-    } on ArgumentError {
-      return null;
-    }
-  }
-}

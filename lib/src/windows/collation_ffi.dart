@@ -106,14 +106,24 @@ class WindowsCollationLoader implements CollationLibraryLoader {
       'ucol_strcoll',
     );
     // Tuning functions are non-fatal.
-    _ucolSetAttribute = lib
-        .tryLookup<UcolSetAttributeNative, UcolSetAttributeDart>(
-          'ucol_setAttribute',
-        );
-    _ucolSetStrength = lib
-        .tryLookup<UcolSetStrengthNative, UcolSetStrengthDart>(
-          'ucol_setStrength',
-        );
+    try {
+      _ucolSetAttribute = lib
+          .lookupFunction<UcolSetAttributeNative, UcolSetAttributeDart>(
+            'ucol_setAttribute',
+          );
+    } on ArgumentError {
+      // Symbol not exported by this ICU build — leave null.
+      _ucolSetAttribute = null;
+    }
+    try {
+      _ucolSetStrength = lib
+          .lookupFunction<UcolSetStrengthNative, UcolSetStrengthDart>(
+            'ucol_setStrength',
+          );
+    } on ArgumentError {
+      // Symbol not exported by this ICU build — leave null.
+      _ucolSetStrength = null;
+    }
   }
 
   /// Verifies the unversioned ICU entry symbols are exported by [lib].

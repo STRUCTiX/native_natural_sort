@@ -122,14 +122,24 @@ class LinuxCollationLoader implements CollationLibraryLoader {
       'ucol_strcoll$suffix',
     );
     // Tuning functions are non-fatal — every realistic ICU build has them.
-    _ucolSetAttribute = lib
-        .tryLookup<UcolSetAttributeNative, UcolSetAttributeDart>(
-          'ucol_setAttribute$suffix',
-        );
-    _ucolSetStrength = lib
-        .tryLookup<UcolSetStrengthNative, UcolSetStrengthDart>(
-          'ucol_setStrength$suffix',
-        );
+    try {
+      _ucolSetAttribute = lib
+          .lookupFunction<UcolSetAttributeNative, UcolSetAttributeDart>(
+            'ucol_setAttribute$suffix',
+          );
+    } on ArgumentError {
+      // Symbol not exported by this ICU build — leave null.
+      _ucolSetAttribute = null;
+    }
+    try {
+      _ucolSetStrength = lib
+          .lookupFunction<UcolSetStrengthNative, UcolSetStrengthDart>(
+            'ucol_setStrength$suffix',
+          );
+    } on ArgumentError {
+      // Symbol not exported by this ICU build — leave null.
+      _ucolSetStrength = null;
+    }
   }
 
   /// Attempts to resolve [path], applying the state on success.

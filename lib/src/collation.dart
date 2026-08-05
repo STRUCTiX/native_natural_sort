@@ -71,11 +71,22 @@ abstract interface class IcuCollator {
 ///
 /// Implemented by `LinuxCollationLoader` (Linux) and
 /// `WindowsCollationLoader` (Windows).
+///
+/// [init] must be called before [collator].  It is safe to call [init]
+/// multiple times — only the first invocation performs resolution;
+/// subsequent calls return the same future.  If resolution fails the
+/// error is thrown to the caller (no silent fallback).
 abstract interface class CollationLibraryLoader {
-  /// Whether the native ICU library was resolved successfully.
-  bool get isAvailable;
+  /// Whether [init] has completed successfully.
+  ///
+  /// Returns `true` after a successful [init] call, `false` before
+  /// initialization or after a failed attempt.  Derived from the
+  /// internal [Completer.isCompleted] state — no separate flag.
+  bool get isInitialized;
 
   /// Resolves the native ICU library and its function pointers.
+  ///
+  /// Throws if the library cannot be found or symbols cannot be resolved.
   Future<void> init();
 
   /// Returns a new collator for [localeName].

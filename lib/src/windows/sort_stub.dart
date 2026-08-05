@@ -23,10 +23,8 @@ import 'sort.dart';
 final class WindowsFfiSort implements WindowsSort {
   WindowsFfiSort({CollationLibraryLoader? loader});
   @override
-  bool get isAvailable => false;
-
-  @override
-  Future<void> init() async {}
+  Future<void> init() async =>
+      throw UnsupportedError('Windows FFI sort unavailable on this platform');
 
   @override
   Future<List<CollationWindowsItem>> sort(

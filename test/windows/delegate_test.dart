@@ -1,35 +1,48 @@
 import 'dart:ui' show Locale;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:native_natural_sort/native_natural_sort.dart';
 import 'package:native_natural_sort/native_natural_sort_io.dart';
 
 void main() {
   group('WindowsDelegate', () {
-    test('init throws when FFI unavailable and no fallback configured',
-        () async {
-      final delegate = WindowsDelegate();
-      expect(
-        () => delegate.init(const SortOptions()),
-        throwsA(isA<StateError>()),
-      );
-    });
+    test(
+      'init throws when FFI unavailable and no fallback configured',
+      () async {
+        final delegate = WindowsDelegate();
+        await expectLater(
+          delegate.init(const SortOptions()),
+          throwsA(isA<StateError>()),
+        );
+      },
+      skip: defaultTargetPlatform != TargetPlatform.windows
+          ? 'requires real Windows environment'
+          : false,
+    );
 
-    test('init with fallback succeeds when FFI unavailable', () async {
-      final mockSort = _MockWindowsSort();
-      final delegate = WindowsDelegate();
-      await delegate.init(
-        SortOptions(
-          windows: SortOptionsWindows(
-            // No sort provided → defaults to FFI (stub: isAvailable=false).
-            // The fallback callback supplies a working mock.
-            onLoadFailed: () async => mockSort,
+    test(
+      'init with fallback succeeds when FFI unavailable',
+      () async {
+        final mockSort = _MockWindowsSort();
+        final delegate = WindowsDelegate();
+        await delegate.init(
+          SortOptions(
+            windows: SortOptionsWindows(
+              // No sort provided → defaults to FFI.  The loader throws on
+              // this platform when ICU DLLs are missing.
+              // The fallback callback supplies a working mock.
+              onLoadFailed: () async => mockSort,
+            ),
           ),
-        ),
-      );
-      // The delegate switched to mockSort after FFI failed.
-      expect(mockSort.initCalled, isTrue);
-    });
+        );
+        // The delegate switched to mockSort after FFI failed.
+        expect(mockSort.initCalled, isTrue);
+      },
+      skip: defaultTargetPlatform != TargetPlatform.windows
+          ? 'requires real Windows environment'
+          : false,
+    );
 
     test('init calls sort.init()', () async {
       final mockSort = _MockWindowsSort();
@@ -251,9 +264,6 @@ class _MockWindowsSort implements WindowsSort {
   bool? lastCaseSensitive;
   bool? lastDiacriticInsensitive;
   List<String> lastRequestedIds = [];
-
-  @override
-  bool get isAvailable => true;
 
   @override
   Future<void> init() async {

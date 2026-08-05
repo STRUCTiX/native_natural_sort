@@ -23,7 +23,7 @@ class LinuxSortImpl implements LinuxSort {
   LinuxSortImpl({CollationLibraryLoader? loader});
 
   @override
-  bool get isAvailable => false;
+  Future<void> init() async {}
 
   @override
   List<SortItem> sort(

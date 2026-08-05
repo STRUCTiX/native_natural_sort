@@ -15,7 +15,6 @@
 import 'dart:ui' show Locale;
 
 import '../collation.dart';
-import '../collation_cache.dart';
 import '../common.dart';
 import '../sort.dart';
 
@@ -23,8 +22,11 @@ import 'sort_stub.dart' if (dart.library.io) 'sort_ffi.dart';
 
 /// Linux sort — Dart FFI → system libicui18n.
 abstract interface class LinuxSort {
-  /// Whether the underlying ICU loader is available.
-  bool get isAvailable;
+  /// Initialize the backend (load native libraries, resolve symbols).
+  ///
+  /// Must be called before [sort].  Safe to call multiple times —
+  /// only the first invocation performs work.
+  Future<void> init();
 
   List<SortItem> sort(
     List<SortItem> items, {
@@ -46,12 +48,6 @@ abstract interface class SortOptionsLinux {
   /// Injectable sort implementation; `null` uses the default.
   LinuxSort? get sort;
 
-  /// Injectable ICU library loader; `null` uses the default.
-  CollationLibraryLoader? get loader;
-
-  /// Injectable cache for resolved library path; `null` uses in-memory.
-  CollationCache? get cache;
-
   /// Sort direction (defaults to [SortDirection.ascending]).
   SortDirection get direction;
 
@@ -67,8 +63,6 @@ abstract interface class SortOptionsLinux {
   const factory SortOptionsLinux({
     Locale? locale,
     LinuxSort? sort,
-    CollationLibraryLoader? loader,
-    CollationCache? cache,
     SortDirection direction,
     CollatorStrength? strength,
     CollatorDecomposition? decomposition,
@@ -82,10 +76,6 @@ class _SortOptionsLinuxImpl implements SortOptionsLinux {
   @override
   final LinuxSort? sort;
   @override
-  final CollationLibraryLoader? loader;
-  @override
-  final CollationCache? cache;
-  @override
   final SortDirection direction;
   @override
   final CollatorStrength? strength;
@@ -96,8 +86,6 @@ class _SortOptionsLinuxImpl implements SortOptionsLinux {
   const _SortOptionsLinuxImpl({
     this.locale,
     this.sort,
-    this.loader,
-    this.cache,
     this.direction = SortDirection.ascending,
     this.strength,
     this.decomposition,

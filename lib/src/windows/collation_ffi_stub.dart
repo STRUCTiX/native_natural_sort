@@ -16,7 +16,7 @@ import '../collation.dart';
 
 class WindowsCollationLoader implements CollationLibraryLoader {
   @override
-  bool get isAvailable => false;
+  bool get isInitialized => false;
 
   @override
   Future<void> init() async =>

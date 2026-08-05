@@ -1,5 +1,6 @@
 import 'dart:ui' show Locale;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:native_natural_sort/native_natural_sort.dart';
 import 'package:native_natural_sort/native_natural_sort_io.dart';
@@ -7,37 +8,41 @@ import 'package:native_natural_sort/native_natural_sort_io.dart';
 void main() {
   group('LinuxDelegate', () {
     test('init resolves loader and stores locale/direction', () async {
-      final mockLoader = _MockLoader();
+      final mockSort = _MockLinuxSort();
       final delegate = LinuxDelegate();
       await delegate.init(
         SortOptions(
           linux: SortOptionsLinux(
             locale: const Locale('de'),
             direction: SortDirection.descending,
-            loader: mockLoader,
+            sort: mockSort,
           ),
         ),
       );
 
-      expect(mockLoader.initCalled, isTrue);
+      expect(mockSort.initCalled, isTrue);
       final result = delegate.sort([const SortItem(id: 'a', value: 'x')]);
       expect(result, [const SortItem(id: 'a', value: 'x')]);
     });
 
-    test('init creates default loader and sort when none provided', () async {
-      final delegate = LinuxDelegate();
-      await delegate.init(const SortOptions());
-    });
+    test(
+      'init creates default loader and sort when none provided',
+      () async {
+        final delegate = LinuxDelegate();
+        await delegate.init(const SortOptions());
+      },
+      skip: defaultTargetPlatform != TargetPlatform.linux
+          ? 'requires real Linux environment'
+          : false,
+    );
 
     test('sort overrides locale and direction from call arguments', () async {
       final mockSort = _MockLinuxSort();
-      final mockLoader = _MockLoader();
       final delegate = LinuxDelegate();
       await delegate.init(
         SortOptions(
           linux: SortOptionsLinux(
             locale: const Locale('en'),
-            loader: mockLoader,
             sort: mockSort,
           ),
         ),
@@ -54,14 +59,12 @@ void main() {
 
     test('sort uses defaults when call arguments are omitted', () async {
       final mockSort = _MockLinuxSort();
-      final mockLoader = _MockLoader();
       final delegate = LinuxDelegate();
       await delegate.init(
         SortOptions(
           linux: SortOptionsLinux(
             locale: const Locale('ja'),
             direction: SortDirection.descending,
-            loader: mockLoader,
             sort: mockSort,
           ),
         ),
@@ -74,13 +77,11 @@ void main() {
 
     test('sortWithOptions overrides all collator parameters', () async {
       final mockSort = _MockLinuxSort();
-      final mockLoader = _MockLoader();
       final delegate = LinuxDelegate();
       await delegate.init(
         SortOptions(
           linux: SortOptionsLinux(
             locale: const Locale('en'),
-            loader: mockLoader,
             sort: mockSort,
           ),
         ),
@@ -109,7 +110,6 @@ void main() {
       'sortWithOptions falls back to init defaults when params are null',
       () async {
         final mockSort = _MockLinuxSort();
-        final mockLoader = _MockLoader();
         final delegate = LinuxDelegate();
         await delegate.init(
           SortOptions(
@@ -119,7 +119,6 @@ void main() {
               strength: CollatorStrength.secondary,
               decomposition: CollatorDecomposition.full,
               numeric: false,
-              loader: mockLoader,
               sort: mockSort,
             ),
           ),
@@ -144,7 +143,6 @@ void main() {
       'sort passes strength, decomposition, numeric from init defaults',
       () async {
         final mockSort = _MockLinuxSort();
-        final mockLoader = _MockLoader();
         final delegate = LinuxDelegate();
         await delegate.init(
           SortOptions(
@@ -152,7 +150,6 @@ void main() {
               strength: CollatorStrength.identical,
               decomposition: CollatorDecomposition.canonical,
               numeric: false,
-              loader: mockLoader,
               sort: mockSort,
             ),
           ),
@@ -166,10 +163,10 @@ void main() {
     );
 
     test('empty list with descending direction does not throw', () async {
-      final mockLoader = _MockLoader();
+      final mockSort = _MockLinuxSort();
       final delegate = LinuxDelegate();
       await delegate.init(
-        SortOptions(linux: SortOptionsLinux(loader: mockLoader)),
+        SortOptions(linux: SortOptionsLinux(sort: mockSort)),
       );
 
       final result = delegate.sort([], direction: SortDirection.descending);
@@ -177,10 +174,10 @@ void main() {
     });
 
     test('single element with descending direction does not throw', () async {
-      final mockLoader = _MockLoader();
+      final mockSort = _MockLinuxSort();
       final delegate = LinuxDelegate();
       await delegate.init(
-        SortOptions(linux: SortOptionsLinux(loader: mockLoader)),
+        SortOptions(linux: SortOptionsLinux(sort: mockSort)),
       );
 
       final result = delegate.sort([
@@ -190,10 +187,10 @@ void main() {
     });
 
     test('sortWithOptions with empty list does not throw', () async {
-      final mockLoader = _MockLoader();
+      final mockSort = _MockLinuxSort();
       final delegate = LinuxDelegate();
       await delegate.init(
-        SortOptions(linux: SortOptionsLinux(loader: mockLoader)),
+        SortOptions(linux: SortOptionsLinux(sort: mockSort)),
       );
 
       final result = delegate.sortWithOptions(
@@ -205,38 +202,8 @@ void main() {
   });
 }
 
-class _MockLoader implements CollationLibraryLoader {
-  bool initCalled = false;
-
-  @override
-  bool get isAvailable => true;
-
-  @override
-  Future<void> init() async {
-    initCalled = true;
-  }
-
-  @override
-  IcuCollator collator(
-    String? localeName, {
-    bool numeric = true,
-    int? strength,
-    int? decomposition,
-  }) => _MockCollator();
-
-  @override
-  void dispose() {}
-}
-
-class _MockCollator implements IcuCollator {
-  @override
-  int compare(String a, String b) => a.compareTo(b);
-
-  @override
-  void dispose() {}
-}
-
 class _MockLinuxSort implements LinuxSort {
+  bool initCalled = false;
   Locale? lastLocale;
   SortDirection? lastDirection;
   CollatorStrength? lastStrength;
@@ -244,7 +211,9 @@ class _MockLinuxSort implements LinuxSort {
   bool? lastNumeric;
 
   @override
-  bool get isAvailable => true;
+  Future<void> init() async {
+    initCalled = true;
+  }
 
   @override
   List<SortItem> sort(

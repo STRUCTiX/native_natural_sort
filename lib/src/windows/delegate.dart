@@ -36,12 +36,11 @@ class WindowsDelegate extends PlatformDelegate {
   Future<void> init(SortOptions options) async {
     final windows = options.windows;
     _sort = windows?.sort ?? WindowsSort.ffi();
-    await _sort.init();
-    if (!_sort.isAvailable) {
+    try {
+      await _sort.init();
+    } catch (_) {
       final fallback = await windows?.onLoadFailed?.call();
-      if (fallback == null) {
-        throw StateError('Windows collation unavailable');
-      }
+      if (fallback == null) rethrow;
       _sort = fallback;
       await _sort.init();
     }

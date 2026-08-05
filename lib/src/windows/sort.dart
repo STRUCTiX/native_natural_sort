@@ -31,10 +31,10 @@ export 'collation_api.g.dart'
 /// - [WindowsSort.pigeon] — MethodChannel → CompareStringEx (default).
 /// - [WindowsSort.ffi] — Dart FFI → OS-bundled ICU.
 abstract interface class WindowsSort {
-  /// Whether the backend is ready to use.
-  bool get isAvailable;
-
   /// Initialize the backend (load native libraries if needed).
+  ///
+  /// Must be called before [sort].  Safe to call multiple times —
+  /// only the first invocation performs work.
   Future<void> init();
 
   /// Sort [items] using platform-native collation.
@@ -62,8 +62,8 @@ abstract interface class WindowsSort {
 
   /// FFI (OS-bundled ICU) backend.
   ///
-  /// Loads `icu.dll` / `icuin.dll` via [init].  Check [isAvailable] after
-  /// initialization to verify the library was found.
+  /// Loads `icu.dll` / `icuin.dll` via [init].  Throws if the library
+  /// cannot be resolved; catch the error to fall back to another backend.
   factory WindowsSort.ffi({CollationLibraryLoader? loader}) = WindowsFfiSort;
 }
 
@@ -71,9 +71,6 @@ final class _WindowsPigeonSort implements WindowsSort {
   final CollationWindowsHostApi _host = CollationWindowsHostApi();
 
   _WindowsPigeonSort();
-
-  @override
-  bool get isAvailable => true;
 
   @override
   Future<void> init() async {}
@@ -145,7 +142,7 @@ abstract interface class SortOptionsWindows {
   /// Optional async fallback invoked when the selected backend fails to
   /// initialize.
   ///
-  /// When the selected [sort] (or the default) fails during
+  /// When the selected [sort] (or the default) throws during
   /// [WindowsSort.init] (e.g. the FFI ICU library is not found), this
   /// callback is called.  It must return a replacement [WindowsSort]
   /// (typically `WindowsSort.pigeon()`), or `null` to propagate the

@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import 'dart:async';
 import 'dart:ffi';
 import 'dart:io';
 
@@ -29,7 +30,7 @@ class LinuxCollationLoader implements CollationLibraryLoader {
   DynamicLibrary? _lib;
   String _icuVersionSuffix = '';
   String? _loadedPath;
-  bool _available = false;
+  Completer<void>? _initCompleter;
 
   UcolOpenDart? _ucolOpen;
   UcolCloseDart? _ucolClose;
@@ -45,15 +46,17 @@ class LinuxCollationLoader implements CollationLibraryLoader {
   List<String>? _searchDirs;
 
   @override
-  bool get isAvailable => _available;
+  bool get isInitialized => _initCompleter?.isCompleted == true;
 
   @override
   Future<void> init() async {
-    if (_available) return;
+    if (_initCompleter != null) return _initCompleter!.future;
+    _initCompleter = Completer<void>();
     try {
       final cachedPath = await _cache.read();
       if (cachedPath != null && _tryLoadPath(cachedPath)) {
         _resolveFunctions();
+        _initCompleter!.complete();
         return;
       }
 
@@ -61,10 +64,17 @@ class LinuxCollationLoader implements CollationLibraryLoader {
         final path = _loadedPath;
         if (path != null) await _cache.write(path);
         _resolveFunctions();
+        _initCompleter!.complete();
         return;
       }
-    } catch (_) {
-      _available = false;
+
+      throw StateError(
+        'LinuxCollationLoader: no libicui18n.so found on the system',
+      );
+    } catch (e) {
+      _initCompleter!.completeError(e);
+      _initCompleter = null; // allow retry
+      rethrow;
     }
   }
 
@@ -89,7 +99,7 @@ class LinuxCollationLoader implements CollationLibraryLoader {
   @override
   void dispose() {
     _lib = null;
-    _available = false;
+    _initCompleter = null;
   }
 
   /// Applies a resolved library to the state.
@@ -97,7 +107,6 @@ class LinuxCollationLoader implements CollationLibraryLoader {
     _lib = lib;
     _icuVersionSuffix = suffix;
     _loadedPath = path;
-    _available = true;
   }
 
   void _resolveFunctions() {

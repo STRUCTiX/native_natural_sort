@@ -28,9 +28,6 @@ final class WindowsFfiSort implements WindowsSort {
     : _loader = loader ?? WindowsCollationLoader();
 
   @override
-  bool get isAvailable => _loader.isAvailable;
-
-  @override
   Future<void> init() => _loader.init();
 
   @override

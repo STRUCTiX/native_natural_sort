@@ -14,15 +14,12 @@
 
 import 'dart:ui' show Locale;
 
-import '../collation.dart';
 import '../common.dart';
 import '../delegate.dart';
 import '../sort.dart';
-import 'collation_ffi.dart';
 import 'sort.dart';
 
 class LinuxDelegate extends PlatformDelegate {
-  late final CollationLibraryLoader _loader;
   late final LinuxSort _sort;
   Locale? _defaultLocale;
   SortDirection? _defaultDirection;
@@ -35,9 +32,8 @@ class LinuxDelegate extends PlatformDelegate {
   @override
   Future<void> init(SortOptions options) async {
     final linux = options.linux;
-    _loader = linux?.loader ?? LinuxCollationLoader();
-    await _loader.init();
-    _sort = linux?.sort ?? LinuxSort(loader: _loader);
+    _sort = linux?.sort ?? LinuxSort();
+    await _sort.init();
     _defaultLocale = linux?.locale;
     _defaultDirection = linux?.direction;
     _defaultStrength = linux?.strength;

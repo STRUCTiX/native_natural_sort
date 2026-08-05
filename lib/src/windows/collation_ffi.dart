@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+import 'dart:async';
 import 'dart:ffi';
 
 import '../collation.dart';
@@ -22,7 +23,7 @@ class WindowsCollationLoader implements CollationLibraryLoader {
   static const _dllCandidates = ['icu.dll', 'icuin.dll'];
 
   DynamicLibrary? _lib;
-  bool _available = false;
+  Completer<void>? _initCompleter;
 
   UcolOpenDart? _ucolOpen;
   UcolCloseDart? _ucolClose;
@@ -33,42 +34,41 @@ class WindowsCollationLoader implements CollationLibraryLoader {
   WindowsCollationLoader();
 
   @override
-  bool get isAvailable => _available;
+  bool get isInitialized => _initCompleter?.isCompleted == true;
 
   @override
   Future<void> init() async {
-    if (_available) return;
+    if (_initCompleter != null) return _initCompleter!.future;
+    _initCompleter = Completer<void>();
     try {
-      if (_searchAndLoad()) {
-        _resolveFunctions();
-        return;
-      }
-    } catch (_) {
-      _available = false;
+      _searchAndLoad();
+      _resolveFunctions();
+      _initCompleter!.complete();
+    } catch (e) {
+      _initCompleter!.completeError(e);
+      _initCompleter = null; // allow retry
+      rethrow;
     }
   }
 
-  bool _searchAndLoad() {
+  void _searchAndLoad() {
     for (final candidate in _dllCandidates) {
-      if (_tryLoad(candidate)) return true;
+      if (_tryLoad(candidate)) return;
     }
-    return false;
+    throw StateError(
+      'WindowsCollationLoader: no ICU DLL found (tried: ${_dllCandidates.join(", ")})',
+    );
   }
 
   bool _tryLoad(String candidate) {
-    DynamicLibrary? open(String name) {
-      try {
-        return DynamicLibrary.open(name);
-      } catch (_) {
-        return null;
-      }
+    final DynamicLibrary lib;
+    try {
+      lib = DynamicLibrary.open(candidate);
+    } catch (_) {
+      return false;
     }
-
-    final lib = open(candidate);
-    if (lib == null) return false;
     if (!_hasSymbols(lib)) return false;
     _lib = lib;
-    _available = true;
     return true;
   }
 
@@ -93,7 +93,7 @@ class WindowsCollationLoader implements CollationLibraryLoader {
   @override
   void dispose() {
     _lib = null;
-    _available = false;
+    _initCompleter = null;
   }
 
   void _resolveFunctions() {

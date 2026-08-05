@@ -27,7 +27,7 @@ class LinuxSortImpl implements LinuxSort {
     : _loader = loader ?? LinuxCollationLoader();
 
   @override
-  bool get isAvailable => _loader.isAvailable;
+  Future<void> init() => _loader.init();
 
   @override
   List<SortItem> sort(

@@ -261,8 +261,9 @@ void main() {
   });
 
   group('WindowsSort', () {
-    test('WindowsSort.pigeon is always available', () {
-      expect(WindowsSort.pigeon().isAvailable, isTrue);
+    test('WindowsSort.pigeon init succeeds', () async {
+      final sort = WindowsSort.pigeon();
+      await sort.init(); // should not throw
     });
 
     test('SortOptionsWindows default sort is null', () {

@@ -58,37 +58,18 @@ class WindowsDelegate extends PlatformDelegate {
     List<SortItem> items, {
     SortDirection? direction,
     Locale? locale,
-  }) => _doSort(
+  }) => sortWith(
     items,
-    locale: locale,
-    direction: direction,
-    strength: _defaultStrength,
-    decomposition: _defaultDecomposition,
-    numeric: _defaultNumeric,
-    caseSensitive: _defaultCaseSensitive,
-    diacriticInsensitive: _defaultDiacriticInsensitive,
+    direction: direction ?? _defaultDirection,
+    locale: locale ?? _defaultLocale,
   );
 
-  @override
-  FutureOr<List<SortItem>> sortWithOptions(
-    List<SortItem> items, {
-    SortOptions? options,
-  }) {
-    final windows = options?.windows;
-    return _doSort(
-      items,
-      locale: windows?.locale ?? _defaultLocale,
-      direction: windows?.direction ?? _defaultDirection,
-      strength: windows?.strength ?? _defaultStrength,
-      decomposition: windows?.decomposition ?? _defaultDecomposition,
-      numeric: windows?.numeric ?? _defaultNumeric,
-      caseSensitive: windows?.caseSensitive ?? _defaultCaseSensitive,
-      diacriticInsensitive:
-          windows?.diacriticInsensitive ?? _defaultDiacriticInsensitive,
-    );
-  }
-
-  FutureOr<List<SortItem>> _doSort(
+  /// Sorts [items] with full Windows-specific collator overrides.
+  ///
+  /// Each named parameter, when non-null, overrides the corresponding
+  /// default set via [SortOptionsWindows] during [init].  A `null`
+  /// parameter falls back to the init default.
+  FutureOr<List<SortItem>> sortWith(
     List<SortItem> items, {
     Locale? locale,
     SortDirection? direction,
@@ -105,11 +86,12 @@ class WindowsDelegate extends PlatformDelegate {
       platformItems,
       locale: locale ?? _defaultLocale,
       direction: direction ?? _defaultDirection,
-      strength: strength,
-      decomposition: decomposition,
-      numeric: numeric,
-      caseSensitive: caseSensitive,
-      diacriticInsensitive: diacriticInsensitive,
+      strength: strength ?? _defaultStrength,
+      decomposition: decomposition ?? _defaultDecomposition,
+      numeric: numeric ?? _defaultNumeric,
+      caseSensitive: caseSensitive ?? _defaultCaseSensitive,
+      diacriticInsensitive:
+          diacriticInsensitive ?? _defaultDiacriticInsensitive,
     );
 
     List<SortItem> mapBack(List<CollationWindowsItem> list) =>

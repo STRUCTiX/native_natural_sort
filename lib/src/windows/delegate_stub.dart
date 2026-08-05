@@ -15,6 +15,7 @@
 import 'dart:async';
 import 'dart:ui' show Locale;
 
+import '../common.dart';
 import '../delegate.dart';
 import '../sort.dart';
 
@@ -31,10 +32,15 @@ class WindowsDelegate extends PlatformDelegate {
   }) =>
       throw UnsupportedError('Windows collation unavailable on this platform');
 
-  @override
-  FutureOr<List<SortItem>> sortWithOptions(
+  FutureOr<List<SortItem>> sortWith(
     List<SortItem> items, {
-    SortOptions? options,
+    Locale? locale,
+    SortDirection? direction,
+    CollatorStrength? strength,
+    CollatorDecomposition? decomposition,
+    bool? numeric,
+    bool? caseSensitive,
+    bool? diacriticInsensitive,
   }) =>
       throw UnsupportedError('Windows collation unavailable on this platform');
 }

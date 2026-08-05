@@ -111,7 +111,7 @@ void main() {
       expect(mockSort.lastDirection, SortDirection.descending);
     });
 
-    test('sortWithOptions overrides collator fields per-call', () async {
+    test('sortWith overrides collator fields per-call', () async {
       final mockSort = _MockAndroidSort();
       final delegate = AndroidDelegate();
       await delegate.init(
@@ -124,20 +124,16 @@ void main() {
         ),
       );
 
-      await delegate.sortWithOptions(
+      await delegate.sortWith(
         [const SortItem(id: 'a', value: 'x')],
-        options: const SortOptions(
-          android: SortOptionsAndroid(
-            strength: CollatorStrength.primary,
-            numeric: false,
-          ),
-        ),
+        strength: CollatorStrength.primary,
+        numeric: false,
       );
       expect(mockSort.lastStrength, CollatorStrength.primary);
       expect(mockSort.lastNumeric, false);
     });
 
-    test('sortWithOptions falls back to defaults when param is null', () async {
+    test('sortWith falls back to defaults when param is null', () async {
       final mockSort = _MockAndroidSort();
       final delegate = AndroidDelegate();
       await delegate.init(
@@ -149,12 +145,9 @@ void main() {
         ),
       );
 
-      await delegate.sortWithOptions(
-        [const SortItem(id: 'a', value: 'x')],
-        options: const SortOptions(
-          android: SortOptionsAndroid(direction: SortDirection.descending),
-        ),
-      );
+      await delegate.sortWith([
+        const SortItem(id: 'a', value: 'x'),
+      ], direction: SortDirection.descending);
       expect(mockSort.lastDecomposition, CollatorDecomposition.none);
       expect(mockSort.lastDirection, SortDirection.descending);
     });

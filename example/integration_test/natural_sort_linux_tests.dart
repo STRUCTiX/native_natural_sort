@@ -47,15 +47,14 @@ void registerLinuxTests() {
       expect(result.map((i) => i.id), ['1', '10', '2']);
     });
 
-    testWidgets('numeric: true via sortWithOptions override', (tester) async {
+    testWidgets('numeric: true via sortWith override', (tester) async {
       await sort.init(
         const SortOptions(linux: SortOptionsLinux(numeric: false)),
       );
 
-      // sortWithOptions is covered by unit tests; integration test just
+      // sortWith is covered by unit tests; integration test just
       // verifies the delegate resolves correctly on this platform.
-      final delegate = sort.resolveAs<LinuxDelegate>();
-      expect(delegate, isA<LinuxDelegate>());
+      expect(sort.linux, isA<LinuxDelegate>());
     });
 
     testWidgets('strength: primary — case-insensitive', (tester) async {

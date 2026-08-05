@@ -46,32 +46,32 @@ class LinuxDelegate extends PlatformDelegate {
     List<SortItem> items, {
     SortDirection? direction,
     Locale? locale,
+  }) => sortWith(
+    items,
+    direction: direction ?? _defaultDirection,
+    locale: locale ?? _defaultLocale,
+  );
+
+  /// Sorts [items] with full Linux-specific collator overrides.
+  ///
+  /// Each named parameter, when non-null, overrides the corresponding
+  /// default set via [SortOptionsLinux] during [init].  A `null`
+  /// parameter falls back to the init default.
+  List<SortItem> sortWith(
+    List<SortItem> items, {
+    Locale? locale,
+    SortDirection? direction,
+    CollatorStrength? strength,
+    CollatorDecomposition? decomposition,
+    bool? numeric,
   }) {
     return _sort.sort(
       items,
       locale: locale ?? _defaultLocale,
       direction: direction ?? _defaultDirection,
-      strength: _defaultStrength,
-      decomposition: _defaultDecomposition,
-      numeric: _defaultNumeric,
-    );
-  }
-
-  /// Sorts [items] with full Linux-specific collator overrides.
-  ///
-  /// Each field in [options.linux], when non-null, overrides the default
-  /// set via [SortOptionsLinux] during [init].  A `null` field, or
-  /// [options] itself being `null`, falls back to the init default.
-  @override
-  List<SortItem> sortWithOptions(List<SortItem> items, {SortOptions? options}) {
-    final linux = options?.linux;
-    return _sort.sort(
-      items,
-      locale: linux?.locale ?? _defaultLocale,
-      direction: linux?.direction ?? _defaultDirection,
-      strength: linux?.strength ?? _defaultStrength,
-      decomposition: linux?.decomposition ?? _defaultDecomposition,
-      numeric: linux?.numeric ?? _defaultNumeric,
+      strength: strength ?? _defaultStrength,
+      decomposition: decomposition ?? _defaultDecomposition,
+      numeric: numeric ?? _defaultNumeric,
     );
   }
 }

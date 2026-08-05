@@ -196,27 +196,6 @@ class NativeSort {
     return _delegate.sort(items, direction: direction, locale: locale);
   }
 
-  /// Sorts [items] with full platform-specific overrides.
-  ///
-  /// [options] carries per-platform override fields; each field,
-  /// when non-null, overrides the corresponding default set via
-  /// [init].  `null` fields and a `null` [options] fall back to
-  /// the init defaults.
-  ///
-  /// ```dart
-  /// final sorted = await sort.sortWithOptions(items,
-  ///   options: SortOptions(android: SortOptionsAndroid(numeric: false)));
-  /// ```
-  ///
-  /// Throws [StateError] if [init] has not been called first.
-  FutureOr<List<SortItem>> sortWithOptions(
-    List<SortItem> items, {
-    SortOptions? options,
-  }) {
-    if (!_isInitialized) throw StateError('Call init() first');
-    return _delegate.sortWithOptions(items, options: options);
-  }
-
   /// Casts the platform delegate to [T].
   ///
   /// The caller is responsible for ensuring the platform matches [T];
@@ -224,7 +203,7 @@ class NativeSort {
   ///
   /// ```dart
   /// final android = sort.resolveAs<AndroidDelegate>();
-  /// await android.sortWithOptions(items, numeric: false);
+  /// await android.sortWith(items, numeric: false);
   /// ```
   T resolveAs<T extends PlatformDelegate>() => _delegate as T;
 }

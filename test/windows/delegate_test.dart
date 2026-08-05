@@ -106,7 +106,7 @@ void main() {
       expect(mockSort.lastDirection, SortDirection.descending);
     });
 
-    test('sortWithOptions overrides per-call', () async {
+    test('sortWith overrides per-call', () async {
       final mockSort = _MockWindowsSort();
       final delegate = WindowsDelegate();
       await delegate.init(
@@ -119,17 +119,14 @@ void main() {
         ),
       );
 
-      await delegate.sortWithOptions(
-        [const SortItem(id: 'a', value: 'x')],
-        options: const SortOptions(
-          windows: SortOptionsWindows(direction: SortDirection.ascending),
-        ),
-      );
+      await delegate.sortWith([
+        const SortItem(id: 'a', value: 'x'),
+      ], direction: SortDirection.ascending);
       expect(mockSort.lastLocale, const Locale('ja'));
       expect(mockSort.lastDirection, SortDirection.ascending);
     });
 
-    test('sortWithOptions with null options uses init defaults', () async {
+    test('sortWith with no params uses init defaults', () async {
       final mockSort = _MockWindowsSort();
       final delegate = WindowsDelegate();
       await delegate.init(
@@ -142,19 +139,19 @@ void main() {
         ),
       );
 
-      await delegate.sortWithOptions([const SortItem(id: 'a', value: 'x')]);
+      await delegate.sortWith([const SortItem(id: 'a', value: 'x')]);
       expect(mockSort.lastLocale, const Locale('es'));
       expect(mockSort.lastDirection, SortDirection.descending);
     });
 
-    test('sortWithOptions with empty list does not throw', () async {
+    test('sortWith with empty list does not throw', () async {
       final mockSort = _MockWindowsSort();
       final delegate = WindowsDelegate();
       await delegate.init(
         SortOptions(windows: SortOptionsWindows(sort: mockSort)),
       );
 
-      final result = await delegate.sortWithOptions([]);
+      final result = await delegate.sortWith([]);
       expect(result, isEmpty);
     });
 
@@ -196,7 +193,7 @@ void main() {
       expect(mockSort.lastDiacriticInsensitive, true);
     });
 
-    test('sortWithOptions overrides tuning params per-call', () async {
+    test('sortWith overrides tuning params per-call', () async {
       final mockSort = _MockWindowsSort();
       final delegate = WindowsDelegate();
       await delegate.init(
@@ -210,47 +207,37 @@ void main() {
         ),
       );
 
-      await delegate.sortWithOptions(
+      await delegate.sortWith(
         [const SortItem(id: 'a', value: 'x')],
-        options: const SortOptions(
-          windows: SortOptionsWindows(
-            strength: CollatorStrength.primary,
-            numeric: false,
-            caseSensitive: true,
-          ),
-        ),
+        strength: CollatorStrength.primary,
+        numeric: false,
+        caseSensitive: true,
       );
       expect(mockSort.lastStrength, CollatorStrength.primary);
       expect(mockSort.lastNumeric, false);
       expect(mockSort.lastCaseSensitive, true);
     });
 
-    test(
-      'sortWithOptions falls back to init defaults for tuning params',
-      () async {
-        final mockSort = _MockWindowsSort();
-        final delegate = WindowsDelegate();
-        await delegate.init(
-          SortOptions(
-            windows: SortOptionsWindows(
-              sort: mockSort,
-              decomposition: CollatorDecomposition.none,
-              diacriticInsensitive: true,
-            ),
+    test('sortWith falls back to init defaults for tuning params', () async {
+      final mockSort = _MockWindowsSort();
+      final delegate = WindowsDelegate();
+      await delegate.init(
+        SortOptions(
+          windows: SortOptionsWindows(
+            sort: mockSort,
+            decomposition: CollatorDecomposition.none,
+            diacriticInsensitive: true,
           ),
-        );
+        ),
+      );
 
-        await delegate.sortWithOptions(
-          [const SortItem(id: 'a', value: 'x')],
-          options: const SortOptions(
-            windows: SortOptionsWindows(direction: SortDirection.descending),
-          ),
-        );
-        expect(mockSort.lastDecomposition, CollatorDecomposition.none);
-        expect(mockSort.lastDiacriticInsensitive, true);
-        expect(mockSort.lastDirection, SortDirection.descending);
-      },
-    );
+      await delegate.sortWith([
+        const SortItem(id: 'a', value: 'x'),
+      ], direction: SortDirection.descending);
+      expect(mockSort.lastDecomposition, CollatorDecomposition.none);
+      expect(mockSort.lastDiacriticInsensitive, true);
+      expect(mockSort.lastDirection, SortDirection.descending);
+    });
   });
 }
 

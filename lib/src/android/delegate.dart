@@ -45,33 +45,21 @@ class AndroidDelegate extends PlatformDelegate {
     List<SortItem> items, {
     SortDirection? direction,
     Locale? locale,
-  }) async => _doSort(items, direction: direction, locale: locale);
+  }) async => sortWith(
+    items,
+    direction: direction ?? _defaultDirection,
+    locale: locale ?? _defaultLocale,
+  );
 
   /// Sorts [items] with full Android-specific collator overrides.
   ///
-  /// Each field in [options.android], when non-null, overrides the default
-  /// set via [SortOptionsAndroid] during [init].  A `null` field, or
-  /// [options] itself being `null`, falls back to the init default.
-  @override
-  Future<List<SortItem>> sortWithOptions(
+  /// Each named parameter, when non-null, overrides the corresponding
+  /// default set via [SortOptionsAndroid] during [init].  A `null`
+  /// parameter falls back to the init default.
+  Future<List<SortItem>> sortWith(
     List<SortItem> items, {
-    SortOptions? options,
-  }) async {
-    final android = options?.android;
-    return _doSort(
-      items,
-      direction: android?.direction ?? _defaultDirection,
-      locale: android?.locale ?? _defaultLocale,
-      strength: android?.strength ?? _defaultStrength,
-      decomposition: android?.decomposition ?? _defaultDecomposition,
-      numeric: android?.numeric ?? _defaultNumeric,
-    );
-  }
-
-  Future<List<SortItem>> _doSort(
-    List<SortItem> items, {
-    SortDirection? direction,
     Locale? locale,
+    SortDirection? direction,
     CollatorStrength? strength,
     CollatorDecomposition? decomposition,
     bool? numeric,

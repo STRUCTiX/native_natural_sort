@@ -41,10 +41,7 @@ void main() {
       final delegate = LinuxDelegate();
       await delegate.init(
         SortOptions(
-          linux: SortOptionsLinux(
-            locale: const Locale('en'),
-            sort: mockSort,
-          ),
+          linux: SortOptionsLinux(locale: const Locale('en'), sort: mockSort),
         ),
       );
 
@@ -75,29 +72,22 @@ void main() {
       expect(mockSort.lastDirection, SortDirection.descending);
     });
 
-    test('sortWithOptions overrides all collator parameters', () async {
+    test('sortWith overrides all collator parameters', () async {
       final mockSort = _MockLinuxSort();
       final delegate = LinuxDelegate();
       await delegate.init(
         SortOptions(
-          linux: SortOptionsLinux(
-            locale: const Locale('en'),
-            sort: mockSort,
-          ),
+          linux: SortOptionsLinux(locale: const Locale('en'), sort: mockSort),
         ),
       );
 
-      delegate.sortWithOptions(
+      delegate.sortWith(
         [const SortItem(id: 'a', value: 'x')],
-        options: const SortOptions(
-          linux: SortOptionsLinux(
-            locale: Locale('fr'),
-            direction: SortDirection.descending,
-            strength: CollatorStrength.primary,
-            decomposition: CollatorDecomposition.none,
-            numeric: false,
-          ),
-        ),
+        locale: const Locale('fr'),
+        direction: SortDirection.descending,
+        strength: CollatorStrength.primary,
+        decomposition: CollatorDecomposition.none,
+        numeric: false,
       );
       expect(mockSort.lastLocale, const Locale('fr'));
       expect(mockSort.lastDirection, SortDirection.descending);
@@ -106,38 +96,33 @@ void main() {
       expect(mockSort.lastNumeric, false);
     });
 
-    test(
-      'sortWithOptions falls back to init defaults when params are null',
-      () async {
-        final mockSort = _MockLinuxSort();
-        final delegate = LinuxDelegate();
-        await delegate.init(
-          SortOptions(
-            linux: SortOptionsLinux(
-              locale: const Locale('ja'),
-              direction: SortDirection.descending,
-              strength: CollatorStrength.secondary,
-              decomposition: CollatorDecomposition.full,
-              numeric: false,
-              sort: mockSort,
-            ),
+    test('sortWith falls back to init defaults when params are null', () async {
+      final mockSort = _MockLinuxSort();
+      final delegate = LinuxDelegate();
+      await delegate.init(
+        SortOptions(
+          linux: SortOptionsLinux(
+            locale: const Locale('ja'),
+            direction: SortDirection.descending,
+            strength: CollatorStrength.secondary,
+            decomposition: CollatorDecomposition.full,
+            numeric: false,
+            sort: mockSort,
           ),
-        );
+        ),
+      );
 
-        delegate.sortWithOptions(
-          [const SortItem(id: 'a', value: 'x')],
-          // Only override strength, others should fall back.
-          options: const SortOptions(
-            linux: SortOptionsLinux(strength: CollatorStrength.primary),
-          ),
-        );
-        expect(mockSort.lastLocale, const Locale('ja'));
-        expect(mockSort.lastDirection, SortDirection.ascending);
-        expect(mockSort.lastStrength, CollatorStrength.primary);
-        expect(mockSort.lastDecomposition, CollatorDecomposition.full);
-        expect(mockSort.lastNumeric, false);
-      },
-    );
+      delegate.sortWith(
+        [const SortItem(id: 'a', value: 'x')],
+        // Only override strength, others should fall back.
+        strength: CollatorStrength.primary,
+      );
+      expect(mockSort.lastLocale, const Locale('ja'));
+      expect(mockSort.lastDirection, SortDirection.descending);
+      expect(mockSort.lastStrength, CollatorStrength.primary);
+      expect(mockSort.lastDecomposition, CollatorDecomposition.full);
+      expect(mockSort.lastNumeric, false);
+    });
 
     test(
       'sort passes strength, decomposition, numeric from init defaults',
@@ -165,9 +150,7 @@ void main() {
     test('empty list with descending direction does not throw', () async {
       final mockSort = _MockLinuxSort();
       final delegate = LinuxDelegate();
-      await delegate.init(
-        SortOptions(linux: SortOptionsLinux(sort: mockSort)),
-      );
+      await delegate.init(SortOptions(linux: SortOptionsLinux(sort: mockSort)));
 
       final result = delegate.sort([], direction: SortDirection.descending);
       expect(result, isEmpty);
@@ -176,9 +159,7 @@ void main() {
     test('single element with descending direction does not throw', () async {
       final mockSort = _MockLinuxSort();
       final delegate = LinuxDelegate();
-      await delegate.init(
-        SortOptions(linux: SortOptionsLinux(sort: mockSort)),
-      );
+      await delegate.init(SortOptions(linux: SortOptionsLinux(sort: mockSort)));
 
       final result = delegate.sort([
         const SortItem(id: 'only', value: 'x'),
@@ -186,17 +167,12 @@ void main() {
       expect(result, [const SortItem(id: 'only', value: 'x')]);
     });
 
-    test('sortWithOptions with empty list does not throw', () async {
+    test('sortWith with empty list does not throw', () async {
       final mockSort = _MockLinuxSort();
       final delegate = LinuxDelegate();
-      await delegate.init(
-        SortOptions(linux: SortOptionsLinux(sort: mockSort)),
-      );
+      await delegate.init(SortOptions(linux: SortOptionsLinux(sort: mockSort)));
 
-      final result = delegate.sortWithOptions(
-        [],
-        options: const SortOptions(linux: SortOptionsLinux(numeric: false)),
-      );
+      final result = delegate.sortWith([], numeric: false);
       expect(result, isEmpty);
     });
   });

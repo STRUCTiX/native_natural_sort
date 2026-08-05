@@ -95,7 +95,7 @@ void registerWindowsPigeonTests() {
       expect(result.last.id, 'c');
     });
 
-    testWidgets('caseSensitive: true via sortWithOptions override', (
+    testWidgets('caseSensitive: true via sortWith override', (
       tester,
     ) async {
       await sort.init(
@@ -103,14 +103,12 @@ void registerWindowsPigeonTests() {
       );
 
       // Override to case-sensitive at call time.
-      final result = await sort.sortWithOptions(
+      final result = await sort.windows.sortWith(
         [
           const SortItem(id: 'a', value: 'Apple'),
           const SortItem(id: 'b', value: 'apple'),
         ],
-        options: SortOptions(
-          windows: SortOptionsWindows.pigeon(caseSensitive: true),
-        ),
+        caseSensitive: true,
       );
       // Case-sensitive: 'Apple' and 'apple' are distinct.
       expect(result.length, 2);
@@ -232,7 +230,7 @@ void registerWindowsPigeonTests() {
       expect(result.map((i) => i.id), ['c', 'b', 'a']);
     });
 
-    testWidgets('sortWithOptions overrides direction per-call', (tester) async {
+    testWidgets('sortWith overrides direction per-call', (tester) async {
       await sort.init(
         SortOptions(
           windows: SortOptionsWindows.pigeon(
@@ -242,17 +240,13 @@ void registerWindowsPigeonTests() {
       );
 
       // Override to descending at call time.
-      final result = await sort.sortWithOptions(
+      final result = await sort.windows.sortWith(
         [
           const SortItem(id: 'a', value: 'apple'),
           const SortItem(id: 'b', value: 'banana'),
           const SortItem(id: 'c', value: 'cherry'),
         ],
-        options: SortOptions(
-          windows: SortOptionsWindows.pigeon(
-            direction: SortDirection.descending,
-          ),
-        ),
+        direction: SortDirection.descending,
       );
       expect(result.map((i) => i.id), ['c', 'b', 'a']);
     });

@@ -42,6 +42,23 @@ class IOSDelegate extends PlatformDelegate {
     List<SortItem> items, {
     SortDirection? direction,
     Locale? locale,
+  }) async => sortWith(
+    items,
+    direction: direction ?? _defaultDirection,
+    locale: locale ?? _defaultLocale,
+  );
+
+  /// Sorts [items] with full iOS-specific collator overrides.
+  ///
+  /// Each named parameter, when non-null, overrides the corresponding
+  /// default set via [SortOptionsIOS] during [init].  A `null`
+  /// parameter falls back to the init default.
+  Future<List<SortItem>> sortWith(
+    List<SortItem> items, {
+    Locale? locale,
+    SortDirection? direction,
+    bool? caseSensitive,
+    bool? diacriticInsensitive,
   }) async {
     final platformItems = items
         .map((i) => CollationIOSItem(id: i.id, value: i.value))
@@ -50,33 +67,9 @@ class IOSDelegate extends PlatformDelegate {
       platformItems,
       locale: locale ?? _defaultLocale,
       direction: direction ?? _defaultDirection,
-      caseSensitive: _defaultCaseSensitive,
-      diacriticInsensitive: _defaultDiacriticInsensitive,
-    );
-    return result.map((i) => SortItem(id: i.id, value: i.value)).toList();
-  }
-
-  /// Sorts [items] with full iOS-specific collator overrides.
-  ///
-  /// Each field in [options.ios], when non-null, overrides the default set
-  /// via [SortOptionsIOS] during [init].  A `null` field, or [options]
-  /// itself being `null`, falls back to the init default.
-  @override
-  Future<List<SortItem>> sortWithOptions(
-    List<SortItem> items, {
-    SortOptions? options,
-  }) async {
-    final ios = options?.ios;
-    final platformItems = items
-        .map((i) => CollationIOSItem(id: i.id, value: i.value))
-        .toList();
-    final result = await _sort.sort(
-      platformItems,
-      locale: ios?.locale ?? _defaultLocale,
-      direction: ios?.direction ?? _defaultDirection,
-      caseSensitive: ios?.caseSensitive ?? _defaultCaseSensitive,
+      caseSensitive: caseSensitive ?? _defaultCaseSensitive,
       diacriticInsensitive:
-          ios?.diacriticInsensitive ?? _defaultDiacriticInsensitive,
+          diacriticInsensitive ?? _defaultDiacriticInsensitive,
     );
     return result.map((i) => SortItem(id: i.id, value: i.value)).toList();
   }

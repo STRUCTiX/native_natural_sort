@@ -117,22 +117,17 @@ void main() {
       expect(result.map((i) => i.id), ['lat', 'cjk']);
     });
 
-    testWidgets('sortWithOptions overrides init strength', (tester) async {
+    testWidgets('sortWith overrides init strength', (tester) async {
       await sort.init(
         const SortOptions(
           web: SortOptionsWeb(strength: CollatorStrength.primary),
         ),
       );
 
-      final result = await sort.sortWithOptions(
-        [
-          const SortItem(id: 'b', value: 'B'),
-          const SortItem(id: 'a', value: 'a'),
-        ],
-        options: const SortOptions(
-          web: SortOptionsWeb(strength: CollatorStrength.tertiary),
-        ),
-      );
+      final result = sort.web.sortWith([
+        const SortItem(id: 'b', value: 'B'),
+        const SortItem(id: 'a', value: 'a'),
+      ], strength: CollatorStrength.tertiary);
       expect(result.map((i) => i.id), ['a', 'b']);
     });
 

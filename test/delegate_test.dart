@@ -23,10 +23,4 @@ class _StubDelegate extends PlatformDelegate {
     SortDirection? direction,
     Locale? locale,
   }) async => items;
-
-  @override
-  Future<List<SortItem>> sortWithOptions(
-    List<SortItem> items, {
-    SortOptions? options,
-  }) async => items;
 }

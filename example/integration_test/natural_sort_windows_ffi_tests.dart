@@ -185,17 +185,17 @@ void registerWindowsFfiTests() {
       expect(result.map((i) => i.id), ['id1', 'id2', 'id3']);
     });
 
-    testWidgets('sortWithOptions overrides numeric per-call', (tester) async {
+    testWidgets('sortWith overrides numeric per-call', (tester) async {
       await sort.init(
         SortOptions(windows: SortOptionsWindows.ffi(numeric: true)),
       );
 
       // Override numeric to false at call time.
-      final result = await sort.sortWithOptions([
+      final result = await sort.windows.sortWith([
         const SortItem(id: '2', value: 'file2.txt'),
         const SortItem(id: '10', value: 'file10.txt'),
         const SortItem(id: '1', value: 'file1.txt'),
-      ], options: SortOptions(windows: SortOptionsWindows(numeric: false)));
+      ], numeric: false);
       // Lexicographic: 'file1' < 'file10' < 'file2'
       expect(result.map((i) => i.id), ['1', '10', '2']);
     });

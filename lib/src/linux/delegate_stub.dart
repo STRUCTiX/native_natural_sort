@@ -15,6 +15,7 @@
 import 'dart:async';
 import 'dart:ui' show Locale;
 
+import '../common.dart';
 import '../delegate.dart';
 import '../sort.dart';
 
@@ -30,9 +31,12 @@ class LinuxDelegate extends PlatformDelegate {
     Locale? locale,
   }) => throw UnsupportedError('Linux collation unavailable on this platform');
 
-  @override
-  FutureOr<List<SortItem>> sortWithOptions(
+  List<SortItem> sortWith(
     List<SortItem> items, {
-    SortOptions? options,
+    Locale? locale,
+    SortDirection? direction,
+    CollatorStrength? strength,
+    CollatorDecomposition? decomposition,
+    bool? numeric,
   }) => throw UnsupportedError('Linux collation unavailable on this platform');
 }

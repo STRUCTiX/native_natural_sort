@@ -515,12 +515,6 @@ class _MockSort implements NativeSort {
   }) async => _result;
 
   @override
-  Future<List<SortItem>> sortWithOptions(
-    List<SortItem> items, {
-    SortOptions? options,
-  }) async => _result;
-
-  @override
   T resolveAs<T extends PlatformDelegate>() => this as T;
 }
 
@@ -572,15 +566,6 @@ class _ContractMock implements NativeSort {
     List<SortItem> items, {
     SortDirection? direction,
     Locale? locale,
-  }) {
-    if (!_initialized) throw StateError('Call init() first');
-    return Future.value(_result);
-  }
-
-  @override
-  Future<List<SortItem>> sortWithOptions(
-    List<SortItem> items, {
-    SortOptions? options,
   }) {
     if (!_initialized) throw StateError('Call init() first');
     return Future.value(_result);

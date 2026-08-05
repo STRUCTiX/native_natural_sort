@@ -26,7 +26,7 @@ import 'delegate.dart';
 /// await sort.init(SortOptions(
 ///   android: SortOptionsAndroid(strength: CollatorStrength.primary),
 /// ));
-/// final result = await sort.android.sortWithOptions(items, numeric: false);
+/// final result = await sort.android.sortWith(items, numeric: false);
 /// ```
 extension NativeSortAndroidExtension on NativeSort {
   /// The [AndroidDelegate] backing this [NativeSort] instance.

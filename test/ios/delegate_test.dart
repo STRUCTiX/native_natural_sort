@@ -154,30 +154,23 @@ void main() {
       expect(mockSort.lastLocale, const Locale('fr'));
     });
 
-    // -- sortWithOptions --
+    // -- sortWith --
 
-    test(
-      'sortWithOptions overrides caseSensitive and diacriticInsensitive',
-      () async {
-        final mockSort = _MockIOSSort();
-        final delegate = IOSDelegate();
-        await delegate.init(SortOptions(ios: SortOptionsIOS(sort: mockSort)));
+    test('sortWith overrides caseSensitive and diacriticInsensitive', () async {
+      final mockSort = _MockIOSSort();
+      final delegate = IOSDelegate();
+      await delegate.init(SortOptions(ios: SortOptionsIOS(sort: mockSort)));
 
-        await delegate.sortWithOptions(
-          [const SortItem(id: 'a', value: 'x')],
-          options: const SortOptions(
-            ios: SortOptionsIOS(
-              caseSensitive: true,
-              diacriticInsensitive: true,
-            ),
-          ),
-        );
-        expect(mockSort.lastCaseSensitive, true);
-        expect(mockSort.lastDiacriticInsensitive, true);
-      },
-    );
+      await delegate.sortWith(
+        [const SortItem(id: 'a', value: 'x')],
+        caseSensitive: true,
+        diacriticInsensitive: true,
+      );
+      expect(mockSort.lastCaseSensitive, true);
+      expect(mockSort.lastDiacriticInsensitive, true);
+    });
 
-    test('sortWithOptions falls back to init defaults', () async {
+    test('sortWith falls back to init defaults', () async {
       final mockSort = _MockIOSSort();
       final delegate = IOSDelegate();
       await delegate.init(
@@ -191,15 +184,15 @@ void main() {
         ),
       );
 
-      await delegate.sortWithOptions([
+      await delegate.sortWith([
         const SortItem(id: 'a', value: 'x'),
-      ], options: const SortOptions(ios: SortOptionsIOS(caseSensitive: true)));
-      expect(mockSort.lastDirection, SortDirection.ascending);
+      ], caseSensitive: true);
+      expect(mockSort.lastDirection, SortDirection.descending);
       expect(mockSort.lastCaseSensitive, true);
       expect(mockSort.lastDiacriticInsensitive, false);
     });
 
-    test('sortWithOptions with null options uses init defaults', () async {
+    test('sortWith with no params uses init defaults', () async {
       final mockSort = _MockIOSSort();
       final delegate = IOSDelegate();
       await delegate.init(
@@ -211,16 +204,16 @@ void main() {
         ),
       );
 
-      await delegate.sortWithOptions([const SortItem(id: 'a', value: 'x')]);
+      await delegate.sortWith([const SortItem(id: 'a', value: 'x')]);
       expect(mockSort.lastDirection, SortDirection.descending);
     });
 
-    test('sortWithOptions with empty list does not throw', () async {
+    test('sortWith with empty list does not throw', () async {
       final mockSort = _MockIOSSort();
       final delegate = IOSDelegate();
       await delegate.init(SortOptions(ios: SortOptionsIOS(sort: mockSort)));
 
-      final result = await delegate.sortWithOptions([]);
+      final result = await delegate.sortWith([]);
       expect(result, isEmpty);
     });
   });

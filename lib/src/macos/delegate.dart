@@ -42,6 +42,23 @@ class MacOSDelegate extends PlatformDelegate {
     List<SortItem> items, {
     SortDirection? direction,
     Locale? locale,
+  }) async => sortWith(
+    items,
+    direction: direction ?? _defaultDirection,
+    locale: locale ?? _defaultLocale,
+  );
+
+  /// Sorts [items] with full macOS-specific collator overrides.
+  ///
+  /// Each named parameter, when non-null, overrides the corresponding
+  /// default set via [SortOptionsMacOS] during [init].  A `null`
+  /// parameter falls back to the init default.
+  Future<List<SortItem>> sortWith(
+    List<SortItem> items, {
+    Locale? locale,
+    SortDirection? direction,
+    bool? caseSensitive,
+    bool? diacriticInsensitive,
   }) async {
     final platformItems = items
         .map((i) => CollationMacOSItem(id: i.id, value: i.value))
@@ -50,33 +67,9 @@ class MacOSDelegate extends PlatformDelegate {
       platformItems,
       locale: locale ?? _defaultLocale,
       direction: direction ?? _defaultDirection,
-      caseSensitive: _defaultCaseSensitive,
-      diacriticInsensitive: _defaultDiacriticInsensitive,
-    );
-    return result.map((i) => SortItem(id: i.id, value: i.value)).toList();
-  }
-
-  /// Sorts [items] with full macOS-specific collator overrides.
-  ///
-  /// Each field in [options.macOS], when non-null, overrides the default
-  /// set via [SortOptionsMacOS] during [init].  A `null` field, or
-  /// [options] itself being `null`, falls back to the init default.
-  @override
-  Future<List<SortItem>> sortWithOptions(
-    List<SortItem> items, {
-    SortOptions? options,
-  }) async {
-    final macOS = options?.macOS;
-    final platformItems = items
-        .map((i) => CollationMacOSItem(id: i.id, value: i.value))
-        .toList();
-    final result = await _sort.sort(
-      platformItems,
-      locale: macOS?.locale ?? _defaultLocale,
-      direction: macOS?.direction ?? _defaultDirection,
-      caseSensitive: macOS?.caseSensitive ?? _defaultCaseSensitive,
+      caseSensitive: caseSensitive ?? _defaultCaseSensitive,
       diacriticInsensitive:
-          macOS?.diacriticInsensitive ?? _defaultDiacriticInsensitive,
+          diacriticInsensitive ?? _defaultDiacriticInsensitive,
     );
     return result.map((i) => SortItem(id: i.id, value: i.value)).toList();
   }

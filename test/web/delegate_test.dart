@@ -51,7 +51,7 @@ void main() {
       // init succeeds on both platforms.
     });
 
-    test('sortWithOptions overrides init defaults', () async {
+    test('sortWith overrides init defaults', () async {
       final delegate = WebDelegate();
       await delegate.init(
         const SortOptions(
@@ -61,12 +61,9 @@ void main() {
 
       // On non-web this will throw from the stub; on web it returns sorted.
       if (kIsWeb) {
-        final result = delegate.sortWithOptions(
-          [const SortItem(id: 'a', value: 'test')],
-          options: const SortOptions(
-            web: SortOptionsWeb(direction: SortDirection.descending),
-          ),
-        );
+        final result = delegate.sortWith([
+          const SortItem(id: 'a', value: 'test'),
+        ], direction: SortDirection.descending);
         expect(result.length, 1);
       }
     });

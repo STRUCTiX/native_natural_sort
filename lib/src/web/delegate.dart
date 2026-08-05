@@ -45,32 +45,32 @@ class WebDelegate extends PlatformDelegate {
     List<SortItem> items, {
     SortDirection? direction,
     Locale? locale,
+  }) => sortWith(
+    items,
+    direction: direction ?? _defaultDirection,
+    locale: locale ?? _defaultLocale,
+  );
+
+  /// Sorts [items] with full web-specific collator overrides.
+  ///
+  /// Each named parameter, when non-null, overrides the corresponding
+  /// default set via [SortOptionsWeb] during [init].  A `null`
+  /// parameter falls back to the init default.
+  List<SortItem> sortWith(
+    List<SortItem> items, {
+    Locale? locale,
+    SortDirection? direction,
+    CollatorStrength? strength,
+    CollatorDecomposition? decomposition,
+    bool? numeric,
   }) {
     return _sort.sort(
       items,
       locale: locale ?? _defaultLocale,
       direction: direction ?? _defaultDirection,
-      strength: _defaultStrength,
-      decomposition: _defaultDecomposition,
-      numeric: _defaultNumeric,
-    );
-  }
-
-  /// Sorts [items] with full web-specific collator overrides.
-  ///
-  /// Each field in [options.web], when non-null, overrides the default
-  /// set via [SortOptionsWeb] during [init].  A `null` field, or
-  /// [options] itself being `null`, falls back to the init default.
-  @override
-  List<SortItem> sortWithOptions(List<SortItem> items, {SortOptions? options}) {
-    final web = options?.web;
-    return _sort.sort(
-      items,
-      locale: web?.locale ?? _defaultLocale,
-      direction: web?.direction ?? _defaultDirection,
-      strength: web?.strength ?? _defaultStrength,
-      decomposition: web?.decomposition ?? _defaultDecomposition,
-      numeric: web?.numeric ?? _defaultNumeric,
+      strength: strength ?? _defaultStrength,
+      decomposition: decomposition ?? _defaultDecomposition,
+      numeric: numeric ?? _defaultNumeric,
     );
   }
 }

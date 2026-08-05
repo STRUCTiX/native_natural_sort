@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui' show Locale;
 
 import 'package:flutter/foundation.dart';
@@ -377,7 +378,7 @@ void main() {
       NativeSort.instance = mock;
 
       final sort = NativeSort();
-      await sort.init(const SortOptions());
+      await sort.config(const SortOptions());
       final result = await sort.sort([
         const SortItem(id: 'id1', value: 'banana'),
         const SortItem(id: 'id2', value: 'cherry'),
@@ -392,34 +393,45 @@ void main() {
       NativeSort.instance = null;
     });
 
-    test('init is idempotent — second call is a no-op', () async {
-      final initCalls = <SortOptions>[];
-      final mock = _ContractMock(initTracking: initCalls);
+    test('config reconfigures — second call takes effect', () async {
+      final configCalls = <SortOptions>[];
+      final mock = _ContractMock(configTracking: configCalls);
       NativeSort.instance = mock;
 
       final sort = NativeSort();
-      await sort.init(const SortOptions(android: SortOptionsAndroid()));
-      await sort.init(const SortOptions(linux: SortOptionsLinux()));
+      await sort.config(const SortOptions(android: SortOptionsAndroid()));
+      await sort.config(const SortOptions(linux: SortOptionsLinux()));
 
-      expect(initCalls.length, 1);
+      expect(configCalls.length, 2);
       NativeSort.instance = null;
     });
 
-    test('concurrent init calls are deduped', () async {
-      final initCalls = <SortOptions>[];
-      final mock = _ContractMock(initTracking: initCalls);
-      NativeSort.instance = mock;
-
+    test('concurrent config calls are deduped', () async {
+      NativeSort.instance = null;
       final sort = NativeSort();
-      final f1 = sort.init(const SortOptions());
-      final f2 = sort.init(const SortOptions());
+      final initOrder = <String>[];
+      final gate = Completer<void>();
+
+      final f1 = sort.config(
+        const SortOptions(),
+        delegate: _DelayedDelegate('first', gate, initOrder),
+      );
+      final f2 = sort.config(
+        const SortOptions(),
+        delegate: _DelayedDelegate('second', null, initOrder),
+      );
+
+      await Future<void>.delayed(Duration.zero);
+      expect(initOrder, isEmpty);
+
+      gate.complete();
       await Future.wait([f1, f2]);
 
-      expect(initCalls.length, 1);
-      NativeSort.instance = null;
+      // f2 deduped to f1 — only first delegate was used.
+      expect(initOrder, ['first']);
     });
 
-    test('sort throws StateError before init', () {
+    test('sort throws StateError before config', () {
       final mock = _ContractMock();
       NativeSort.instance = mock;
       final sort = NativeSort();
@@ -447,55 +459,86 @@ void main() {
       expect(NativeSort(), same(real));
     });
 
-    test('init rethrows delegate errors and allows retry', () async {
+    test('config rethrows delegate errors and allows retry', () async {
       final mock = _ContractMock(failCount: 1);
       NativeSort.instance = mock;
 
       final sort = NativeSort();
       await expectLater(
-        sort.init(const SortOptions()),
+        sort.config(const SortOptions()),
         throwsA(isA<Exception>()),
       );
 
-      // Second init should succeed (mock was configured to fail once).
-      await sort.init(const SortOptions());
-      expect(mock.initCallCount, 2);
+      await sort.config(const SortOptions());
+      expect(mock.configCallCount, 2);
 
       NativeSort.instance = null;
     });
 
-    test('resolveAs returns PlatformDelegate', () {
+    test('config accepts custom delegate', () async {
+      final customDelegate = _StubDelegate();
       NativeSort.instance = null;
       final sort = NativeSort();
+      await sort.config(const SortOptions(), delegate: customDelegate);
+
+      final resolved = sort.resolveAs<PlatformDelegate>();
+      expect(identical(resolved, customDelegate), isTrue);
+    });
+
+    test('sort captures delegate snapshot during concurrent config', () async {
+      NativeSort.instance = null;
+      final sort = NativeSort();
+      await sort.config(const SortOptions());
+
+      final firstDelegate = sort.resolveAs<PlatformDelegate>();
+      final captured = sort.resolveAs<PlatformDelegate>();
+      await sort.config(const SortOptions());
+      final afterConfig = sort.resolveAs<PlatformDelegate>();
+
+      expect(identical(captured, firstDelegate), isTrue);
+      expect(identical(afterConfig, firstDelegate), isFalse);
+    });
+
+    test('resolveAs returns PlatformDelegate after config', () async {
+      NativeSort.instance = null;
+      final sort = NativeSort();
+      await sort.config(const SortOptions());
       final delegate = sort.resolveAs<PlatformDelegate>();
       expect(delegate, isA<PlatformDelegate>());
     });
 
-    test('resolveAs returns platform-specific delegate type', () {
-      NativeSort.instance = null;
-      final sort = NativeSort();
-      final delegate = sort.resolveAs<PlatformDelegate>();
-      // The delegate must be one of the known platform delegates.
-      expect(
-        delegate,
-        anyOf(
-          isA<AndroidDelegate>(),
-          isA<IOSDelegate>(),
-          isA<MacOSDelegate>(),
-          isA<LinuxDelegate>(),
-          isA<WindowsDelegate>(),
-          isA<WebDelegate>(),
-        ),
-      );
-    });
+    test(
+      'resolveAs returns platform-specific delegate type after config',
+      () async {
+        NativeSort.instance = null;
+        final sort = NativeSort();
+        await sort.config(const SortOptions());
+        final delegate = sort.resolveAs<PlatformDelegate>();
+        expect(
+          delegate,
+          anyOf(
+            isA<AndroidDelegate>(),
+            isA<IOSDelegate>(),
+            isA<MacOSDelegate>(),
+            isA<LinuxDelegate>(),
+            isA<WindowsDelegate>(),
+            isA<WebDelegate>(),
+          ),
+        );
+      },
+    );
 
-    test('android extension resolves on Android platform', () {
-      NativeSort.instance = null;
-      final sort = NativeSort();
-      if (defaultTargetPlatform == TargetPlatform.android) {
-        expect(sort.android, isA<AndroidDelegate>());
-      }
-    });
+    test(
+      'android extension resolves on Android platform after config',
+      () async {
+        NativeSort.instance = null;
+        final sort = NativeSort();
+        await sort.config(const SortOptions());
+        if (defaultTargetPlatform == TargetPlatform.android) {
+          expect(sort.android, isA<AndroidDelegate>());
+        }
+      },
+    );
   });
 }
 
@@ -505,7 +548,10 @@ class _MockSort implements NativeSort {
   _MockSort(this._result);
 
   @override
-  Future<void> init(SortOptions options) async {}
+  Future<void> config(
+    SortOptions options, {
+    PlatformDelegate? delegate,
+  }) async {}
 
   @override
   Future<List<SortItem>> sort(
@@ -518,45 +564,44 @@ class _MockSort implements NativeSort {
   T resolveAs<T extends PlatformDelegate>() => this as T;
 }
 
-/// Mirrors [NativeSort._] init/sort contract: idempotent init,
-/// concurrent dedup, StateError before init, retry on failure.
+/// Mirrors [NativeSort._] config/sort contract: reconfigurable config,
+/// concurrent dedup, StateError before config, retry on failure.
 class _ContractMock implements NativeSort {
   final List<SortItem> _result;
-  final List<SortOptions>? _initTracking;
+  final List<SortOptions>? _configTracking;
   final int _failCount;
 
-  bool _initialized = false;
-  int _initCallCount = 0;
-  Future<void>? _initFuture;
+  bool _configured = false;
+  int _configCallCount = 0;
+  Completer<void>? _configCompleter;
 
   _ContractMock({
     List<SortItem> result = const [],
-    List<SortOptions>? initTracking,
+    List<SortOptions>? configTracking,
     int failCount = 0,
   }) : _result = result,
-       _initTracking = initTracking,
+       _configTracking = configTracking,
        _failCount = failCount;
 
-  int get initCallCount => _initCallCount;
+  int get configCallCount => _configCallCount;
 
   @override
-  Future<void> init(SortOptions options) async {
-    if (_initialized) return;
-    if (_initFuture != null) return _initFuture!;
+  Future<void> config(SortOptions options, {PlatformDelegate? delegate}) async {
+    if (_configCompleter != null) return _configCompleter!.future;
 
-    _initFuture = () async {
-      _initCallCount++;
-      _initTracking?.add(options);
-      if (_initCallCount <= _failCount) {
-        throw Exception('init failure $_initCallCount');
-      }
-      _initialized = true;
-    }();
-
+    _configCompleter = Completer<void>();
     try {
-      await _initFuture;
+      _configCallCount++;
+      _configTracking?.add(options);
+      if (_configCallCount <= _failCount) {
+        throw Exception('config failure $_configCallCount');
+      }
+      _configured = true;
+      _configCompleter!.complete();
+      _configCompleter = null;
     } catch (e) {
-      _initFuture = null;
+      _configCompleter!.complete();
+      _configCompleter = null;
       rethrow;
     }
   }
@@ -567,10 +612,43 @@ class _ContractMock implements NativeSort {
     SortDirection? direction,
     Locale? locale,
   }) {
-    if (!_initialized) throw StateError('Call init() first');
+    if (!_configured) throw StateError('Call config() first');
     return Future.value(_result);
   }
 
   @override
   T resolveAs<T extends PlatformDelegate>() => this as T;
+}
+
+class _StubDelegate extends PlatformDelegate {
+  @override
+  Future<void> init(SortOptions options) async {}
+
+  @override
+  Future<List<SortItem>> sort(
+    List<SortItem> items, {
+    SortDirection? direction,
+    Locale? locale,
+  }) async => items;
+}
+
+class _DelayedDelegate extends PlatformDelegate {
+  final String _name;
+  final Completer<void>? _gate;
+  final List<String> _initOrder;
+
+  _DelayedDelegate(this._name, this._gate, this._initOrder);
+
+  @override
+  Future<void> init(SortOptions options) async {
+    await _gate?.future;
+    _initOrder.add(_name);
+  }
+
+  @override
+  Future<List<SortItem>> sort(
+    List<SortItem> items, {
+    SortDirection? direction,
+    Locale? locale,
+  }) async => items;
 }

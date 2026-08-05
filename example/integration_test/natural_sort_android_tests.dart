@@ -10,7 +10,7 @@ void registerAndroidTests() {
     });
 
     testWidgets('direction: descending', (tester) async {
-      await sort.init(const SortOptions());
+      await sort.config(const SortOptions());
 
       final result = await sort.sort([
         const SortItem(id: 'a', value: 'apple'),
@@ -21,7 +21,7 @@ void registerAndroidTests() {
     });
 
     testWidgets('locale: zh sorts Chinese before Latin', (tester) async {
-      await sort.init(
+      await sort.config(
         const SortOptions(android: SortOptionsAndroid(locale: Locale('zh'))),
       );
 
@@ -33,7 +33,7 @@ void registerAndroidTests() {
     });
 
     testWidgets('locale: en sorts Latin before Chinese', (tester) async {
-      await sort.init(
+      await sort.config(
         const SortOptions(android: SortOptionsAndroid(locale: Locale('en'))),
       );
 
@@ -45,7 +45,7 @@ void registerAndroidTests() {
     });
 
     testWidgets('zh locale: Chinese pinyin order (啊<吧<才)', (tester) async {
-      await sort.init(
+      await sort.config(
         const SortOptions(android: SortOptionsAndroid(locale: Locale('zh'))),
       );
 
@@ -58,7 +58,7 @@ void registerAndroidTests() {
     });
 
     testWidgets('en locale: Chinese Unicode order (吧<啊<才)', (tester) async {
-      await sort.init(
+      await sort.config(
         const SortOptions(android: SortOptionsAndroid(locale: Locale('en'))),
       );
 
@@ -71,7 +71,7 @@ void registerAndroidTests() {
     });
 
     testWidgets('numeric: true (default) — natural (98 < 123)', (tester) async {
-      await sort.init(const SortOptions());
+      await sort.config(const SortOptions());
 
       final result = await sort.sort([
         const SortItem(id: 'big', value: 'file123'),
@@ -83,7 +83,7 @@ void registerAndroidTests() {
     testWidgets('numeric: false — lexicographic (item1 < item10 < item2)', (
       tester,
     ) async {
-      await sort.init(const SortOptions());
+      await sort.config(const SortOptions());
 
       final result = await sort.android.sortWith([
         const SortItem(id: '10', value: 'item10'),
@@ -96,7 +96,7 @@ void registerAndroidTests() {
     testWidgets('strength: primary — case + accent both ignored', (
       tester,
     ) async {
-      await sort.init(const SortOptions());
+      await sort.config(const SortOptions());
 
       final result = await sort.android.sortWith(
         [
@@ -114,7 +114,7 @@ void registerAndroidTests() {
     testWidgets('strength: secondary — case ignored, accent matters', (
       tester,
     ) async {
-      await sort.init(const SortOptions());
+      await sort.config(const SortOptions());
 
       final result = await sort.android.sortWith(
         [
@@ -131,7 +131,7 @@ void registerAndroidTests() {
     testWidgets('strength: tertiary (default) — case + accent matter', (
       tester,
     ) async {
-      await sort.init(const SortOptions());
+      await sort.config(const SortOptions());
 
       final result = await sort.android.sortWith(
         [
@@ -148,7 +148,7 @@ void registerAndroidTests() {
 
     testWidgets('zh × strength: primary — Chinese before Latin, '
         'case+accent ignored', (tester) async {
-      await sort.init(
+      await sort.config(
         const SortOptions(android: SortOptionsAndroid(locale: Locale('zh'))),
       );
 
@@ -166,7 +166,7 @@ void registerAndroidTests() {
 
     testWidgets('en × strength: secondary — Latin before Chinese, '
         'case ignored', (tester) async {
-      await sort.init(
+      await sort.config(
         const SortOptions(android: SortOptionsAndroid(locale: Locale('en'))),
       );
 
@@ -184,7 +184,7 @@ void registerAndroidTests() {
 
     testWidgets('zh × numeric: false — Chinese before Latin, '
         'lexicographic Latin', (tester) async {
-      await sort.init(
+      await sort.config(
         const SortOptions(android: SortOptionsAndroid(locale: Locale('zh'))),
       );
 
@@ -200,7 +200,7 @@ void registerAndroidTests() {
     testWidgets('all combined: zh + descending + primary + numeric:false', (
       tester,
     ) async {
-      await sort.init(
+      await sort.config(
         const SortOptions(
           android: SortOptionsAndroid(
             locale: Locale('zh'),

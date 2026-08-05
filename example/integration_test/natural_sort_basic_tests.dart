@@ -6,7 +6,7 @@ void registerBasicSortTests() {
   setUp(() async {
     NativeSort.reset();
     sort = NativeSort();
-    await sort.init(const SortOptions());
+    await sort.config(const SortOptions());
   });
 
   testWidgets('sorts strings in ascending collation order', (tester) async {
@@ -58,7 +58,7 @@ void registerBasicSortTests() {
   });
 
   testWidgets('init is idempotent', (tester) async {
-    await sort.init(const SortOptions());
+    await sort.config(const SortOptions());
     // Should not throw or deadlock.
     final result = await sort.sort([const SortItem(id: 'a', value: 'test')]);
     expect(result, [const SortItem(id: 'a', value: 'test')]);

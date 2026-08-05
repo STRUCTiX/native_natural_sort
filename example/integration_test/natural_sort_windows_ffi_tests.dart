@@ -28,7 +28,7 @@ void registerWindowsFfiTests() {
     });
 
     testWidgets('direction: descending reverses result', (tester) async {
-      await sort.init(SortOptions(windows: SortOptionsWindows.ffi()));
+      await sort.config(SortOptions(windows: SortOptionsWindows.ffi()));
 
       final result = await sort.sort([
         const SortItem(id: 'a', value: 'apple'),
@@ -41,7 +41,7 @@ void registerWindowsFfiTests() {
     testWidgets('direction: ascending (default) preserves order', (
       tester,
     ) async {
-      await sort.init(SortOptions(windows: SortOptionsWindows.ffi()));
+      await sort.config(SortOptions(windows: SortOptionsWindows.ffi()));
 
       final result = await sort.sort([
         const SortItem(id: 'c', value: 'cherry'),
@@ -52,7 +52,7 @@ void registerWindowsFfiTests() {
     });
 
     testWidgets('numeric: false — lexicographic (10 < 2)', (tester) async {
-      await sort.init(
+      await sort.config(
         SortOptions(windows: SortOptionsWindows.ffi(numeric: false)),
       );
 
@@ -66,7 +66,7 @@ void registerWindowsFfiTests() {
     });
 
     testWidgets('numeric: true — natural sort (default)', (tester) async {
-      await sort.init(SortOptions(windows: SortOptionsWindows.ffi()));
+      await sort.config(SortOptions(windows: SortOptionsWindows.ffi()));
 
       final result = await sort.sort([
         const SortItem(id: '10', value: 'file10.txt'),
@@ -78,7 +78,7 @@ void registerWindowsFfiTests() {
     });
 
     testWidgets('strength: primary — case-insensitive', (tester) async {
-      await sort.init(
+      await sort.config(
         SortOptions(
           windows: SortOptionsWindows.ffi(strength: CollatorStrength.primary),
         ),
@@ -97,7 +97,7 @@ void registerWindowsFfiTests() {
     testWidgets('strength: tertiary — case-sensitive (default)', (
       tester,
     ) async {
-      await sort.init(SortOptions(windows: SortOptionsWindows.ffi()));
+      await sort.config(SortOptions(windows: SortOptionsWindows.ffi()));
 
       final result = await sort.sort([
         const SortItem(id: 'a', value: 'apple'),
@@ -110,7 +110,7 @@ void registerWindowsFfiTests() {
     testWidgets('decomposition: canonical — composed vs decomposed equal', (
       tester,
     ) async {
-      await sort.init(SortOptions(windows: SortOptionsWindows.ffi()));
+      await sort.config(SortOptions(windows: SortOptionsWindows.ffi()));
 
       // é (U+00E9) vs e + combining acute (U+0065 U+0301)
       final result = await sort.sort([
@@ -122,7 +122,7 @@ void registerWindowsFfiTests() {
     });
 
     testWidgets('locale: en — Latin before CJK', (tester) async {
-      await sort.init(
+      await sort.config(
         SortOptions(
           windows: SortOptionsWindows.ffi(locale: const Locale('en')),
         ),
@@ -137,14 +137,14 @@ void registerWindowsFfiTests() {
     });
 
     testWidgets('empty list with descending direction', (tester) async {
-      await sort.init(SortOptions(windows: SortOptionsWindows.ffi()));
+      await sort.config(SortOptions(windows: SortOptionsWindows.ffi()));
 
       final result = await sort.sort([], direction: SortDirection.descending);
       expect(result, isEmpty);
     });
 
     testWidgets('single element with descending direction', (tester) async {
-      await sort.init(SortOptions(windows: SortOptionsWindows.ffi()));
+      await sort.config(SortOptions(windows: SortOptionsWindows.ffi()));
 
       final result = await sort.sort([
         const SortItem(id: 'only', value: 'x'),
@@ -153,7 +153,7 @@ void registerWindowsFfiTests() {
     });
 
     testWidgets('long strings do not crash', (tester) async {
-      await sort.init(SortOptions(windows: SortOptionsWindows.ffi()));
+      await sort.config(SortOptions(windows: SortOptionsWindows.ffi()));
 
       final longA = 'a' * 1000;
       final longB = 'b' * 1000;
@@ -165,9 +165,9 @@ void registerWindowsFfiTests() {
     });
 
     testWidgets('init is idempotent — does not throw', (tester) async {
-      await sort.init(SortOptions(windows: SortOptionsWindows.ffi()));
+      await sort.config(SortOptions(windows: SortOptionsWindows.ffi()));
       // Second init should be a no-op and not throw.
-      await sort.init(
+      await sort.config(
         SortOptions(windows: SortOptionsWindows.ffi(numeric: false)),
       );
       final result = await sort.sort([const SortItem(id: 'a', value: 'test')]);
@@ -175,7 +175,7 @@ void registerWindowsFfiTests() {
     });
 
     testWidgets('ties on value broken by id', (tester) async {
-      await sort.init(SortOptions(windows: SortOptionsWindows.ffi()));
+      await sort.config(SortOptions(windows: SortOptionsWindows.ffi()));
 
       final result = await sort.sort([
         const SortItem(id: 'id3', value: 'same'),
@@ -186,7 +186,7 @@ void registerWindowsFfiTests() {
     });
 
     testWidgets('sortWith overrides numeric per-call', (tester) async {
-      await sort.init(
+      await sort.config(
         SortOptions(windows: SortOptionsWindows.ffi(numeric: true)),
       );
 

@@ -28,7 +28,7 @@ void registerWindowsPigeonTests() {
     });
 
     testWidgets('direction: descending reverses result', (tester) async {
-      await sort.init(SortOptions(windows: SortOptionsWindows.pigeon()));
+      await sort.config(SortOptions(windows: SortOptionsWindows.pigeon()));
 
       final result = await sort.sort([
         const SortItem(id: 'a', value: 'apple'),
@@ -41,7 +41,7 @@ void registerWindowsPigeonTests() {
     testWidgets('direction: ascending (default) preserves order', (
       tester,
     ) async {
-      await sort.init(SortOptions(windows: SortOptionsWindows.pigeon()));
+      await sort.config(SortOptions(windows: SortOptionsWindows.pigeon()));
 
       final result = await sort.sort([
         const SortItem(id: 'c', value: 'cherry'),
@@ -52,7 +52,7 @@ void registerWindowsPigeonTests() {
     });
 
     testWidgets('numeric awareness: natural sort (always on)', (tester) async {
-      await sort.init(SortOptions(windows: SortOptionsWindows.pigeon()));
+      await sort.config(SortOptions(windows: SortOptionsWindows.pigeon()));
 
       final result = await sort.sort([
         const SortItem(id: '10', value: 'file10.txt'),
@@ -66,7 +66,7 @@ void registerWindowsPigeonTests() {
     testWidgets('caseSensitive: false — case-insensitive (default)', (
       tester,
     ) async {
-      await sort.init(SortOptions(windows: SortOptionsWindows.pigeon()));
+      await sort.config(SortOptions(windows: SortOptionsWindows.pigeon()));
 
       // Default behaviour: case-insensitive, ties broken by id.
       final result = await sort.sort([
@@ -80,7 +80,7 @@ void registerWindowsPigeonTests() {
     testWidgets('caseSensitive: true — case-sensitive comparison', (
       tester,
     ) async {
-      await sort.init(
+      await sort.config(
         SortOptions(windows: SortOptionsWindows.pigeon(caseSensitive: true)),
       );
 
@@ -98,7 +98,7 @@ void registerWindowsPigeonTests() {
     testWidgets('caseSensitive: true via sortWith override', (
       tester,
     ) async {
-      await sort.init(
+      await sort.config(
         SortOptions(windows: SortOptionsWindows.pigeon(caseSensitive: false)),
       );
 
@@ -118,7 +118,7 @@ void registerWindowsPigeonTests() {
     testWidgets('diacriticInsensitive: true — ignores diacritics', (
       tester,
     ) async {
-      await sort.init(
+      await sort.config(
         SortOptions(
           windows: SortOptionsWindows.pigeon(diacriticInsensitive: true),
         ),
@@ -136,7 +136,7 @@ void registerWindowsPigeonTests() {
     testWidgets('diacriticInsensitive: false — diacritics distinct (default)', (
       tester,
     ) async {
-      await sort.init(SortOptions(windows: SortOptionsWindows.pigeon()));
+      await sort.config(SortOptions(windows: SortOptionsWindows.pigeon()));
 
       final result = await sort.sort([
         const SortItem(id: 'accent', value: 'café'),
@@ -147,7 +147,7 @@ void registerWindowsPigeonTests() {
     });
 
     testWidgets('locale: en — Latin before CJK', (tester) async {
-      await sort.init(
+      await sort.config(
         SortOptions(
           windows: SortOptionsWindows.pigeon(locale: const Locale('en')),
         ),
@@ -162,14 +162,14 @@ void registerWindowsPigeonTests() {
     });
 
     testWidgets('empty list with descending direction', (tester) async {
-      await sort.init(SortOptions(windows: SortOptionsWindows.pigeon()));
+      await sort.config(SortOptions(windows: SortOptionsWindows.pigeon()));
 
       final result = await sort.sort([], direction: SortDirection.descending);
       expect(result, isEmpty);
     });
 
     testWidgets('single element with descending direction', (tester) async {
-      await sort.init(SortOptions(windows: SortOptionsWindows.pigeon()));
+      await sort.config(SortOptions(windows: SortOptionsWindows.pigeon()));
 
       final result = await sort.sort([
         const SortItem(id: 'only', value: 'x'),
@@ -178,7 +178,7 @@ void registerWindowsPigeonTests() {
     });
 
     testWidgets('long strings do not crash', (tester) async {
-      await sort.init(SortOptions(windows: SortOptionsWindows.pigeon()));
+      await sort.config(SortOptions(windows: SortOptionsWindows.pigeon()));
 
       final longA = 'a' * 1000;
       final longB = 'b' * 1000;
@@ -190,9 +190,9 @@ void registerWindowsPigeonTests() {
     });
 
     testWidgets('init is idempotent — does not throw', (tester) async {
-      await sort.init(SortOptions(windows: SortOptionsWindows.pigeon()));
+      await sort.config(SortOptions(windows: SortOptionsWindows.pigeon()));
       // Second init should be a no-op and not throw.
-      await sort.init(
+      await sort.config(
         SortOptions(windows: SortOptionsWindows.pigeon(caseSensitive: true)),
       );
       final result = await sort.sort([const SortItem(id: 'a', value: 'test')]);
@@ -200,7 +200,7 @@ void registerWindowsPigeonTests() {
     });
 
     testWidgets('ties on value broken by id', (tester) async {
-      await sort.init(SortOptions(windows: SortOptionsWindows.pigeon()));
+      await sort.config(SortOptions(windows: SortOptionsWindows.pigeon()));
 
       final result = await sort.sort([
         const SortItem(id: 'id3', value: 'same'),
@@ -213,7 +213,7 @@ void registerWindowsPigeonTests() {
     testWidgets('descending direction with sort direction from init', (
       tester,
     ) async {
-      await sort.init(
+      await sort.config(
         SortOptions(
           windows: SortOptionsWindows.pigeon(
             direction: SortDirection.descending,
@@ -231,7 +231,7 @@ void registerWindowsPigeonTests() {
     });
 
     testWidgets('sortWith overrides direction per-call', (tester) async {
-      await sort.init(
+      await sort.config(
         SortOptions(
           windows: SortOptionsWindows.pigeon(
             direction: SortDirection.ascending,

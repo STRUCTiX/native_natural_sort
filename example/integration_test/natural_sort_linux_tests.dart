@@ -10,7 +10,7 @@ void registerLinuxTests() {
     });
 
     testWidgets('direction: descending reverses result', (tester) async {
-      await sort.init(const SortOptions());
+      await sort.config(const SortOptions());
 
       final result = await sort.sort([
         const SortItem(id: 'a', value: 'apple'),
@@ -23,7 +23,7 @@ void registerLinuxTests() {
     testWidgets('direction: ascending (default) preserves order', (
       tester,
     ) async {
-      await sort.init(const SortOptions());
+      await sort.config(const SortOptions());
 
       final result = await sort.sort([
         const SortItem(id: 'c', value: 'cherry'),
@@ -34,7 +34,7 @@ void registerLinuxTests() {
     });
 
     testWidgets('numeric: false — lexicographic (10 < 2)', (tester) async {
-      await sort.init(
+      await sort.config(
         const SortOptions(linux: SortOptionsLinux(numeric: false)),
       );
 
@@ -48,7 +48,7 @@ void registerLinuxTests() {
     });
 
     testWidgets('numeric: true via sortWith override', (tester) async {
-      await sort.init(
+      await sort.config(
         const SortOptions(linux: SortOptionsLinux(numeric: false)),
       );
 
@@ -58,7 +58,7 @@ void registerLinuxTests() {
     });
 
     testWidgets('strength: primary — case-insensitive', (tester) async {
-      await sort.init(
+      await sort.config(
         const SortOptions(
           linux: SortOptionsLinux(strength: CollatorStrength.primary),
         ),
@@ -77,7 +77,7 @@ void registerLinuxTests() {
     testWidgets('strength: tertiary — case-sensitive (default)', (
       tester,
     ) async {
-      await sort.init(const SortOptions());
+      await sort.config(const SortOptions());
 
       final result = await sort.sort([
         const SortItem(id: 'a', value: 'apple'),
@@ -90,7 +90,7 @@ void registerLinuxTests() {
     testWidgets('decomposition: canonical — composed vs decomposed equal', (
       tester,
     ) async {
-      await sort.init(const SortOptions());
+      await sort.config(const SortOptions());
 
       // é (U+00E9) vs e + combining acute (U+0065 U+0301)
       final result = await sort.sort([
@@ -102,7 +102,7 @@ void registerLinuxTests() {
     });
 
     testWidgets('locale: en — Latin before CJK', (tester) async {
-      await sort.init(
+      await sort.config(
         const SortOptions(linux: SortOptionsLinux(locale: Locale('en'))),
       );
 
@@ -115,14 +115,14 @@ void registerLinuxTests() {
     });
 
     testWidgets('empty list with descending direction', (tester) async {
-      await sort.init(const SortOptions());
+      await sort.config(const SortOptions());
 
       final result = await sort.sort([], direction: SortDirection.descending);
       expect(result, isEmpty);
     });
 
     testWidgets('single element with descending direction', (tester) async {
-      await sort.init(const SortOptions());
+      await sort.config(const SortOptions());
 
       final result = await sort.sort([
         const SortItem(id: 'only', value: 'x'),
@@ -131,7 +131,7 @@ void registerLinuxTests() {
     });
 
     testWidgets('long strings do not crash', (tester) async {
-      await sort.init(const SortOptions());
+      await sort.config(const SortOptions());
 
       final longA = 'a' * 1000;
       final longB = 'b' * 1000;
@@ -143,9 +143,9 @@ void registerLinuxTests() {
     });
 
     testWidgets('init is idempotent — does not throw', (tester) async {
-      await sort.init(const SortOptions());
+      await sort.config(const SortOptions());
       // Second init should be a no-op and not throw.
-      await sort.init(
+      await sort.config(
         const SortOptions(linux: SortOptionsLinux(numeric: false)),
       );
       final result = await sort.sort([const SortItem(id: 'a', value: 'test')]);
@@ -153,7 +153,7 @@ void registerLinuxTests() {
     });
 
     testWidgets('ties on value broken by id', (tester) async {
-      await sort.init(const SortOptions());
+      await sort.config(const SortOptions());
 
       final result = await sort.sort([
         const SortItem(id: 'id3', value: 'same'),

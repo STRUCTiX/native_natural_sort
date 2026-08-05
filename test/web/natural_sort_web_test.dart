@@ -30,7 +30,7 @@ void main() {
     });
 
     testWidgets('direction: descending', (tester) async {
-      await sort.init(const SortOptions());
+      await sort.config(const SortOptions());
 
       final result = await sort.sort([
         const SortItem(id: 'a', value: 'apple'),
@@ -41,7 +41,7 @@ void main() {
     });
 
     testWidgets('numeric: true (default) — natural (2 < 10)', (tester) async {
-      await sort.init(const SortOptions());
+      await sort.config(const SortOptions());
 
       final result = await sort.sort([
         const SortItem(id: '10', value: 'file10.txt'),
@@ -52,7 +52,7 @@ void main() {
     });
 
     testWidgets('numeric: false — lexicographic (1 < 10 < 2)', (tester) async {
-      await sort.init(const SortOptions(web: SortOptionsWeb(numeric: false)));
+      await sort.config(const SortOptions(web: SortOptionsWeb(numeric: false)));
 
       final result = await sort.sort([
         const SortItem(id: '10', value: 'item10'),
@@ -65,7 +65,7 @@ void main() {
     testWidgets('strength: primary — case + accent both ignored', (
       tester,
     ) async {
-      await sort.init(
+      await sort.config(
         const SortOptions(
           web: SortOptionsWeb(strength: CollatorStrength.primary),
         ),
@@ -80,7 +80,7 @@ void main() {
     });
 
     testWidgets('strength: tertiary — case differs', (tester) async {
-      await sort.init(
+      await sort.config(
         const SortOptions(
           web: SortOptionsWeb(strength: CollatorStrength.tertiary),
         ),
@@ -94,7 +94,7 @@ void main() {
     });
 
     testWidgets('locale: zh sorts Chinese before Latin', (tester) async {
-      await sort.init(
+      await sort.config(
         const SortOptions(web: SortOptionsWeb(locale: Locale('zh'))),
       );
 
@@ -106,7 +106,7 @@ void main() {
     });
 
     testWidgets('locale: en sorts Latin before Chinese', (tester) async {
-      await sort.init(
+      await sort.config(
         const SortOptions(web: SortOptionsWeb(locale: Locale('en'))),
       );
 
@@ -118,7 +118,7 @@ void main() {
     });
 
     testWidgets('sortWith overrides init strength', (tester) async {
-      await sort.init(
+      await sort.config(
         const SortOptions(
           web: SortOptionsWeb(strength: CollatorStrength.primary),
         ),
@@ -132,20 +132,20 @@ void main() {
     });
 
     testWidgets('init is idempotent', (tester) async {
-      await sort.init(const SortOptions());
-      await sort.init(const SortOptions(web: SortOptionsWeb(numeric: false)));
+      await sort.config(const SortOptions());
+      await sort.config(const SortOptions(web: SortOptionsWeb(numeric: false)));
       final result = await sort.sort([const SortItem(id: 'a', value: 'test')]);
       expect(result, [const SortItem(id: 'a', value: 'test')]);
     });
 
     testWidgets('empty list returns empty', (tester) async {
-      await sort.init(const SortOptions());
+      await sort.config(const SortOptions());
       final result = await sort.sort([]);
       expect(result, isEmpty);
     });
 
     testWidgets('single item returns itself', (tester) async {
-      await sort.init(const SortOptions());
+      await sort.config(const SortOptions());
       final result = await sort.sort([
         const SortItem(id: 'only', value: 'just one'),
       ]);
@@ -153,7 +153,7 @@ void main() {
     });
 
     testWidgets('ties on value are broken by id', (tester) async {
-      await sort.init(const SortOptions());
+      await sort.config(const SortOptions());
       final result = await sort.sort([
         const SortItem(id: 'id3', value: 'same'),
         const SortItem(id: 'id1', value: 'same'),
@@ -163,7 +163,7 @@ void main() {
     });
 
     testWidgets('Unicode characters are sorted without error', (tester) async {
-      await sort.init(const SortOptions());
+      await sort.config(const SortOptions());
       final result = await sort.sort([
         const SortItem(id: 'c', value: 'café'),
         const SortItem(id: 'n', value: 'naïve'),

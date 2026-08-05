@@ -9,7 +9,7 @@ void registerLocaleTests() {
   });
 
   testWidgets('sorts with explicit locale', (tester) async {
-    await sort.init(
+    await sort.config(
       const SortOptions(
         android: SortOptionsAndroid(locale: Locale('en')),
         linux: SortOptionsLinux(locale: Locale('en')),
@@ -26,7 +26,7 @@ void registerLocaleTests() {
   });
 
   testWidgets('sorts with locale override at call time', (tester) async {
-    await sort.init(const SortOptions());
+    await sort.config(const SortOptions());
     final result = await sort.sort([
       const SortItem(id: 'a', value: 'apple'),
       const SortItem(id: 'b', value: 'banana'),
@@ -35,7 +35,7 @@ void registerLocaleTests() {
   });
 
   testWidgets('sorts Chinese characters in zh locale order', (tester) async {
-    await sort.init(
+    await sort.config(
       const SortOptions(
         android: SortOptionsAndroid(locale: Locale('zh')),
         linux: SortOptionsLinux(locale: Locale('zh')),

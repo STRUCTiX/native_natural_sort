@@ -12,7 +12,7 @@ void registerAppleTests() {
       });
 
       testWidgets('direction: descending', (tester) async {
-        await sort.init(const SortOptions());
+        await sort.config(const SortOptions());
 
         final result = await sort.sort([
           const SortItem(id: 'a', value: 'apple'),
@@ -23,7 +23,7 @@ void registerAppleTests() {
       });
 
       testWidgets('locale: zh sorts Chinese before Latin', (tester) async {
-        await sort.init(
+        await sort.config(
           const SortOptions(
             ios: SortOptionsIOS(locale: Locale('zh')),
             macOS: SortOptionsMacOS(locale: Locale('zh')),
@@ -39,7 +39,7 @@ void registerAppleTests() {
       });
 
       testWidgets('locale: en sorts Latin before Chinese', (tester) async {
-        await sort.init(
+        await sort.config(
           const SortOptions(
             ios: SortOptionsIOS(locale: Locale('en')),
             macOS: SortOptionsMacOS(locale: Locale('en')),
@@ -57,7 +57,7 @@ void registerAppleTests() {
       testWidgets('numeric: natural numeric ordering (98 < 123)', (
         tester,
       ) async {
-        await sort.init(const SortOptions());
+        await sort.config(const SortOptions());
 
         final result = await sort.sort([
           const SortItem(id: 'big', value: 'file123'),
@@ -70,7 +70,7 @@ void registerAppleTests() {
       testWidgets('caseSensitive: true — case differences matter', (
         tester,
       ) async {
-        await sort.init(
+        await sort.config(
           const SortOptions(
             ios: SortOptionsIOS(locale: Locale('en'), caseSensitive: true),
             macOS: SortOptionsMacOS(locale: Locale('en'), caseSensitive: true),
@@ -88,7 +88,7 @@ void registerAppleTests() {
       testWidgets('caseSensitive: false (default) — case-insensitive', (
         tester,
       ) async {
-        await sort.init(const SortOptions());
+        await sort.config(const SortOptions());
 
         final result = await sort.sort([
           const SortItem(id: 'a', value: 'apple'),
@@ -101,7 +101,7 @@ void registerAppleTests() {
       testWidgets('diacriticInsensitive: true — accent ignored', (
         tester,
       ) async {
-        await sort.init(
+        await sort.config(
           const SortOptions(
             ios: SortOptionsIOS(diacriticInsensitive: true),
             macOS: SortOptionsMacOS(diacriticInsensitive: true),
@@ -119,7 +119,7 @@ void registerAppleTests() {
       testWidgets('diacriticInsensitive: false (default) — e before é', (
         tester,
       ) async {
-        await sort.init(
+        await sort.config(
           const SortOptions(
             ios: SortOptionsIOS(locale: Locale('en')),
             macOS: SortOptionsMacOS(locale: Locale('en')),
@@ -136,7 +136,7 @@ void registerAppleTests() {
 
       testWidgets('caseSensitive + diacriticInsensitive: both true, '
           '"Café" vs "cafe"', (tester) async {
-        await sort.init(
+        await sort.config(
           const SortOptions(
             ios: SortOptionsIOS(
               locale: Locale('en'),
@@ -161,7 +161,7 @@ void registerAppleTests() {
 
       testWidgets('all options combined: zh locale + descending + '
           'caseSensitive + diacriticInsensitive', (tester) async {
-        await sort.init(
+        await sort.config(
           const SortOptions(
             ios: SortOptionsIOS(
               locale: Locale('zh'),
@@ -188,7 +188,7 @@ void registerAppleTests() {
       });
 
       testWidgets('zh locale: Chinese pinyin order (啊<吧<才)', (tester) async {
-        await sort.init(
+        await sort.config(
           const SortOptions(
             ios: SortOptionsIOS(locale: Locale('zh')),
             macOS: SortOptionsMacOS(locale: Locale('zh')),
@@ -205,7 +205,7 @@ void registerAppleTests() {
       });
 
       testWidgets('en locale: Chinese Unicode order (吧<啊<才)', (tester) async {
-        await sort.init(
+        await sort.config(
           const SortOptions(
             ios: SortOptionsIOS(locale: Locale('en')),
             macOS: SortOptionsMacOS(locale: Locale('en')),
@@ -223,7 +223,7 @@ void registerAppleTests() {
 
       testWidgets('zh × caseSensitive: Chinese before Latin, '
           'case matters within Latin', (tester) async {
-        await sort.init(
+        await sort.config(
           const SortOptions(
             ios: SortOptionsIOS(locale: Locale('zh'), caseSensitive: true),
             macOS: SortOptionsMacOS(locale: Locale('zh'), caseSensitive: true),
@@ -241,7 +241,7 @@ void registerAppleTests() {
 
       testWidgets('en × caseSensitive: Latin before Chinese, '
           'case matters within Latin', (tester) async {
-        await sort.init(
+        await sort.config(
           const SortOptions(
             ios: SortOptionsIOS(locale: Locale('en'), caseSensitive: true),
             macOS: SortOptionsMacOS(locale: Locale('en'), caseSensitive: true),
@@ -259,7 +259,7 @@ void registerAppleTests() {
 
       testWidgets('zh × diacriticInsensitive: Chinese before Latin, '
           'accent ignored within Latin', (tester) async {
-        await sort.init(
+        await sort.config(
           const SortOptions(
             ios: SortOptionsIOS(
               locale: Locale('zh'),
@@ -283,7 +283,7 @@ void registerAppleTests() {
 
       testWidgets('en × diacriticInsensitive: Latin before Chinese, '
           'accent ignored within Latin', (tester) async {
-        await sort.init(
+        await sort.config(
           const SortOptions(
             ios: SortOptionsIOS(
               locale: Locale('en'),

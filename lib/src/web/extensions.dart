@@ -19,7 +19,7 @@ import 'delegate.dart';
 ///
 /// ```dart
 /// final sort = NativeSort();
-/// await sort.init(SortOptions(
+/// await sort.config(SortOptions(
 ///   web: SortOptionsWeb(strength: CollatorStrength.primary),
 /// ));
 /// final result = sort.web.sortWith(items, numeric: false);

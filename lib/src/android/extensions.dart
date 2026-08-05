@@ -23,7 +23,7 @@ import 'delegate.dart';
 ///
 /// ```dart
 /// final sort = NativeSort();
-/// await sort.init(SortOptions(
+/// await sort.config(SortOptions(
 ///   android: SortOptionsAndroid(strength: CollatorStrength.primary),
 /// ));
 /// final result = await sort.android.sortWith(items, numeric: false);

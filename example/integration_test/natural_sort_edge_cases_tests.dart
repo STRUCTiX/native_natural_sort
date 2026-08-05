@@ -6,7 +6,7 @@ void registerEdgeCaseTests() {
   setUp(() async {
     NativeSort.reset();
     sort = NativeSort();
-    await sort.init(const SortOptions());
+    await sort.config(const SortOptions());
   });
 
   testWidgets('sorts strings with Unicode characters', (tester) async {

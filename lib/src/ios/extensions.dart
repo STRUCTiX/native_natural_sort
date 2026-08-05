@@ -19,7 +19,7 @@ import 'delegate.dart';
 ///
 /// ```dart
 /// final sort = NativeSort();
-/// await sort.init(SortOptions(
+/// await sort.config(SortOptions(
 ///   ios: SortOptionsIOS(caseSensitive: true),
 /// ));
 /// final result = await sort.ios.sortWith(items, diacriticInsensitive: true);

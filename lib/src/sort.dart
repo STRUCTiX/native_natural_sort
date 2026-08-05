@@ -65,8 +65,6 @@ class SortItem {
   String toString() => 'SortItem(id: $id, value: $value)';
 }
 
-/// Initialization configuration for [NativeSort].
-///
 /// Holds optional per-platform configuration sections.  Each platform
 /// implementation picks its own section and ignores the rest.
 class SortOptions {
@@ -104,7 +102,7 @@ class SortOptions {
 ///
 /// ```dart
 /// final sort = NativeSort();
-/// await sort.init(SortOptions(
+/// await sort.config(SortOptions(
 ///   android: SortOptionsAndroid(locale: Locale('zh')),
 /// ));
 /// final sorted = await sort.sort([
@@ -136,11 +134,11 @@ class NativeSort {
     _testInstance = NativeSort._();
   }
 
-  final PlatformDelegate _delegate;
-  Completer<void>? _initCompleter;
-  bool _isInitialized = false;
+  late PlatformDelegate _delegate;
+  Completer<void>? _configCompleter;
+  bool _isConfigured = false;
 
-  NativeSort._() : _delegate = _resolveDelegate();
+  NativeSort._();
 
   static PlatformDelegate _resolveDelegate() {
     if (kIsWeb) return WebDelegate();
@@ -160,23 +158,29 @@ class NativeSort {
     }
   }
 
-  /// Initializes the native collation engine with [options].
+  /// Configures the native collation engine with [options].
   ///
-  /// Safe to call multiple times; subsequent calls are no-ops.
-  /// On FFI platforms (Linux, Windows) this resolves native
-  /// libraries; on Pigeon platforms it is a no-op.
-  Future<void> init(SortOptions options) async {
-    if (_isInitialized) return;
-    if (_initCompleter != null) return _initCompleter!.future;
+  /// Each call creates a fresh platform delegate and initializes it,
+  /// replacing any previous configuration.  A custom [delegate] may be
+  /// injected to override the platform default.
+  ///
+  /// Concurrent calls are deduplicated — only the first takes effect
+  /// and all callers receive the same future.  On FFI platforms (Linux,
+  /// Windows) this resolves native libraries; on Pigeon platforms it is
+  /// a no-op.
+  Future<void> config(SortOptions options, {PlatformDelegate? delegate}) async {
+    if (_configCompleter != null) return _configCompleter!.future;
 
-    _initCompleter = Completer<void>();
+    _configCompleter = Completer<void>();
     try {
+      _delegate = delegate ?? _resolveDelegate();
       await _delegate.init(options);
-      _isInitialized = true;
-      _initCompleter!.complete();
+      _isConfigured = true;
+      _configCompleter!.complete();
+      _configCompleter = null; // allow reconfiguration
     } catch (e) {
-      _initCompleter!.completeError(e);
-      _initCompleter = null; // allow retry
+      _configCompleter!.complete();
+      _configCompleter = null; // allow retry
       rethrow;
     }
   }
@@ -184,16 +188,17 @@ class NativeSort {
   /// Sorts [items] by the collation order of their values and
   /// returns the items in that order.
   ///
-  /// [direction] overrides the default set via [init] options.
-  /// [locale] overrides the default set via [init] options.
-  /// Throws [StateError] if [init] has not been called first.
+  /// [direction] overrides the default set via [config] options.
+  /// [locale] overrides the default set via [config] options.
+  /// Throws [StateError] if [config] has not been called first.
   FutureOr<List<SortItem>> sort(
     List<SortItem> items, {
     SortDirection? direction,
     Locale? locale,
   }) {
-    if (!_isInitialized) throw StateError('Call init() first');
-    return _delegate.sort(items, direction: direction, locale: locale);
+    if (!_isConfigured) throw StateError('Call config() first');
+    final delegate = _delegate;
+    return delegate.sort(items, direction: direction, locale: locale);
   }
 
   /// Casts the platform delegate to [T].

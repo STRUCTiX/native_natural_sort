@@ -26,7 +26,7 @@ class _MyAppState extends State<MyApp> {
   Future<void> initSort() async {
     try {
       final sort = NativeSort();
-      await sort.init(SortOptions());
+      await sort.config(SortOptions());
       final sorted = await sort.sort([
         SortItem(id: 'a', value: 'file10.txt'),
         SortItem(id: 'b', value: 'file2.txt'),

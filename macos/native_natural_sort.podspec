@@ -4,7 +4,7 @@
 #
 Pod::Spec.new do |s|
   s.name             = 'native_natural_sort'
-  s.version          = '0.1.1'
+  s.version          = '0.1.2'
   s.summary          = 'Locale-aware, numeric-aware natural string sorting for Flutter using each platform\'s native collation engine.'
   s.description      = <<-DESC
 Locale-aware, numeric-aware natural string sorting for Flutter using each platform's native collation engine.

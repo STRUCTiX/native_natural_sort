@@ -1,6 +1,6 @@
 name: native_natural_sort
 description: "Locale-aware, numeric-aware natural string sorting for Flutter using each platform's native collation engine."
-version: 0.1.1
+version: 0.1.2
 homepage: https://github.com/FriesI23/native_natural_sort
 repository: https://github.com/FriesI23/native_natural_sort
 issue_tracker: https://github.com/FriesI23/native_natural_sort/issues

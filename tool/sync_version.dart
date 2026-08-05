@@ -4,8 +4,10 @@ import 'dart:io';
 
 void main() {
   final pubspec = File('pubspec.yaml').readAsStringSync();
-  final versionMatch =
-      RegExp(r'^version:\s*(\S+)', multiLine: true).firstMatch(pubspec);
+  final versionMatch = RegExp(
+    r'^version:\s*(\S+)',
+    multiLine: true,
+  ).firstMatch(pubspec);
   if (versionMatch == null) {
     stderr.writeln('ERROR: version not found in pubspec.yaml');
     exit(1);
@@ -17,10 +19,7 @@ void main() {
   _syncPodspec('macos/native_natural_sort.podspec', version);
 }
 
-final _versionRe = RegExp(
-  r"^(\s*s\.version\s*=\s*)'[^']*'",
-  multiLine: true,
-);
+final _versionRe = RegExp(r"^(\s*s\.version\s*=\s*)'[^']*'", multiLine: true);
 
 void _syncPodspec(String path, String version) {
   final content = File(path).readAsStringSync();
@@ -29,4 +28,3 @@ void _syncPodspec(String path, String version) {
   });
   File(path).writeAsStringSync(updated);
 }
-

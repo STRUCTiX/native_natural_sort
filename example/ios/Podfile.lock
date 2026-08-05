@@ -2,7 +2,7 @@ PODS:
   - Flutter (1.0.0)
   - integration_test (0.0.1):
     - Flutter
-  - native_natural_sort (0.1.0):
+  - native_natural_sort (0.1.1):
     - Flutter
 
 DEPENDENCIES:
@@ -21,7 +21,7 @@ EXTERNAL SOURCES:
 SPEC CHECKSUMS:
   Flutter: cabc95a1d2626b1b06e7179b784ebcf0c0cde467
   integration_test: 4a889634ef21a45d28d50d622cf412dc6d9f586e
-  native_natural_sort: 9356a1bb5fddf5e64a745e375f76ab8faf9b0ffc
+  native_natural_sort: dffadb8fa37e06f720456d58fee0e2cf06de3fc1
 
 PODFILE CHECKSUM: 3c63482e143d1b91d2d2560aee9fb04ecc74ac7e
 

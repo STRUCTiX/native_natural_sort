@@ -21,7 +21,7 @@ import '../sort.dart';
 import 'sort.dart';
 
 class WindowsDelegate extends PlatformDelegate {
-  late final WindowsSort _sort;
+  late WindowsSort _sort;
   Locale? _defaultLocale;
   SortDirection? _defaultDirection;
   CollatorStrength? _defaultStrength;
@@ -37,6 +37,14 @@ class WindowsDelegate extends PlatformDelegate {
     final windows = options.windows;
     _sort = windows?.sort ?? WindowsSort.ffi();
     await _sort.init();
+    if (!_sort.isAvailable) {
+      final fallback = await windows?.onLoadFailed?.call();
+      if (fallback == null) {
+        throw StateError('Windows collation unavailable');
+      }
+      _sort = fallback;
+      await _sort.init();
+    }
     _defaultLocale = windows?.locale;
     _defaultDirection = windows?.direction;
     _defaultStrength = windows?.strength;

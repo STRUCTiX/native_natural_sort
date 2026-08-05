@@ -6,9 +6,29 @@ import 'package:native_natural_sort/native_natural_sort_io.dart';
 
 void main() {
   group('WindowsDelegate', () {
-    test('init creates default sort when none provided', () async {
+    test('init throws when FFI unavailable and no fallback configured',
+        () async {
       final delegate = WindowsDelegate();
-      await delegate.init(const SortOptions());
+      expect(
+        () => delegate.init(const SortOptions()),
+        throwsA(isA<StateError>()),
+      );
+    });
+
+    test('init with fallback succeeds when FFI unavailable', () async {
+      final mockSort = _MockWindowsSort();
+      final delegate = WindowsDelegate();
+      await delegate.init(
+        SortOptions(
+          windows: SortOptionsWindows(
+            // No sort provided → defaults to FFI (stub: isAvailable=false).
+            // The fallback callback supplies a working mock.
+            onLoadFailed: () async => mockSort,
+          ),
+        ),
+      );
+      // The delegate switched to mockSort after FFI failed.
+      expect(mockSort.initCalled, isTrue);
     });
 
     test('init calls sort.init()', () async {

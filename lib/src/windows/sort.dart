@@ -142,6 +142,19 @@ abstract interface class SortOptionsWindows {
   /// `true` ignores them.  Only used by the Pigeon backend.
   bool? get diacriticInsensitive;
 
+  /// Optional async fallback invoked when the selected backend fails to
+  /// initialize.
+  ///
+  /// When the selected [sort] (or the default) fails during
+  /// [WindowsSort.init] (e.g. the FFI ICU library is not found), this
+  /// callback is called.  It must return a replacement [WindowsSort]
+  /// (typically `WindowsSort.pigeon()`), or `null` to propagate the
+  /// failure as a [StateError].
+  ///
+  /// When the callback itself is `null` (the default), no fallback is
+  /// attempted and the load error is thrown.
+  FutureOr<WindowsSort?> Function()? get onLoadFailed;
+
   /// Unnamed constructor — all params, no pre-selected backend.
   const factory SortOptionsWindows({
     Locale? locale,
@@ -152,6 +165,7 @@ abstract interface class SortOptionsWindows {
     bool? numeric,
     bool? caseSensitive,
     bool? diacriticInsensitive,
+    FutureOr<WindowsSort?> Function()? onLoadFailed,
   }) = _SortOptionsWindowsImpl;
 
   /// FFI (ICU) backend — pre-selects [WindowsSort.ffi].
@@ -164,6 +178,7 @@ abstract interface class SortOptionsWindows {
     CollatorDecomposition? decomposition,
     bool? numeric,
     CollationLibraryLoader? loader,
+    FutureOr<WindowsSort?> Function()? onLoadFailed,
   }) => SortOptionsWindows(
     locale: locale,
     sort: WindowsSort.ffi(loader: loader),
@@ -171,6 +186,7 @@ abstract interface class SortOptionsWindows {
     strength: strength,
     decomposition: decomposition,
     numeric: numeric,
+    onLoadFailed: onLoadFailed,
   );
 
   /// Pigeon (CompareStringEx) backend — pre-selects [WindowsSort.pigeon].
@@ -208,6 +224,9 @@ class _SortOptionsWindowsImpl implements SortOptionsWindows {
   @override
   final bool? diacriticInsensitive;
 
+  @override
+  final FutureOr<WindowsSort?> Function()? onLoadFailed;
+
   const _SortOptionsWindowsImpl({
     this.locale,
     this.sort,
@@ -217,5 +236,6 @@ class _SortOptionsWindowsImpl implements SortOptionsWindows {
     this.numeric,
     this.caseSensitive,
     this.diacriticInsensitive,
+    this.onLoadFailed,
   });
 }

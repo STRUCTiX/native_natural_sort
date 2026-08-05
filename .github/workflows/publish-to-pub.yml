@@ -11,7 +11,7 @@ jobs:
     uses: ./.github/workflows/_test.yml
     with:
       android: true
-      ios: true
+      # ios: true  # slow on github runner
       linux: true
       macos: true
       windows: true

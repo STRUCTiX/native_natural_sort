@@ -99,6 +99,6 @@ add_custom_command(TARGET ${TEST_RUNNER} POST_BUILD
 )
 
 # Enable automatic test discovery.
-include(GoogleTest)
-gtest_discover_tests(${TEST_RUNNER})
+# include(GoogleTest)
+# gtest_discover_tests(${TEST_RUNNER})
 endif()

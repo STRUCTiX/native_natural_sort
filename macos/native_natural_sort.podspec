@@ -4,23 +4,23 @@
 #
 Pod::Spec.new do |s|
   s.name             = 'native_natural_sort'
-  s.version          = '0.0.1'
-  s.summary          = 'A new Flutter plugin project.'
+  s.version          = '0.1.0'
+  s.summary          = 'Locale-aware, numeric-aware natural string sorting for Flutter using each platform\'s native collation engine.'
   s.description      = <<-DESC
-A new Flutter plugin project.
+Locale-aware, numeric-aware natural string sorting for Flutter using each platform's native collation engine.
                        DESC
-  s.homepage         = 'http://example.com'
+  s.homepage         = 'https://github.com/FriesI23/native_natural_sort'
   s.license          = { :file => '../LICENSE' }
-  s.author           = { 'Your Company' => 'email@example.com' }
+  s.author           = { 'Fries_I23' => 'https://github.com/FriesI23' }
 
   s.source           = { :path => '.' }
-  s.source_files = 'Classes/**/*.swift'
+  s.source_files = 'native_natural_sort/Sources/native_natural_sort/**/*.swift'
 
   # If your plugin requires a privacy manifest, for example if it collects user
   # data, update the PrivacyInfo.xcprivacy file to describe your plugin's
   # privacy impact, and then uncomment this line. For more information,
   # see https://developer.apple.com/documentation/bundleresources/privacy_manifest_files
-  # s.resource_bundles = {'native_natural_sort_privacy' => ['Resources/PrivacyInfo.xcprivacy']}
+  # s.resource_bundles = {'native_natural_sort_privacy' => ['native_natural_sort/Sources/native_natural_sort/PrivacyInfo.xcprivacy']}
 
   s.dependency 'FlutterMacOS'
 

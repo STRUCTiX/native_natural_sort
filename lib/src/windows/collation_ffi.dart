@@ -15,7 +15,6 @@
 import 'dart:async';
 import 'dart:ffi';
 
-import '../collation.dart';
 import '../collation_ffi.dart';
 
 class WindowsCollationLoader implements CollationLibraryLoader {
@@ -105,14 +104,12 @@ class WindowsCollationLoader implements CollationLibraryLoader {
     _ucolStrColl = lib.lookupFunction<UcolStrCollNative, UcolStrCollDart>(
       'ucol_strcoll',
     );
-    // Tuning functions are non-fatal.
     try {
       _ucolSetAttribute = lib
           .lookupFunction<UcolSetAttributeNative, UcolSetAttributeDart>(
             'ucol_setAttribute',
           );
     } on ArgumentError {
-      // Symbol not exported by this ICU build — leave null.
       _ucolSetAttribute = null;
     }
     try {
@@ -121,7 +118,6 @@ class WindowsCollationLoader implements CollationLibraryLoader {
             'ucol_setStrength',
           );
     } on ArgumentError {
-      // Symbol not exported by this ICU build — leave null.
       _ucolSetStrength = null;
     }
   }

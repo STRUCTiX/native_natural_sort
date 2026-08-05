@@ -17,8 +17,16 @@ import 'dart:ui' show Locale;
 
 import 'sort.dart';
 
+/// Platform-specific collation delegate.
+///
+/// Each platform (Android, iOS, macOS, Linux, Windows, Web) provides its
+/// own implementation.  Instance lifecycle: [init] is called once with
+/// [SortOptions], then [sort] can be called repeatedly.
 abstract class PlatformDelegate {
+  /// Initializes the delegate with platform-specific [options].
   Future<void> init(SortOptions options);
+
+  /// Sorts [items] by collation order.
   FutureOr<List<SortItem>> sort(
     List<SortItem> items, {
     SortDirection? direction,

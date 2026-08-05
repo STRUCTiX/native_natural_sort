@@ -1,0 +1,344 @@
+name: Test CI
+
+on:
+  workflow_call:
+    inputs:
+      android:
+        type: boolean
+        default: false
+        description: "Run Android (Kotlin unit) tests"
+      ios:
+        type: boolean
+        default: false
+        description: "Run iOS integration tests (requires macOS runner + simulator boot)"
+      linux:
+        type: boolean
+        default: false
+        description: "Run Linux native unit + integration tests"
+      macos:
+        type: boolean
+        default: false
+        description: "Run macOS integration tests"
+      windows:
+        type: boolean
+        default: false
+        description: "Run Windows native unit + integration tests"
+      web:
+        type: boolean
+        default: false
+        description: "Run web (Chrome) tests"
+
+jobs:
+  dart-test:
+    name: Dart Unit Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Run Dart unit tests
+        run: make test CI=1 MACHINE_OUT=dart_test.log
+      - uses: actions/upload-artifact@v7
+        if: success() || failure()
+        with:
+          name: dart-test-result
+          path: dart_test.log
+          if-no-files-found: error
+          retention-days: 7
+
+  web-test:
+    name: Web Test
+    runs-on: ubuntu-latest
+    if: inputs.web
+    steps:
+      - uses: actions/checkout@v7
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Run web tests
+        run: make test-web CI=1 MACHINE_OUT=web_test.log
+      - uses: actions/upload-artifact@v7
+        if: success() || failure()
+        with:
+          name: web-test-result
+          path: web_test.log
+          if-no-files-found: error
+          retention-days: 7
+
+  kotlin-test:
+    name: Kotlin Unit Test
+    runs-on: ubuntu-latest
+    if: inputs.android
+    steps:
+      - uses: actions/checkout@v7
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: gradle/actions/setup-gradle@v6
+        with:
+          gradle-version: "8.14"
+          cache-cleanup: always
+      - name: Resolve Flutter plugins
+        working-directory: example
+        run: flutter pub get
+      - name: Create local.properties
+        working-directory: example/android
+        run: |
+          echo "flutter.sdk=$FLUTTER_ROOT" > local.properties
+          echo "flutter.buildMode=debug" >> local.properties
+      - name: Generate Gradle wrapper
+        working-directory: example/android
+        run: gradle wrapper
+      - name: Run Kotlin unit tests
+        run: make test-kotlin CI=1
+      - uses: actions/upload-artifact@v7
+        if: success() || failure()
+        with:
+          name: kotlin-test-xml
+          path: example/build/native_natural_sort/test-results/testDebugUnitTest/TEST-*.xml
+          if-no-files-found: warn
+          retention-days: 7
+
+  linux-native:
+    name: Linux Native Test
+    runs-on: ubuntu-latest
+    if: inputs.linux
+    env:
+      CMAKE_POLICY_VERSION_MINIMUM: "3.5"
+    steps:
+      - uses: actions/checkout@v7
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Install Linux build dependencies
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y \
+            clang cmake ninja-build pkg-config \
+            libgtk-3-dev liblzma-dev libstdc++-12-dev
+      - name: Create native test results directory
+        run: mkdir -p native-test-results
+      - name: Run Linux native tests
+        run: make test-linux CI=1 NATIVE_XML_DIR=native-test-results
+      - uses: actions/upload-artifact@v7
+        if: success() || failure()
+        with:
+          name: linux-native-xml
+          path: native-test-results/native_test_linux.xml
+          if-no-files-found: warn
+          retention-days: 7
+
+  windows-native:
+    name: Windows Native Test
+    runs-on: windows-latest
+    if: inputs.windows
+    env:
+      CMAKE_POLICY_VERSION_MINIMUM: "3.5"
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install GNU Make
+        run: choco install make -y --no-progress
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Create native test results directory
+        run: mkdir -p native-test-results
+        shell: bash
+      - name: Run Windows native tests
+        run: make test-windows CI=1 NATIVE_XML_DIR=native-test-results
+      - uses: actions/upload-artifact@v7
+        if: success() || failure()
+        with:
+          name: windows-native-xml
+          path: native-test-results/native_test_windows.xml
+          if-no-files-found: warn
+          retention-days: 7
+
+  android-integration:
+    name: Android Integration Test
+    runs-on: ubuntu-latest
+    if: inputs.android
+    strategy:
+      fail-fast: false
+    steps:
+      - uses: actions/checkout@v7
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: gradle/actions/setup-gradle@v6
+        with:
+          gradle-version: "8.14"
+          cache-cleanup: always
+      - name: Resolve Flutter plugins
+        working-directory: example
+        run: flutter pub get
+      - name: Create local.properties
+        working-directory: example/android
+        run: |
+          echo "flutter.sdk=$FLUTTER_ROOT" > local.properties
+          echo "flutter.buildMode=debug" >> local.properties
+      - name: Generate Gradle wrapper
+        working-directory: example/android
+        run: gradle wrapper
+      - name: Free disk space for emulator
+        run: |
+          echo "=== Before cleanup ==="
+          df -h /home/runner
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/share/boost
+          sudo rm -rf /usr/local/lib/android/sdk/ndk
+          sudo docker image prune -af || true
+          echo "=== After cleanup ==="
+          df -h /home/runner
+      - name: Enable KVM for hardware-accelerated emulator
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Run Android integration tests
+        uses: ReactiveCircus/android-emulator-runner@v2
+        env:
+          ANDROID_EMU_FORCE_QUICKBOOT_FILE_BACKED: "1"
+        with:
+          api-level: 34
+          arch: x86_64
+          target: default
+          force-avd-creation: false
+          disk-size: 2048M
+          emulator-options: >-
+            -no-window
+            -gpu swiftshader_indirect
+            -noaudio
+            -no-boot-anim
+          disable-animations: true
+          emulator-boot-timeout: 900
+          script: make test-integration DEVICE=android CI=1 MACHINE_OUT=${{ github.workspace }}/android_integration.log
+      - uses: actions/upload-artifact@v7
+        if: success() || failure()
+        with:
+          name: android-integration-result
+          path: ${{ github.workspace }}/android_integration.log
+          if-no-files-found: error
+          retention-days: 7
+
+  linux-integration:
+    name: Linux Integration Test
+    runs-on: ubuntu-latest
+    if: inputs.linux
+    env:
+      CMAKE_POLICY_VERSION_MINIMUM: "3.5"
+    steps:
+      - uses: actions/checkout@v7
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Install Linux build + display dependencies
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y \
+            clang cmake ninja-build pkg-config \
+            libgtk-3-dev liblzma-dev libstdc++-12-dev \
+            xvfb
+      - name: Run Linux integration tests (xvfb)
+        run: >
+          xvfb-run
+          make test-integration DEVICE=linux CI=1
+          MACHINE_OUT=${{ github.workspace }}/linux_integration.log
+      - uses: actions/upload-artifact@v7
+        if: success() || failure()
+        with:
+          name: linux-integration-result
+          path: ${{ github.workspace }}/linux_integration.log
+          if-no-files-found: error
+          retention-days: 7
+
+  macos-integration:
+    name: macOS Integration Test
+    runs-on: macos-latest
+    if: inputs.macos
+    steps:
+      - uses: actions/checkout@v7
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Run macOS integration tests
+        run: >
+          make test-integration DEVICE=macos CI=1
+          MACHINE_OUT=${{ github.workspace }}/macos_integration.log
+      - uses: actions/upload-artifact@v7
+        if: success() || failure()
+        with:
+          name: macos-integration-result
+          path: ${{ github.workspace }}/macos_integration.log
+          if-no-files-found: error
+          retention-days: 7
+
+  ios-integration:
+    name: iOS Integration Test
+    runs-on: macos-latest
+    if: inputs.ios
+    steps:
+      - uses: actions/checkout@v7
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Boot iOS simulator
+        run: |
+          DEVICE_ID=$(xcrun simctl list devices available iPhone \
+            | grep -m 1 -o '[A-F0-9]\{8\}-[A-F0-9]\{4\}-[A-F0-9]\{4\}-[A-F0-9]\{4\}-[A-F0-9]\{12\}')
+          xcrun simctl boot "$DEVICE_ID" || true
+          echo "DEVICE_ID=$DEVICE_ID" >> "$GITHUB_ENV"
+      - name: Run iOS integration tests
+        run: >
+          make test-integration DEVICE="$DEVICE_ID" CI=1
+          MACHINE_OUT=${{ github.workspace }}/ios_integration.log
+      - uses: actions/upload-artifact@v7
+        if: success() || failure()
+        with:
+          name: ios-integration-result
+          path: ${{ github.workspace }}/ios_integration.log
+          if-no-files-found: error
+          retention-days: 7
+
+  windows-integration:
+    name: Windows Integration Test
+    runs-on: windows-latest
+    if: inputs.windows
+    env:
+      CMAKE_POLICY_VERSION_MINIMUM: "3.5"
+    steps:
+      - uses: actions/checkout@v7
+      - name: Install GNU Make
+        run: choco install make -y --no-progress
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+      - name: Run Windows integration tests
+        run: >
+          make test-integration DEVICE=windows CI=1
+          MACHINE_OUT=${{ github.workspace }}/windows_integration.log
+      - uses: actions/upload-artifact@v7
+        if: success() || failure()
+        with:
+          name: windows-integration-result
+          path: ${{ github.workspace }}/windows_integration.log
+          if-no-files-found: error
+          retention-days: 7

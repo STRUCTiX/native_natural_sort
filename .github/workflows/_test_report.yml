@@ -1,0 +1,92 @@
+# Aggregates test results from the Test CI workflow using dorny/test-reporter.
+# Triggers automatically after Test CI completes (workflow_run pattern).
+#
+# See: https://github.com/dorny/test-reporter#recommended-setup-for-public-repositories
+name: Test CI Report
+
+on:
+  workflow_run:
+    workflows:
+      - Test CI
+    types:
+      - completed
+
+permissions:
+  contents: read
+  actions: read
+  checks: write
+
+jobs:
+  report:
+    name: Aggregate Test Reports
+    runs-on: ubuntu-latest
+    steps:
+      - uses: dorny/test-reporter@v3
+        with:
+          artifact: dart-test-result
+          name: Dart Unit Test
+          path: dart_test.log
+          reporter: flutter-json
+
+      - uses: dorny/test-reporter@v3
+        with:
+          artifact: web-test-result
+          name: Web Test
+          path: web_test.log
+          reporter: flutter-json
+
+      - uses: dorny/test-reporter@v3
+        with:
+          artifact: kotlin-test-xml
+          name: Kotlin Unit Test
+          path: TEST-*.xml
+          reporter: java-junit
+
+      - uses: dorny/test-reporter@v3
+        with:
+          artifact: linux-native-xml
+          name: Linux Native Test
+          path: native_test_linux.xml
+          reporter: java-junit
+
+      - uses: dorny/test-reporter@v3
+        with:
+          artifact: windows-native-xml
+          name: Windows Native Test
+          path: native_test_windows.xml
+          reporter: java-junit
+
+      - uses: dorny/test-reporter@v3
+        with:
+          artifact: android-integration-result
+          name: Android Integration Test
+          path: android_integration.log
+          reporter: flutter-json
+
+      - uses: dorny/test-reporter@v3
+        with:
+          artifact: linux-integration-result
+          name: Linux Integration Test
+          path: linux_integration.log
+          reporter: flutter-json
+
+      - uses: dorny/test-reporter@v3
+        with:
+          artifact: macos-integration-result
+          name: macOS Integration Test
+          path: macos_integration.log
+          reporter: flutter-json
+
+      - uses: dorny/test-reporter@v3
+        with:
+          artifact: ios-integration-result
+          name: iOS Integration Test
+          path: ios_integration.log
+          reporter: flutter-json
+
+      - uses: dorny/test-reporter@v3
+        with:
+          artifact: windows-integration-result
+          name: Windows Integration Test
+          path: windows_integration.log
+          reporter: flutter-json

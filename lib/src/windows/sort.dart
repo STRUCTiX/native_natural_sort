@@ -22,8 +22,7 @@ import 'collation_api.g.dart';
 
 import 'sort_stub.dart' if (dart.library.io) 'sort_ffi.dart';
 
-export 'collation_api.g.dart'
-    show CollationWindowsHostApi, CollationWindowsItem, CollationWindowsRequest;
+export 'collation_api.g.dart' show CollationWindowsItem;
 
 /// Windows collation interface.
 ///

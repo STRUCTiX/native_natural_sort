@@ -1,3 +1,4 @@
-## 0.0.1
+## 0.1.0
 
-* TODO: Describe initial release.
+* Initial release: locale-aware, numeric-aware natural string sorting for Flutter
+  using each platform's native collation engine.

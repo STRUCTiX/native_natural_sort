@@ -1,0 +1,26 @@
+name: Publish to pub.dev
+
+on:
+  push:
+    tags:
+      - v[0-9]+.[0-9]+.[0-9]+
+
+jobs:
+  testing:
+    name: Test
+    uses: ./.github/workflows/_test.yml
+    with:
+      android: true
+      ios: true
+      linux: true
+      macos: true
+      windows: true
+      web: true
+
+  publish:
+    name: Publish
+    needs:
+      - testing
+    permissions:
+      id-token: write # Required for authentication using OIDC
+    uses: dart-lang/setup-dart/.github/workflows/publish.yml@v1

@@ -1,6 +1,6 @@
 PODS:
   - FlutterMacOS (1.0.0)
-  - native_natural_sort (0.0.1):
+  - native_natural_sort (0.1.0):
     - FlutterMacOS
 
 DEPENDENCIES:
@@ -15,7 +15,7 @@ EXTERNAL SOURCES:
 
 SPEC CHECKSUMS:
   FlutterMacOS: d0db08ddef1a9af05a5ec4b724367152bb0500b1
-  native_natural_sort: af976a6db6280bbe38aa8a0016bc635bc2f46bee
+  native_natural_sort: 494c5bd0c49afa79497ed443f77d17c0b1514829
 
 PODFILE CHECKSUM: 54d867c82ac51cbd61b565781b9fada492027009
 

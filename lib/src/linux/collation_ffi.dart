@@ -16,7 +16,6 @@ import 'dart:async';
 import 'dart:ffi';
 import 'dart:io';
 
-import '../collation.dart';
 import '../collation_cache.dart';
 import '../collation_ffi.dart';
 
@@ -121,14 +120,12 @@ class LinuxCollationLoader implements CollationLibraryLoader {
     _ucolStrColl = lib.lookupFunction<UcolStrCollNative, UcolStrCollDart>(
       'ucol_strcoll$suffix',
     );
-    // Tuning functions are non-fatal — every realistic ICU build has them.
     try {
       _ucolSetAttribute = lib
           .lookupFunction<UcolSetAttributeNative, UcolSetAttributeDart>(
             'ucol_setAttribute$suffix',
           );
     } on ArgumentError {
-      // Symbol not exported by this ICU build — leave null.
       _ucolSetAttribute = null;
     }
     try {
@@ -137,7 +134,6 @@ class LinuxCollationLoader implements CollationLibraryLoader {
             'ucol_setStrength$suffix',
           );
     } on ArgumentError {
-      // Symbol not exported by this ICU build — leave null.
       _ucolSetStrength = null;
     }
   }

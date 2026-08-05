@@ -17,7 +17,7 @@ import 'package:pigeon/pigeon.dart';
 @ConfigurePigeon(
   PigeonOptions(
     dartOut: 'lib/src/ios/collation_api.g.dart',
-    swiftOut: 'ios/Classes/CollationApi.g.swift',
+    swiftOut: 'ios/native_natural_sort/Sources/native_natural_sort/CollationApi.g.swift',
     dartOptions: DartOptions(),
   ),
 )

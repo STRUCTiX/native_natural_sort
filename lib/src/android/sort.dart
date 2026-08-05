@@ -18,8 +18,7 @@ import '../common.dart';
 import '../sort.dart' show SortDirection;
 import 'collation_api.g.dart';
 
-export 'collation_api.g.dart'
-    show CollationAndroidHostApi, CollationAndroidItem, CollationAndroidRequest;
+export 'collation_api.g.dart' show CollationAndroidItem;
 
 /// Android platform sort — Pigeon MethodChannel → ICU Collator.
 abstract interface class AndroidSort {

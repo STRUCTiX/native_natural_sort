@@ -34,13 +34,13 @@ extension type JSCollatorOptions._(JSObject _) implements JSObject {
   });
 }
 
-/// Maps [CollatorStrength] to `Intl.Collator` sensitivity.
+// Maps CollatorStrength to Intl.Collator sensitivity.
 String _mapSensitivity(CollatorStrength? strength) => switch (strength) {
   CollatorStrength.primary => 'base',
   CollatorStrength.secondary => 'accent',
   CollatorStrength.tertiary => 'case',
   CollatorStrength.identical => 'variant',
-  _ => 'case', // default: tertiary
+  _ => 'case',
 };
 
 class WebSortImpl implements WebSort {
@@ -67,18 +67,14 @@ class WebSortImpl implements WebSort {
     try {
       if (items.length == 1) return items;
 
-      // Stable sort: sort indices then reorder.
       final indices = List<int>.generate(items.length, (i) => i);
       indices.sort((a, b) {
         final cmp = collator.compare(items[a].value, items[b].value);
         if (cmp != 0) return direction == SortDirection.descending ? -cmp : cmp;
-        // Tie-break by id.
         final idCmp = items[a].id.compareTo(items[b].id);
         return direction == SortDirection.descending ? -idCmp : idCmp;
       });
       return indices.map((i) => items[i]).toList();
-    } finally {
-      // JS GC will collect; no explicit dispose needed.
-    }
+    } finally {}
   }
 }

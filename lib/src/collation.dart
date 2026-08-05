@@ -17,15 +17,12 @@
 typedef CollationCompareFn = int Function(String a, String b);
 
 /// ICU attribute / value constants used by [CollatorBase].
-/// See `ucol.h` and `unorm2.h`.
 abstract final class IcuAttr {
   IcuAttr._();
 
-  // ucol.h: UColAttribute
   static const int normalizationMode = 4;
   static const int numericCollation = 6;
 
-  // ucol.h: UCollationStrength (for ucol_setStrength)
   static const int strengthPrimary = 0;
   static const int strengthSecondary = 1;
   static const int strengthTertiary = 2;
@@ -40,7 +37,6 @@ abstract final class IcuAttr {
     _ => strengthTertiary,
   };
 
-  // unorm2.h: UNormalizationMode (for ucol_setAttribute NORMALIZATION_MODE)
   static const int normNone = 1;
   static const int normNfd = 2;
   static const int normNfkd = 3;

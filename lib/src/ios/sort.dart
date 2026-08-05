@@ -17,8 +17,7 @@ import 'dart:ui' show Locale;
 import '../sort.dart' show SortDirection;
 import 'collation_api.g.dart';
 
-export 'collation_api.g.dart'
-    show CollationIOSHostApi, CollationIOSItem, CollationIOSRequest;
+export 'collation_api.g.dart' show CollationIOSItem;
 
 /// iOS sort — Pigeon MethodChannel → localizedStandardCompare.
 abstract interface class IOSSort {

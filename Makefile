@@ -32,22 +32,31 @@ ANDROID_DIR := $(EXAMPLE_DIR)/android
 ANDROID_TEST_TASK := :$(PROJECT_NAME):testDebugUnitTest
 
 # Test mode flags
-#   make test          → human-readable (default)
-#   make test CI=1     → CI-friendly (GitHub reporter / plain console)
+#   make test                    → human-readable (default)
+#   make test CI=1               → CI-friendly (GitHub reporter)
+#   make test CI=1 MACHINE_OUT=<file> → machine-readable JSON for test reporting
 CI ?= 0
 
 # Device ID for integration tests (optional, e.g. DEVICE=macos).
 DEVICE ?=
 
 ifeq ($(CI),1)
-FLUTTER_TFLAGS = --reporter=github
 KOTLIN_TFLAGS = --console=plain
 NATIVE_TFLAGS = $(if $(filter Windows_NT,$(OS)),--gtest_color=no,)
 else
-FLUTTER_TFLAGS =
 KOTLIN_TFLAGS =
 NATIVE_TFLAGS =
 endif
+
+# Machine-readable output for CI test reporting.
+# When set, dart/web/integration tests produce JSON via --machine instead
+# of --reporter=github and write the stream to this file.
+MACHINE_OUT ?=
+
+# When set, native tests produce JUnit XML in this directory.
+# Linux:  ctest --output-junit $(CURDIR)/$(dir)/native_test_linux.xml
+# Windows: the test .exe receives --gtest_output=xml:$(CURDIR)/$(dir)/native_test_windows.xml
+NATIVE_XML_DIR ?=
 
 .PHONY: help format fix analyze test test-web \
         test-integration test-integration-no-device test-all \
@@ -65,6 +74,7 @@ help:
 	@echo "  fix             Apply Dart fixes then format"
 	@echo "  analyze         Run Dart static analysis"
 	@echo "  gen             Regenerate Pigeon platform-channel code"
+	@echo "  sync-version    Sync version from pubspec.yaml to ios/macos podspecs"
 	@echo "  test            Dart unit tests (Flutter only)"
 	@echo "  test-web        Dart unit tests on web (Flutter, --platform chrome)"
 	@echo "                  (make test CI=1 for CI-friendly output)"
@@ -96,13 +106,23 @@ gen:
 	@$(DART) run pigeon --input pigeons/collation_macos.dart
 	@$(DART) run pigeon --input pigeons/collation_windows.dart
 
+sync-version:
+	@VERSION=$$($(DART) run tool/sync_version.dart); \
+	echo "Synced podspec versions to $$VERSION"
+
 aio: gen format fix analyze gen test
 
 aio-all: gen format fix analyze gen test-all
 
 _test-dart:
 	@echo "=== Dart tests ==="
-	@$(FLUTTER) test $(FLUTTER_TFLAGS)
+ifneq ($(MACHINE_OUT),)
+	@$(FLUTTER) test --machine > $(MACHINE_OUT)
+else ifeq ($(CI),1)
+	@$(FLUTTER) test --reporter github
+else
+	@$(FLUTTER) test
+endif
 
 test-kotlin:
 	@echo "=== Kotlin unit tests (JVM, no device) ==="
@@ -118,20 +138,28 @@ test-linux:
 			*) echo "ERROR: unsupported architecture $$ARCH"; exit 1 ;; \
 		esac; \
 		cd build/linux/$$BUILD_ARCH/debug/plugins/$(PROJECT_NAME) \
-			&& ctest --output-on-failure $(NATIVE_TFLAGS)
+			&& ctest --output-on-failure $(NATIVE_TFLAGS) \
+				$(if $(NATIVE_XML_DIR),--output-junit $(CURDIR)/$(NATIVE_XML_DIR)/native_test_linux.xml,)
 
 test-windows:
 	@echo "=== Windows C++ tests ==="
 	@cd $(EXAMPLE_DIR) && $(FLUTTER) build windows --debug
 	@cd $(EXAMPLE_DIR)/build/windows/x64/plugins/$(PROJECT_NAME)/Debug \
-		&& $(PROJECT_NAME)_test.exe $(NATIVE_TFLAGS)
+		&& $(PROJECT_NAME)_test.exe $(NATIVE_TFLAGS) \
+			$(if $(NATIVE_XML_DIR),--gtest_output=xml:$(CURDIR)/$(NATIVE_XML_DIR)/native_test_windows.xml,)
 
 test:
 	@$(SUBMAKE) _test-dart
 
 test-web:
 	@echo "=== Dart web tests ==="
-	@$(FLUTTER) test --platform chrome test/web $(FLUTTER_TFLAGS)
+ifneq ($(MACHINE_OUT),)
+	@$(FLUTTER) test --platform chrome test/web --machine > $(MACHINE_OUT)
+else ifeq ($(CI),1)
+	@$(FLUTTER) test --platform chrome test/web --reporter github
+else
+	@$(FLUTTER) test --platform chrome test/web
+endif
 
 test-all:
 	@$(SUBMAKE) _test-dart
@@ -177,6 +205,15 @@ test-integration-no-device:
 	@$(SUBMAKE) _test-integration
 
 _test-integration:
-	@cd $(EXAMPLE_DIR) && $(FLUTTER) test integration_test $(if $(DEVICE),-d $(DEVICE),)
+ifneq ($(MACHINE_OUT),)
+	@cd $(EXAMPLE_DIR) && $(FLUTTER) test integration_test \
+		$(if $(DEVICE),-d $(DEVICE),) --machine > $(MACHINE_OUT)
+else ifeq ($(CI),1)
+	@cd $(EXAMPLE_DIR) && $(FLUTTER) test integration_test \
+		$(if $(DEVICE),-d $(DEVICE),) --reporter github
+else
+	@cd $(EXAMPLE_DIR) && $(FLUTTER) test integration_test \
+		$(if $(DEVICE),-d $(DEVICE),)
+endif
 
 # test-integration is always run standalone; test-all no longer chains it.

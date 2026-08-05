@@ -15,7 +15,7 @@ class _TestCollator implements IcuCollator {
 
 void main() {
   group('CollatorSort extension', () {
-    /// Mock compare function: standard Dart string comparison.
+    // Mock compare function: standard Dart string comparison.
     int mockCompare(String a, String b) => a.compareTo(b);
 
     test('empty items returns empty list', () {

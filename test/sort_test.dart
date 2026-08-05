@@ -564,8 +564,8 @@ class _MockSort implements NativeSort {
   T resolveAs<T extends PlatformDelegate>() => this as T;
 }
 
-/// Mirrors [NativeSort._] config/sort contract: reconfigurable config,
-/// concurrent dedup, StateError before config, retry on failure.
+// Mirrors [NativeSort._] config/sort contract: reconfigurable config,
+// concurrent dedup, StateError before config, retry on failure.
 class _ContractMock implements NativeSort {
   final List<SortItem> _result;
   final List<SortOptions>? _configTracking;

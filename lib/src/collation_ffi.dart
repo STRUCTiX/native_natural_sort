@@ -19,6 +19,14 @@ import 'package:ffi/ffi.dart';
 
 import 'collation.dart';
 
+export 'collation.dart'
+    show
+        CollationCompareFn,
+        CollationLibraryLoader,
+        CollatorSort,
+        IcuAttr,
+        IcuCollator;
+
 /// `UCollator* ucol_open(const char* loc, UErrorCode* status)`
 typedef UcolOpenNative = Pointer<Void> Function(Pointer<Uint8>, Pointer<Int32>);
 typedef UcolOpenDart = Pointer<Void> Function(Pointer<Uint8>, Pointer<Int32>);
@@ -107,8 +115,6 @@ abstract class CollatorBase implements IcuCollator {
     final hasLocale = localeName != null && localeName.isNotEmpty;
     final base = hasLocale ? localeName : Platform.localeName;
     final normalized = base.replaceAll('_', '-');
-    // ICU requires an IETF BCP 47 language tag; fall back to 'en' when the
-    // system locale is a POSIX / C locale or otherwise not a usable tag.
     final needsFallback = normalized.isEmpty || _isPosixLocale(normalized);
     final effectiveLocale = needsFallback ? 'en' : normalized;
     final keywordSuffix = numeric ? '-u-kn' : '';
@@ -117,16 +123,12 @@ abstract class CollatorBase implements IcuCollator {
     final status = calloc<Int32>()..value = 0;
     try {
       final coll = _ucolOpen(locPtr.cast<Uint8>(), status);
-      // Only positive status is an error (U_FAILURE); negative values are
-      // warnings (e.g. U_USING_DEFAULT_WARNING) and still yield a valid
-      // collator using fallback data.
       if (status.value > 0 || coll == nullptr) {
         if (coll != nullptr) _ucolClose(coll);
         throw UnsupportedError(
           'ucol_open failed for "$locale": UErrorCode=${status.value}',
         );
       }
-      // Apply optional tuning attributes after open.
       if (strength != null && _ucolSetStrength != null) {
         _ucolSetStrength(coll, IcuAttr.mapStrength(strength));
       }

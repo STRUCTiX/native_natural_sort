@@ -54,14 +54,14 @@ final sorted = await sort.sort([
 ### Platform-specific options
 
 ```dart
-await sort.init(SortOptions(
+await sort.config(SortOptions(
   android: SortOptionsAndroid(
     locale: Locale('zh'),
     direction: SortDirection.descending,
   ),
   windows: SortOptionsWindows(
     locale: Locale('en'),
-    sort: WindowsSort.ffi(),  // or WindowsSort.pigeon() (default)
+    sort: WindowsSort.ffi(),  // or WindowsSort.pigeon()
   ),
 ));
 ```
@@ -80,16 +80,22 @@ final sorted = await sort.sort(
 
 | Backend                | Technology                | Notes                     |
 | ---------------------- | ------------------------- | ------------------------- |
-| `WindowsSort.pigeon()` | `CompareStringEx` (Win32) | Default                   |
-| `WindowsSort.ffi()`    | OS-bundled ICU DLL        | Requires Windows 10 1703+ |
+| `WindowsSort.ffi()`    | OS-bundled ICU DLL        | Default                   |
+| `WindowsSort.pigeon()` | `CompareStringEx` (Win32) |                           |
 
 ### Direct FFI access
 
 ```dart
 import 'package:native_natural_sort/native_natural_sort.dart';
 
-final collation = IcuCollation(engine);
-final sorted = collation.sort(items: [...], idOf: ..., valueOf: ...);
+final loader = MyCollationLibraryLoader(); // see Linux/Windows FFI loaders
+await loader.init();
+final collator = loader.collator('en');
+final sorted = collator.sort(
+  items: ['file10.txt', 'file2.txt', 'file1.txt'],
+  idOf: (s) => s,
+  valueOf: (s) => s,
+);
 ```
 
 For more examples, see the [integration tests](./integration_test/).

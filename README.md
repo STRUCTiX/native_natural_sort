@@ -5,17 +5,65 @@
 ![Popularity][pubdev-popularity]
 ![Points][pubdev-points]
 
-Locale-aware, numeric-aware natural string sorting for Flutter using each
-platform's native collation engine.
+EN / [中文](https://github.com/FriesI23/native_natural_sort/blob/main/README_zh.md)
+
+> **Human-friendly string sorting for Flutter** — numbers in the right order
+> (`file2` before `file10`), locale-aware collation (`ä` with `a`), and
+> alphanumeric sorting that works the way people expect. Powered by each
+> platform's native collation engine.
+
+```dart
+// ❌ Lexicographic (ASCII / dictionary) order:
+//    file1.txt  file10.txt  file2.txt   ← "10" sorts before "2"
+
+// ✅ Natural (human-friendly) order with native_natural_sort:
+//    file1.txt  file2.txt   file10.txt  ← numbers treated as numbers
+```
+
+## Why not `List.sort`?
+
+Dart's default string sort is **lexicographic** — it compares strings
+character-by-character by Unicode code point. This produces unintuitive
+results well beyond just numbers:
+
+| Input               | Dart `sort()`       | `native_natural_sort`      |
+| ------------------- | ------------------- | -------------------------- |
+| `item2, item10`     | `item10, item2`     | `item2, item10`            |
+| `árbol, amor, azul` | `amor, azul, árbol` | `amor, árbol, azul`        |
+| `张, 李, 王`        | `张, 李, 王`        | `李, 王, 张` (Pinyin)      |
+| `Straße, Strasse`   | `Strasse, Straße`   | equal (German: `ß` = `ss`) |
+| `v1, v2, v10`       | `v1, v10, v2`       | `v1, v2, v10`              |
+
+`native_natural_sort` fixes this by delegating to each platform's **native
+collation engine** (ICU on Linux/Windows, `android.icu` on Android,
+`localizedStandardCompare` on Apple platforms, ECMAScript `Intl.Collator` on
+Web), which understands numeric substrings, locale-specific character
+ordering, and linguistic rules out of the box.
+
+### Why native, not bundled ICU?
+
+Some Dart packages ship a copy of the ICU library (~10–30 MB of collation
+data) inside your app. `native_natural_sort` calls the collation APIs
+already built into every platform instead:
+
+- **Small footprint** — zero ICU data in your app bundle.
+- **OS-consistent results** — strings sort the same way they do in Finder,
+  Windows Explorer, or the Android file picker.
+- **No extra native dependencies** — nothing to compile, no FFI bridge to
+  maintain across platforms.
+- **Free updates** — collation data improves with OS updates; no package
+  upgrade needed.
 
 ## Features
 
-- [x] Cross-platform: Android, iOS, macOS, Linux, Windows
-- [x] Locale-aware sorting via each platform's native collation engine
-- [x] Numeric-aware natural sort (e.g. `file2` < `file10`)
-- [x] Sort-time locale and direction overrides
-- [x] Dual Windows backends: Pigeon (`CompareStringEx`) or FFI (ICU)
-- [x] Direct FFI access via `IcuCollation` for advanced use cases
+- 🔢 **Numeric-aware** — numbers in strings sort by their numeric value, not
+  digit-by-digit (`"v2.10"` after `"v2.2"`, not before).
+- 🌐 **Locale & language aware** — respects language-specific collation rules
+  (German ß = ss, Swedish å after z, Chinese by Pinyin or stroke order).
+- ⚡ **Native performance** — zero Dart-level comparison overhead; delegates
+  directly to OS collation APIs.
+- 🖥️ **All platforms** — Android, iOS, macOS, Linux, Windows, Web.
+- 🔧 **Dual Windows backends** — ICU (FFI) or Win32 `CompareStringEx` (Pigeon).
 
 ## Getting started
 
@@ -36,7 +84,7 @@ dependencies:
 
 Then run `flutter pub get`.
 
-## Usage
+## Quick Start
 
 ```dart
 import 'package:native_natural_sort/native_natural_sort.dart';
@@ -48,10 +96,35 @@ final sorted = await sort.sort([
   SortItem(id: 'b', value: 'file2.txt'),
   SortItem(id: 'c', value: 'file1.txt'),
 ]);
-// sorted: [c, b, a]  (file1 < file2 < file10)
+// → [c, b, a]  (file1.txt < file2.txt < file10.txt)
 ```
 
-### Platform-specific options
+### Sorting plain strings
+
+If you prefer to work with plain `List<String>`, wrap it with a small helper:
+
+```dart
+Future<List<String>> sortStrings(List<String> values) async {
+  final sort = NativeSort();
+  await sort.config(SortOptions());
+  final items = values.asMap().entries
+      .map((e) => SortItem(id: e.key.toString(), value: e.value))
+      .toList();
+  return (await sort.sort(items)).map((e) => e.value).toList();
+}
+```
+
+### Sort-time overrides
+
+```dart
+final sorted = await sort.sort(
+  items,
+  locale: Locale('fr'),
+  direction: SortDirection.descending,
+);
+```
+
+## Platform-specific options
 
 ```dart
 await sort.config(SortOptions(
@@ -66,22 +139,12 @@ await sort.config(SortOptions(
 ));
 ```
 
-### Sort-time overrides
-
-```dart
-final sorted = await sort.sort(
-  items,
-  locale: Locale('fr'),
-  direction: SortDirection.descending,
-);
-```
-
 ### Windows backend selection
 
-| Backend                | Technology                | Notes                     |
-| ---------------------- | ------------------------- | ------------------------- |
-| `WindowsSort.ffi()`    | OS-bundled ICU DLL        | Default                   |
-| `WindowsSort.pigeon()` | `CompareStringEx` (Win32) |                           |
+| Backend                | Technology                | Notes   |
+| ---------------------- | ------------------------- | ------- |
+| `WindowsSort.ffi()`    | OS-bundled ICU DLL        | Default |
+| `WindowsSort.pigeon()` | `CompareStringEx` (Win32) |         |
 
 ### Direct FFI access
 
@@ -108,7 +171,8 @@ NativeSortService (unified Dart API)
 ├── iOS       → Pigeon → localizedStandardCompare
 ├── macOS     → Pigeon → localizedStandardCompare
 ├── Linux     → Dart FFI → system libicui18n
-└── Windows   → Pigeon (CompareStringEx) or FFI (ICU)
+├── Windows   → Pigeon (CompareStringEx) or FFI (ICU)
+└── Web       → Dart → Intl.Collator
 ```
 
 ## Development

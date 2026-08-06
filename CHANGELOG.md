@@ -1,3 +1,7 @@
+## 0.1.3
+
+- Added web platform support.
+
 ## 0.1.2
 
 - Fixed README API examples to match current public API.

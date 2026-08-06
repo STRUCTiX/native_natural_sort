@@ -1,3 +1,7 @@
+## 0.1.4
+
+- Added documentation improvements and a Chinese README.
+
 ## 0.1.3
 
 - Added web platform support.
